@@ -73,6 +73,12 @@ export default function ProductCard({ item, priority = false }: ProductCardProps
   const itemBadge = badge(item)
   const isFree = item.listingType === 'free'
   const location = locationText(item)
+  const purchaseHref =
+    isFree || item.price !== null
+      ? '/products/' + item.slug + '/checkout'
+      : '/products/' + item.slug + '?action=offer'
+  const actionLabel =
+    isFree ? 'اطلبها الآن' : item.price !== null ? 'إتمام الشراء' : 'تفاوض على السعر'
 
   return (
     <article className="deba-product-card">
@@ -150,15 +156,11 @@ export default function ProductCard({ item, priority = false }: ProductCardProps
         </div>
 
         <Link
-          href={
-            '/products/' +
-            item.slug +
-            (isFree ? '/checkout' : '/checkout')
-          }
+          href={purchaseHref}
           className={'deba-product-action ' + (isFree ? 'is-green' : '')}
         >
           <MessageCircle size={16} />
-          {isFree ? 'اطلبها الآن' : 'إتمام الشراء'}
+          {actionLabel}
         </Link>
       </div>
     </article>
