@@ -222,10 +222,15 @@ export default function LoginPage() {
         return
       }
 
+      const oauthAccountType = mode === 'register' ? accountType : ''
+      const callback = new URL('/auth/callback', window.location.origin)
+      callback.searchParams.set('next', '/')
+      if (oauthAccountType) callback.searchParams.set('account_type', oauthAccountType)
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/auth/callback?next=/',
+          redirectTo: callback.toString(),
           queryParams: {
             prompt: 'select_account',
           },
