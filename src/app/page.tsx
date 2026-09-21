@@ -76,7 +76,7 @@ const CONDITION_LABELS: Record<string, string> = {
 
 const CATEGORY_ICONS: Record<string, string> = {
   electronics: '📱',
-  furniture-home: '🛋️',
+  'furniture-home': '🛋️',
   'home-appliances': '🔌',
   fashion: '👕',
   'books-education': '📚',
