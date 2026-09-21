@@ -646,16 +646,16 @@ export default async function ProductDetailPage({
               </div>
             </section>
 
-            {!isOwner && (
+            {product.listing_type === 'sale' && product.is_negotiable && !isOwner && (
               <OfferForm
                 productId={product.id}
                 ownerId={product.owner_id}
-                listingType={product.listing_type}
+                listingType="sale"
                 currency={product.currency || 'EGP'}
                 price={price}
                 minimumOfferAmount={minimumOfferAmount}
                 productTitle={product.title}
-                autoFocus={action === 'offer' || action === 'request'}
+                autoFocus={action === 'offer'}
               />
             )}
 
