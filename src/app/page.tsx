@@ -573,6 +573,7 @@ export default async function HomePage({
               <li><Link href="#categories">تصفح الفئات</Link></li>
               <li><Link href="#featured">منتجات مميزة</Link></li>
               <li><Link href="#community">DEBA Community</Link></li>
+              <li><Link href="/legal">السياسات والخصوصية</Link></li>
             </ul>
           </div>
         </div>
