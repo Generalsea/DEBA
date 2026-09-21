@@ -809,3 +809,25 @@ $$;
 
 revoke execute on function public.transition_shipment_status(uuid,text,text,text) from public, anon;
 grant execute on function public.transition_shipment_status(uuid,text,text,text) to authenticated;
+
+
+revoke all on table public.order_status_history from anon, authenticated;
+revoke all on table public.payments from anon, authenticated;
+revoke all on table public.payment_attempts from anon, authenticated;
+revoke all on table public.payment_webhooks from anon, authenticated;
+revoke all on table public.refunds from anon, authenticated;
+revoke all on table public.shipments from anon, authenticated;
+revoke all on table public.shipment_events from anon, authenticated;
+revoke all on table public.notifications from anon, authenticated;
+revoke all on table public.notification_preferences from anon, authenticated;
+revoke all on table public.audit_logs from anon, authenticated;
+
+grant select on public.order_status_history to authenticated;
+grant select on public.payments to authenticated;
+grant select on public.payment_attempts to authenticated;
+grant select on public.refunds to authenticated;
+grant select on public.shipments to authenticated;
+grant select on public.shipment_events to authenticated;
+grant select, update on public.notifications to authenticated;
+grant select, insert, update on public.notification_preferences to authenticated;
+grant all on all tables in schema public to service_role;
