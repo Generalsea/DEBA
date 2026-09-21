@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import NotificationPreferences from '@/components/NotificationPreferences'
+import SellerAnalytics from '@/components/SellerAnalytics'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 
