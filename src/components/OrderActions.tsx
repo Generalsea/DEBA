@@ -164,6 +164,10 @@ export default function OrderActions({
   }
 
   const shipmentActions = isSeller && shipment ? SHIPMENT_ACTIONS[shipment.status] || [] : []
+  const canCompleteOrder =
+    isBuyer &&
+    orderStatus === 'ready' &&
+    (deliveryMethod === 'pickup' || shipment?.status === 'delivered')
 
   return (
     <div className="deba-order-actions">
@@ -179,7 +183,9 @@ export default function OrderActions({
         </button>
       ) : null}
 
-      {actions.map((action) => (
+      {actions
+        .filter((action) => action.status !== 'completed' || canCompleteOrder)
+        .map((action) => (
         <button
           key={action.status}
           type="button"
