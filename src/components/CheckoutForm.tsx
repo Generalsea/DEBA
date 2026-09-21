@@ -16,11 +16,11 @@ type CheckoutFormProps = {
   productId: string
   productSlug: string
   productTitle: string
-  listingType: 'sale' | 'free'
   price: number
   currency: string
   productDeliveryMethod: string
   isAuthenticated: boolean
+  availableQuantity: number
 }
 
 function formatMoney(value: number, currency: string) {
@@ -35,12 +35,13 @@ export default function CheckoutForm({
   productId,
   productSlug,
   productTitle,
-  listingType,
   price,
   currency,
   productDeliveryMethod,
   isAuthenticated,
+  availableQuantity,
 }: CheckoutFormProps) {
+  const [quantity, setQuantity] = useState(1)
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>(
     productDeliveryMethod === 'both'
       ? 'pickup'
@@ -81,6 +82,7 @@ export default function CheckoutForm({
         },
         body: JSON.stringify({
           productId,
+          quantity,
           deliveryMethod,
           deliveryAddress: {
             addressLine1,
@@ -122,19 +124,29 @@ export default function CheckoutForm({
         <span>DEBA ORDER</span>
         <h2>تم تسجيل طلب الشراء</h2>
         <p>
-          الطلب الخاص بـ <strong>{productTitle}</strong> أصبح مسجلًا داخل DEBA.
+          تم تسجيل طلب <strong>{productTitle}</strong> بالسعر الثابت داخل DEBA.
           رقم الطلب: <strong>{orderId.slice(0, 8).toUpperCase()}</strong>
         </p>
         <div className="deba-checkout-status-grid">
           <div>
+            <span>الكمية</span>
+            <strong>{quantity.toLocaleString('ar-EG')} وحدة</strong>
+          </div>
+          <div>
+            <span>الإجمالي</span>
+            <strong>{formatMoney(price * quantity, currency)}</strong>
+          </div>
+          <div>
             <span>حالة الطلب</span>
             <strong>قيد المتابعة</strong>
           </div>
+        </div>
+        <div className="deba-checkout-status-grid">
           <div>
             <span>الدفع</span>
             <strong>غير مدفوع إلكترونيًا</strong>
           </div>
-          <div>
+          <div className="deba-checkout-status-grid-delivery">
             <span>الاستلام</span>
             <strong>
               {deliveryMethod === 'pickup'
@@ -165,10 +177,35 @@ export default function CheckoutForm({
           <strong>{productTitle}</strong>
         </div>
         <div>
-          <span>الإجمالي الحالي</span>
-          <strong>{listingType === 'free' ? 'مجاني' : formatMoney(price, currency)}</strong>
+          <span>السعر الثابت</span>
+          <strong>{formatMoney(price, currency)}</strong>
+        </div>
+        <div>
+          <span>الإجمالي</span>
+          <strong>{formatMoney(price * quantity, currency)}</strong>
         </div>
       </div>
+
+      <fieldset className="deba-checkout-fieldset">
+        <legend>الكمية</legend>
+        <div className="deba-quantity-control" aria-label="اختيار الكمية">
+          <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} disabled={quantity <= 1}>−</button>
+          <input
+            type="number"
+            min={1}
+            max={availableQuantity}
+            value={quantity}
+            onChange={(event) => {
+              const next = Number(event.target.value)
+              if (!Number.isFinite(next)) return
+              setQuantity(Math.min(availableQuantity, Math.max(1, Math.floor(next))))
+            }}
+            aria-label="الكمية"
+          />
+          <button type="button" onClick={() => setQuantity((value) => Math.min(availableQuantity, value + 1))} disabled={quantity >= availableQuantity}>+</button>
+          <span>متاح: {availableQuantity.toLocaleString('ar-EG')}</span>
+        </div>
+      </fieldset>
 
       <fieldset className="deba-checkout-fieldset">
         <legend>طريقة الاستلام</legend>
@@ -303,7 +340,7 @@ export default function CheckoutForm({
       <div className="deba-checkout-total">
         <span>الإجمالي</span>
         <strong>
-          {listingType === 'free' ? 'مجاني' : formatMoney(price, currency)}
+          {formatMoney(price * quantity, currency)}
         </strong>
       </div>
 
@@ -320,7 +357,7 @@ export default function CheckoutForm({
         ) : isAuthenticated ? (
           <>
             <CheckCircle2 size={18} />
-            تأكيد طلب الشراء
+            تأكيد الشراء بالسعر الثابت
           </>
         ) : (
           'تسجيل الدخول لإتمام الطلب'
@@ -329,8 +366,8 @@ export default function CheckoutForm({
 
       <p className="deba-checkout-note">
         {isAuthenticated
-          ? 'هذه الخطوة تسجل طلبك داخل DEBA ولا تخصم مبلغًا إلكترونيًا في النسخة الحالية.'
-          : 'ستحتاج إلى تسجيل الدخول حتى يرتبط الطلب بحسابك داخل DEBA.'}
+          ? 'هذه الخطوة تسجل طلب الشراء بالسعر الثابت داخل DEBA ولا تخصم مبلغًا إلكترونيًا في النسخة الحالية.'
+          : 'ستحتاج إلى تسجيل الدخول حتى يتم تسجيل طلب الشراء في حسابك.'}
       </p>
     </form>
   )
