@@ -5880,3 +5880,116 @@
 .deba-legal-note strong{color:var(--dark);font-size:.7rem}
 .deba-legal-note p{margin:6px 0 0;color:var(--gray);font-size:.62rem;line-height:1.75}
 @media (max-width:850px){.deba-legal-grid{grid-template-columns:1fr}}
+
+/* DEBA trust & support */
+.deba-reviews-wrap{display:grid;gap:15px}
+.deba-reviews-summary{display:grid;grid-template-columns:minmax(220px,.8fr) minmax(280px,1.2fr);gap:18px;padding:16px;border:1px solid #E5E7EB;border-radius:18px;background:#FAFAFA}
+.deba-reviews-rating{display:flex;align-items:center;gap:13px}
+.deba-reviews-rating>strong{font-size:2rem;color:var(--dark);line-height:1}
+.deba-reviews-rating>div{display:flex;flex-direction:column;gap:5px}
+.deba-reviews-rating span{color:var(--gray);font-size:.62rem}
+.deba-reviews-stars{display:flex;align-items:center;gap:3px;color:#F59E0B}
+.deba-reviews-stars.small{gap:2px}
+.deba-reviews-breakdown{display:grid;gap:6px;align-content:center}
+.deba-reviews-breakdown-row{display:grid;grid-template-columns:14px minmax(0,1fr) 22px;align-items:center;gap:7px;color:var(--gray);font-size:.6rem}
+.deba-reviews-breakdown-row>div{height:6px;overflow:hidden;border-radius:999px;background:#E5E7EB}
+.deba-reviews-breakdown-row i{display:block;height:100%;border-radius:999px;background:var(--primary)}
+.deba-reviews-breakdown-row small{text-align:left;color:#9CA3AF}
+.deba-review-form{padding:16px;border:1px solid #FDE7D9;border-radius:18px;background:#FFF8F5}
+.deba-review-form-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.deba-review-form-head>div{display:flex;flex-direction:column;gap:4px}
+.deba-review-form-head span{color:var(--primary);font-size:.57rem;font-weight:900;letter-spacing:1px}
+.deba-review-form-head h3{margin:0;color:var(--dark);font-size:.83rem}
+.deba-review-form-head>svg{color:var(--primary)}
+.deba-review-stars-picker{display:flex;align-items:center;gap:4px;margin:13px 0}
+.deba-review-stars-picker button{width:35px;height:35px;display:grid;place-items:center;border:1px solid #E5E7EB;border-radius:9px;background:#fff;color:#CBD5E1;cursor:pointer}
+.deba-review-stars-picker button.active{color:#F59E0B;border-color:#FCD34D;background:#FFFBEB}
+.deba-review-input{width:100%;margin-top:8px;padding:11px 12px;border:1px solid #E5E7EB;border-radius:11px;background:#fff;color:var(--dark);font:inherit;font-size:.68rem;outline:none}
+.deba-review-input:focus{border-color:#F6B9A1;box-shadow:0 0 0 3px rgba(246,185,161,.16)}
+.deba-review-textarea{resize:vertical;line-height:1.65}
+.deba-review-submit{min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-top:9px;padding:0 14px;border:1px solid var(--primary);border-radius:11px;background:var(--primary);color:#fff;font:inherit;font-size:.66rem;font-weight:900;cursor:pointer}
+.deba-review-submit:hover:not(:disabled){filter:brightness(.96)}
+.deba-review-submit:disabled{opacity:.55;cursor:wait}
+.deba-review-message{margin:9px 0 0;color:var(--gray);font-size:.61rem}
+.deba-review-pending,.deba-review-empty{display:flex;align-items:center;gap:8px;padding:13px 14px;border:1px dashed #D1D5DB;border-radius:13px;background:#FAFAFA;color:var(--gray);font-size:.64rem}
+.deba-review-pending svg{color:var(--primary)}
+.deba-review-list{display:grid;gap:9px}
+.deba-review-card{padding:14px;border:1px solid #E5E7EB;border-radius:16px;background:#fff}
+.deba-review-head{display:grid;grid-template-columns:35px minmax(0,1fr) auto;align-items:center;gap:9px}
+.deba-review-avatar{width:35px;height:35px;display:grid;place-items:center;border-radius:10px;background:#EFF6FF;color:#004E89;font-size:.63rem;font-weight:900}
+.deba-review-head>div:nth-child(2){display:flex;flex-direction:column;gap:3px;min-width:0}
+.deba-review-head strong{color:var(--dark);font-size:.68rem}
+.deba-review-head span{color:var(--gray);font-size:.58rem}
+.deba-review-card h3{margin:10px 0 4px;color:var(--dark);font-size:.72rem}
+.deba-review-card p{margin:0;color:var(--gray);font-size:.64rem;line-height:1.75}
+.deba-trust-panel{margin-top:16px;padding:17px;border:1px solid #E5E7EB;border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(31,41,55,.05)}
+.deba-trust-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:13px}
+.deba-trust-head>div{display:flex;flex-direction:column;gap:4px}
+.deba-trust-head span{color:var(--primary);font-size:.58rem;font-weight:900;letter-spacing:1.1px}
+.deba-trust-head h2{margin:0;color:var(--dark);font-size:.95rem}
+.deba-trust-head>svg{color:var(--primary)}
+.deba-trust-callout{display:flex;align-items:flex-start;gap:9px;padding:11px 12px;border:1px solid #FDE7D9;border-radius:12px;background:#FFF8F5;color:var(--primary)}
+.deba-trust-callout>div{display:flex;flex-direction:column;gap:3px}
+.deba-trust-callout strong{color:var(--dark);font-size:.68rem}
+.deba-trust-callout span{color:var(--gray);font-size:.61rem;line-height:1.55}
+.deba-dispute-form{display:grid;gap:8px}
+.deba-dispute-form select,.deba-dispute-form input,.deba-dispute-form textarea,.deba-dispute-reply textarea{width:100%;padding:11px 12px;border:1px solid #E5E7EB;border-radius:11px;background:#fff;color:var(--dark);font:inherit;font-size:.67rem;outline:none}
+.deba-dispute-form textarea,.deba-dispute-reply textarea{resize:vertical;line-height:1.65}
+.deba-dispute-form select:focus,.deba-dispute-form input:focus,.deba-dispute-form textarea:focus,.deba-dispute-reply textarea:focus{border-color:#F6B9A1;box-shadow:0 0 0 3px rgba(246,185,161,.16)}
+.deba-dispute-body{display:grid;gap:11px}
+.deba-dispute-status{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:12px 13px;border-radius:13px;background:#FAFAFA;border:1px solid #E5E7EB}
+.deba-dispute-status>div{display:flex;flex-direction:column;gap:4px}
+.deba-dispute-status strong{color:var(--dark);font-size:.69rem}
+.deba-dispute-status span,.deba-dispute-status small{color:var(--gray);font-size:.59rem}
+.deba-dispute-description{padding:12px 13px;border:1px solid #E5E7EB;border-radius:13px;color:var(--gray);font-size:.64rem;line-height:1.75;white-space:pre-wrap}
+.deba-dispute-messages{display:grid;gap:7px}
+.deba-dispute-message{padding:10px 11px;border:1px solid #E5E7EB;border-radius:12px;background:#fff}
+.deba-dispute-message>div{display:flex;align-items:center;gap:6px;color:var(--gray)}
+.deba-dispute-message small{font-size:.55rem}
+.deba-dispute-message p{margin:6px 0 0;color:var(--dark);font-size:.63rem;line-height:1.7;white-space:pre-wrap}
+.deba-dispute-reply{display:grid;gap:7px}
+.deba-support-page{min-height:100vh;background:#F7F8FA;padding:24px 16px 72px}
+.deba-support-center{width:min(1120px,100%);margin:0 auto}
+.deba-support-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:14px}
+.deba-support-head>div{display:flex;flex-direction:column;gap:5px}
+.deba-support-head span{color:var(--primary);font-size:.6rem;font-weight:900;letter-spacing:1.2px}
+.deba-support-head h1{margin:0;color:var(--dark);font-size:clamp(1.4rem,3vw,2rem)}
+.deba-support-head p{margin:0;color:var(--gray);font-size:.66rem}
+.deba-support-form{padding:15px;border:1px solid #FDE7D9;border-radius:18px;background:#FFF8F5;margin-bottom:14px}
+.deba-support-form-grid{display:grid;grid-template-columns:180px minmax(0,1fr);gap:8px}
+.deba-support-form select,.deba-support-form input,.deba-support-form textarea{width:100%;padding:11px 12px;border:1px solid #E5E7EB;border-radius:11px;background:#fff;color:var(--dark);font:inherit;font-size:.67rem;outline:none}
+.deba-support-form textarea{margin-top:8px;resize:vertical;line-height:1.65}
+.deba-support-grid{display:grid;grid-template-columns:330px minmax(0,1fr);gap:14px}
+.deba-support-tickets,.deba-support-thread{padding:15px;border:1px solid #E5E7EB;border-radius:18px;background:#fff;box-shadow:0 10px 26px rgba(31,41,55,.05)}
+.deba-support-section-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:9px;border-bottom:1px solid #E5E7EB}
+.deba-support-section-head strong{color:var(--dark);font-size:.7rem}
+.deba-support-section-head span{color:var(--gray);font-size:.6rem}
+.deba-support-ticket{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;padding:10px;border:1px solid #E5E7EB;border-radius:12px;background:#fff;text-align:right;color:inherit;cursor:pointer}
+.deba-support-ticket:hover,.deba-support-ticket.active{border-color:#F6B9A1;background:#FFF8F5}
+.deba-support-ticket>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.deba-support-ticket strong{color:var(--dark);font-size:.64rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.deba-support-ticket small{color:var(--gray);font-size:.56rem}
+.deba-support-ticket>svg{color:var(--primary);flex:none}
+.deba-support-thread{min-height:520px;display:flex;flex-direction:column}
+.deba-support-thread-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding-bottom:12px;border-bottom:1px solid #E5E7EB}
+.deba-support-thread-head>div{display:flex;flex-direction:column;gap:4px}
+.deba-support-thread-head span{color:var(--primary);font-size:.57rem;font-weight:900;letter-spacing:1px}
+.deba-support-thread-head h2{margin:0;color:var(--dark);font-size:.92rem}
+.deba-support-thread-head small{color:var(--gray);font-size:.57rem}
+.deba-support-thread-head>svg{color:var(--primary)}
+.deba-support-messages{display:grid;gap:8px;flex:1;align-content:start;padding:12px 0;min-height:180px}
+.deba-support-message{padding:10px 11px;border:1px solid #E5E7EB;border-radius:12px;background:#FAFAFA}
+.deba-support-message>div{display:flex;align-items:center;gap:6px;color:var(--gray)}
+.deba-support-message small{font-size:.55rem}
+.deba-support-message p{margin:6px 0 0;color:var(--dark);font-size:.63rem;line-height:1.7;white-space:pre-wrap}
+.deba-support-reply{display:grid;gap:7px;padding-top:10px;border-top:1px solid #E5E7EB}
+.deba-support-reply textarea{width:100%;padding:11px;border:1px solid #E5E7EB;border-radius:11px;font:inherit;font-size:.66rem;resize:vertical}
+.deba-support-empty{display:flex;align-items:center;justify-content:center;gap:7px;min-height:100px;color:var(--gray);font-size:.63rem;text-align:center}
+.deba-support-empty.large{height:100%;min-height:430px;flex-direction:column}
+.deba-support-empty.large strong{color:var(--dark);font-size:.75rem}
+.deba-support-empty.large span{max-width:340px;line-height:1.7}
+@media (max-width:850px){
+  .deba-reviews-summary,.deba-support-grid{grid-template-columns:1fr}
+  .deba-support-form-grid{grid-template-columns:1fr}
+  .deba-support-thread{min-height:430px}
+}
