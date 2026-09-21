@@ -64,7 +64,4 @@ begin
 end;
 $function$;
 
-update public.profiles
-set account_type = 'seller',
-    updated_at = now()
-where id = '9552d26a-2ce4-459a-b45e-c1b0c06f17b6';
+-- Existing account roles can be assigned through the authenticated profile flow.
