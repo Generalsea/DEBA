@@ -714,7 +714,11 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
                 {account.sellerProducts.map((product) => (
                   <article key={product.id} className="deba-profile-product-card">
                     <div className="deba-profile-product-placeholder">
-                      <Store size={26} />
+                      {product.imageUrl ? (
+                        <img src={product.imageUrl} alt={product.title} />
+                      ) : (
+                        <Store size={26} />
+                      )}
                       <span>{product.conditionGrade || 'حالة غير محددة'}</span>
                     </div>
                     <div className="deba-profile-product-copy">
