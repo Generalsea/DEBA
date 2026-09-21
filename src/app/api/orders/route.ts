@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
-import { createAdminClient } from '@/utils/supabase/admin'
 
 type OrderBody = {
   productId?: string
@@ -13,6 +12,7 @@ type OrderBody = {
     governorate?: string
   }
   notes?: string
+  idempotencyKey?: string
 }
 
 const ALLOWED_DELIVERIES = new Set([
@@ -25,12 +25,37 @@ function cleanText(value: unknown, max: number) {
   return typeof value === 'string' ? value.trim().slice(0, max) : ''
 }
 
-function allowedDeliveryMethods(productMethod: string) {
-  if (productMethod === 'both') return ['pickup', 'seller_delivery']
-  if (productMethod === 'pickup') return ['pickup']
-  if (productMethod === 'seller_delivery') return ['seller_delivery']
-  if (productMethod === 'platform_delivery') return ['platform_delivery']
-  return []
+function mapOrderError(message: string) {
+  const normalized = message.toLowerCase()
+
+  if (
+    normalized.includes('authenticated buyer') ||
+    normalized.includes('not allowed') ||
+    normalized.includes('cannot buy your own product')
+  ) {
+    return { status: 403, error: 'هذا الطلب غير مسموح لهذا الحساب.' }
+  }
+
+  if (
+    normalized.includes('product is not available') ||
+    normalized.includes('insufficient stock') ||
+    normalized.includes('stock changed')
+  ) {
+    return { status: 409, error: 'المنتج أو الكمية لم تعد متاحة. حدّث الصفحة وحاول مرة أخرى.' }
+  }
+
+  if (
+    normalized.includes('invalid quantity') ||
+    normalized.includes('invalid delivery method') ||
+    normalized.includes('delivery method not available') ||
+    normalized.includes('delivery address is required') ||
+    normalized.includes('valid idempotency key') ||
+    normalized.includes('product price is invalid')
+  ) {
+    return { status: 400, error: 'بيانات الطلب غير مكتملة أو غير صالحة.' }
+  }
+
+  return { status: 500, error: 'تعذر إنشاء طلب الشراء الآن.' }
 }
 
 export async function POST(request: Request) {
@@ -46,7 +71,10 @@ export async function POST(request: Request) {
     const productId = cleanText(body.productId, 64)
 
     if (!productId) {
-      return NextResponse.json({ error: 'معرّف المنتج غير صالح.' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'معرّف المنتج غير صالح.' },
+        { status: 400 },
+      )
     }
 
     const supabase = await createClient()
@@ -61,13 +89,18 @@ export async function POST(request: Request) {
       )
     }
 
-    const requestedQuantity = Number.isInteger(body.quantity) ? Number(body.quantity) : 1
+    const requestedQuantity = Number.isInteger(body.quantity)
+      ? Number(body.quantity)
+      : 1
+
     if (requestedQuantity < 1 || requestedQuantity > 100) {
-      return NextResponse.json({ error: 'الكمية المطلوبة غير صالحة.' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'الكمية المطلوبة غير صالحة.' },
+        { status: 400 },
+      )
     }
 
     const requestedDelivery = body.deliveryMethod || 'pickup'
-
     if (!ALLOWED_DELIVERIES.has(requestedDelivery)) {
       return NextResponse.json(
         { error: 'طريقة الاستلام غير صالحة.' },
@@ -75,199 +108,50 @@ export async function POST(request: Request) {
       )
     }
 
-    const addressLine1 = cleanText(body.deliveryAddress?.addressLine1, 180)
-    const district = cleanText(body.deliveryAddress?.district, 100)
-    const city = cleanText(body.deliveryAddress?.city, 100)
-    const governorate = cleanText(body.deliveryAddress?.governorate, 100)
-    const notes = cleanText(body.notes, 500)
+    const idempotencyKey =
+      cleanText(request.headers.get('idempotency-key'), 128) ||
+      cleanText(body.idempotencyKey, 128)
 
-    const admin = createAdminClient()
-
-    const { data: product, error: productError } = await admin
-      .from('products')
-      .select(
-        'id,owner_id,title,listing_type,status,moderation_status,price,currency,quantity,delivery_method',
-      )
-      .eq('id', productId)
-      .eq('status', 'published')
-      .eq('moderation_status', 'approved')
-      .eq('listing_type', 'sale')
-      .maybeSingle()
-
-    if (productError) {
-      console.error('DEBA checkout product lookup failed', productError)
+    if (idempotencyKey.length < 16) {
       return NextResponse.json(
-        { error: 'تعذر التحقق من توفر المنتج.' },
-        { status: 500 },
-      )
-    }
-
-    if (!product) {
-      return NextResponse.json(
-        { error: 'المنتج لم يعد متاحًا للشراء.' },
-        { status: 409 },
-      )
-    }
-
-    if (!product.owner_id || product.owner_id === user.id) {
-      return NextResponse.json(
-        { error: 'لا يمكنك شراء إعلانك الخاص.' },
-        { status: 403 },
-      )
-    }
-
-    if (product.quantity < requestedQuantity) {
-      return NextResponse.json(
-        { error: 'الكمية المطلوبة غير متاحة حاليًا.' },
-        { status: 409 },
-      )
-    }
-
-    const allowed = allowedDeliveryMethods(product.delivery_method)
-    if (!allowed.includes(requestedDelivery)) {
-      return NextResponse.json(
-        { error: 'طريقة الاستلام المختارة غير متاحة لهذا الإعلان.' },
+        { error: 'تعذر تأمين الطلب. أعد المحاولة من الصفحة.' },
         { status: 400 },
       )
     }
 
-    const requiresAddress = requestedDelivery !== 'pickup'
-    if (requiresAddress && (!addressLine1 || !city || !governorate)) {
-      return NextResponse.json(
-        { error: 'أكمل عنوان الاستلام قبل تأكيد الطلب.' },
-        { status: 400 },
-      )
-    }
-
-    const { data: existingOrder, error: existingOrderError } = await admin
-      .from('orders')
-      .select('id,status')
-      .eq('product_id', product.id)
-      .eq('buyer_id', user.id)
-      .in('status', ['pending', 'confirmed', 'processing', 'ready'])
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (existingOrderError) {
-      console.error('DEBA existing order lookup failed', existingOrderError)
-      return NextResponse.json(
-        { error: 'تعذر التحقق من الطلبات السابقة.' },
-        { status: 500 },
-      )
-    }
-
-    if (existingOrder) {
-      return NextResponse.json({
-        orderId: existingOrder.id,
-        existing: true,
-      })
-    }
-
-    const numericPrice =
-      typeof product.price === 'number'
-        ? product.price
-        : Number(product.price ?? 0)
-
-    const unitPrice =
-      Number.isFinite(numericPrice) && numericPrice > 0 ? numericPrice : NaN
-
-    if (!Number.isFinite(unitPrice)) {
-      return NextResponse.json(
-        { error: 'سعر المنتج غير صالح للشراء.' },
-        { status: 409 },
-      )
-    }
-
-    const orderAddress =
+    const deliveryAddress =
       requestedDelivery === 'pickup'
         ? {}
         : {
-            address_line1: addressLine1,
-            district,
-            city,
-            governorate,
+            address_line1: cleanText(body.deliveryAddress?.addressLine1, 180),
+            district: cleanText(body.deliveryAddress?.district, 100),
+            city: cleanText(body.deliveryAddress?.city, 100),
+            governorate: cleanText(body.deliveryAddress?.governorate, 100),
           }
 
-    const { data: order, error: orderError } = await admin
-      .from('orders')
-      .insert({
-        buyer_id: user.id,
-        seller_id: product.owner_id,
-        product_id: product.id,
-        status: 'pending',
-        payment_status: 'unpaid',
-        fulfillment_status: 'pending',
-        subtotal: unitPrice * requestedQuantity,
-        shipping_fee: 0,
-        platform_fee: 0,
-        total: unitPrice * requestedQuantity,
-        currency: product.currency || 'EGP',
-        delivery_method: requestedDelivery,
-        delivery_address_snapshot: orderAddress,
-        notes,
-      })
-      .select('id')
-      .single()
+    const { data, error } = await supabase.rpc('create_fixed_price_order', {
+      p_product_id: productId,
+      p_quantity: requestedQuantity,
+      p_delivery_method: requestedDelivery,
+      p_delivery_address: deliveryAddress,
+      p_notes: cleanText(body.notes, 500),
+      p_idempotency_key: idempotencyKey,
+    })
 
-    if (orderError || !order) {
-      console.error('DEBA order creation failed', orderError)
+    if (error) {
+      console.error('DEBA atomic order creation failed', error)
+      const mapped = mapOrderError(error.message || '')
+      return NextResponse.json({ error: mapped.error }, { status: mapped.status })
+    }
+
+    if (!data || typeof data !== 'object') {
       return NextResponse.json(
-        { error: 'تعذر إنشاء طلب الشراء.' },
+        { error: 'تعذر قراءة نتيجة إنشاء الطلب.' },
         { status: 500 },
       )
     }
 
-    const { error: itemError } = await admin.from('order_items').insert({
-      order_id: order.id,
-      product_id: product.id,
-      seller_id: product.owner_id,
-      quantity: requestedQuantity,
-      unit_price: unitPrice,
-      line_total: unitPrice * requestedQuantity,
-    })
-
-    if (itemError) {
-      console.error('DEBA order item creation failed', itemError)
-      await admin.from('orders').delete().eq('id', order.id)
-      return NextResponse.json(
-        { error: 'تعذر حفظ تفاصيل الطلب.' },
-        { status: 500 },
-      )
-    }
-
-    const nextQuantity = product.quantity - requestedQuantity
-    const nextStatus = nextQuantity === 0 ? 'reserved' : 'published'
-
-    const { data: updatedProduct, error: reserveError } = await admin
-      .from('products')
-      .update({
-        quantity: nextQuantity,
-        status: nextStatus,
-      })
-      .eq('id', product.id)
-      .eq('status', 'published')
-      .gte('quantity', requestedQuantity)
-      .select('id,quantity,status')
-      .maybeSingle()
-
-    if (reserveError || !updatedProduct) {
-      console.error('DEBA product reservation failed', reserveError)
-      await admin.from('order_items').delete().eq('order_id', order.id)
-      await admin.from('orders').delete().eq('id', order.id)
-      return NextResponse.json(
-        { error: 'تغيّرت حالة المنتج أثناء الطلب. حدّث الصفحة وحاول مرة أخرى.' },
-        { status: 409 },
-      )
-    }
-
-    return NextResponse.json({
-      orderId: order.id,
-      quantity: requestedQuantity,
-      total: unitPrice * requestedQuantity,
-      currency: product.currency || 'EGP',
-      existing: false,
-    })
+    return NextResponse.json(data)
   } catch (error) {
     console.error('DEBA checkout route failed', error)
     return NextResponse.json(
