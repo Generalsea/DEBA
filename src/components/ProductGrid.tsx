@@ -1,46 +1,52 @@
 import Link from 'next/link'
 import ProductCard, { type ProductCardItem } from '@/components/ProductCard'
+import { ArrowLeft, Gift, ShoppingBag } from 'lucide-react'
 
 export type ProductGridItem = ProductCardItem
 
 type ProductGridProps = {
   products: ProductGridItem[]
   donations: ProductGridItem[]
+  mode?: 'all' | 'sale' | 'donation'
 }
 
 function EmptyState({ type }: { type: 'sale' | 'donation' }) {
+  const sale = type === 'sale'
+
   return (
-    <div className="market-empty-state">
-      <span className="market-empty-icon">{type === 'sale' ? 'سوق' : 'أثر'}</span>
-      <h3>
-        {type === 'sale'
-          ? 'لا توجد منتجات منشورة للبيع بعد'
-          : 'لا توجد تبرعات منشورة بعد'}
-      </h3>
-      <p>ستظهر الإعلانات المعتمدة هنا تلقائيًا.</p>
+    <div className="deba-empty-state">
+      <span className="deba-empty-icon">{sale ? <ShoppingBag size={24} /> : <Gift size={24} />}</span>
+      <h3>{sale ? 'لا توجد سلع منشورة للبيع حاليًا' : 'لا توجد تبرعات منشورة حاليًا'}</h3>
+      <p>ستظهر هنا الإعلانات المعتمدة تلقائيًا بمجرد نشرها.</p>
     </div>
   )
 }
 
-function SectionHeading({
+function SectionHeader({
   eyebrow,
   title,
+  count,
   href,
 }: {
   eyebrow: string
   title: string
+  count: number
   href: string
 }) {
   return (
-    <div className="market-section-heading">
+    <div className="deba-section-header">
       <div>
-        <span>{eyebrow}</span>
+        <span className="deba-section-eyebrow">{eyebrow}</span>
         <h2>{title}</h2>
       </div>
 
-      <Link href={href} className="market-section-link">
-        مشاهدة الكل ←
-      </Link>
+      <div className="deba-section-header-side">
+        <span>{count.toLocaleString('ar-EG')} عنصر</span>
+        <Link href={href}>
+          مشاهدة الكل
+          <ArrowLeft size={15} />
+        </Link>
+      </div>
     </div>
   )
 }
@@ -48,44 +54,54 @@ function SectionHeading({
 export default function ProductGrid({
   products,
   donations,
+  mode = 'all',
 }: ProductGridProps) {
+  const showSales = mode !== 'donation'
+  const showDonations = mode !== 'sale'
+
   return (
-    <div className="market-listing-sections">
-      <section id="marketplace">
-        <SectionHeading
-          eyebrow="الأكثر طلبًا"
-          title="منتجات مميزة للبيع"
-          href="/?type=sale"
-        />
+    <div className="deba-product-sections">
+      {showSales && (
+        <section id="marketplace" className="deba-product-section">
+          <SectionHeader
+            eyebrow="DEBA MARKET"
+            title="أحدث السلع والعروض"
+            count={products.length}
+            href="/?type=sale"
+          />
 
-        {products.length > 0 ? (
-          <div className="market-product-grid">
-            {products.map((item) => (
-              <ProductCard key={item.id} item={item} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState type="sale" />
-        )}
-      </section>
+          {products.length ? (
+            <div className="deba-product-grid">
+              {products.map((item, index) => (
+                <ProductCard key={item.id} item={item} priority={index < 4} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState type="sale" />
+          )}
+        </section>
+      )}
 
-      <section id="donations">
-        <SectionHeading
-          eyebrow="DEBA IMPACT"
-          title="تبرعات عاجلة تحتاج من يكمل أثرها"
-          href="/?type=donation"
-        />
+      {showDonations && (
+        <section id="donations" className="deba-product-section">
+          <SectionHeader
+            eyebrow="DEBA IMPACT"
+            title="تبرعات مجانية جاهزة لمن يحتاجها"
+            count={donations.length}
+            href="/?type=donation"
+          />
 
-        {donations.length > 0 ? (
-          <div className="market-product-grid">
-            {donations.map((item) => (
-              <ProductCard key={item.id} item={item} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState type="donation" />
-        )}
-      </section>
+          {donations.length ? (
+            <div className="deba-product-grid">
+              {donations.map((item, index) => (
+                <ProductCard key={item.id} item={item} priority={!showSales && index < 4} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState type="donation" />
+          )}
+        </section>
+      )}
     </div>
   )
 }
