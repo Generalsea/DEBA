@@ -3,6 +3,7 @@
 import {
   ArrowLeft,
   BadgeCheck,
+  BarChart3,
   Bell,
   Box,
   CheckCircle2,
@@ -114,6 +115,7 @@ type TabId =
   | 'reviews'
   | 'products'
   | 'seller-orders'
+  | 'analytics'
   | 'settings'
   | 'security'
 
@@ -167,6 +169,7 @@ const TAB_MAP = new Set<TabId>([
   'reviews',
   'products',
   'seller-orders',
+  'analytics',
   'settings',
   'security',
 ])
@@ -730,6 +733,9 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
                 <ShoppingBag size={17} /> طلبات العملاء
                 <em>{account.stats.sellerOrders}</em>
               </button>
+              <button className={activeTab === 'analytics' ? 'active' : ''} onClick={() => goTab('analytics')}>
+                <BarChart3 size={17} /> التحليلات
+              </button>
             </div>
           ) : null}
 
@@ -776,7 +782,9 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
                           ? 'إعلاناتي'
                           : activeTab === 'seller-orders'
                             ? 'طلبات العملاء'
-                            : activeTab === 'settings'
+                            : activeTab === 'analytics'
+                              ? 'التحليلات'
+                              : activeTab === 'settings'
                               ? 'بيانات الحساب'
                               : 'الأمان والحماية'}
               </h2>
@@ -910,6 +918,8 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
               />
             )
           ) : null}
+
+          {activeTab === 'analytics' && isSeller ? <SellerAnalytics /> : null}
 
           {activeTab === 'seller-orders' && isSeller ? (
             account.sellerOrders.length ? (
