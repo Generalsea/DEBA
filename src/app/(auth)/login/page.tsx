@@ -3,7 +3,6 @@
 import {
   type FormEvent,
   useEffect,
-  useMemo,
   useState,
   useTransition,
 } from 'react'
@@ -40,7 +39,6 @@ function mapAuthError(message: string) {
 
 export default function LoginPage() {
   const router = useRouter()
-  const supabase = useMemo(() => createClient(), [])
   const [mode, setMode] = useState<AuthMode>('login')
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
@@ -90,6 +88,22 @@ export default function LoginPage() {
     }
 
     startTransition(async () => {
+      let supabase
+      try {
+        supabase = createClient()
+      } catch (error) {
+        setMessage({
+          type: 'error',
+          text:
+            error instanceof Error
+              ? error.message.includes('Missing NEXT_PUBLIC_SUPABASE_')
+                ? 'إعدادات Supabase غير مكتملة في Vercel.'
+                : error.message
+              : 'إعدادات المصادقة غير متاحة حاليًا.',
+        })
+        return
+      }
+
       if (mode === 'login') {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: cleanEmail,
@@ -150,6 +164,20 @@ export default function LoginPage() {
     setMessage(null)
 
     startTransition(async () => {
+      let supabase
+      try {
+        supabase = createClient()
+      } catch (error) {
+        setMessage({
+          type: 'error',
+          text:
+            error instanceof Error
+              ? error.message
+              : 'إعدادات المصادقة غير متاحة حاليًا.',
+        })
+        return
+      }
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
