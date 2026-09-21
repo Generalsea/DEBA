@@ -562,7 +562,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'مراجعة المخاطر تم التعامل معها بالفعل.' }, { status: 409 })
       }
 
-      const result = await admin.rpc('admin_review_risk', {
+      const result = await supabase.rpc('admin_review_risk', {
         p_assessment_id: id,
         p_status: action === 'approve_risk' ? 'approved' : 'blocked',
         p_note: note || (action === 'approve_risk' ? 'Approved by admin.' : 'Blocked by admin.'),
