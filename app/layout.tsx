@@ -3,11 +3,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "DEBA",
+    default: "DEBA — ديبا",
     template: "%s | DEBA",
   },
   description:
-    "DEBA — a modern marketplace for buying, selling, exchanging, and giving useful things another life.",
+    "ديبا: سوق حديث لبيع وشراء وتبادل الأشياء المستعملة والجديدة، مع مسار تبرع شفاف وآمن.",
 };
 
 export default function RootLayout({
