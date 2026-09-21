@@ -279,7 +279,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'بيانات العملية غير مكتملة.' }, { status: 400 })
     }
 
-    const { user, allowed } = await requireModerator()
+    const { supabase, user, allowed } = await requireModerator()
     if (!user) return NextResponse.json({ error: 'يجب تسجيل الدخول.' }, { status: 401 })
     if (!allowed) return NextResponse.json({ error: 'لا تملك صلاحية الإدارة.' }, { status: 403 })
 
