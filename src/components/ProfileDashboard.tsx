@@ -426,8 +426,8 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
               ) : (
                 initial(profile.displayName)
               )}
-              <span className="deba-profile-avatar-check">
-                <CheckCircle2 size={15} />
+              <span className="deba-profile-avatar-check" title={account.emailConfirmed ? 'البريد الإلكتروني موثق' : 'الحساب يحتاج تأكيد البريد'}>
+                {account.emailConfirmed ? <CheckCircle2 size={15} /> : <Bell size={15} />}
               </span>
             </div>
 
@@ -442,8 +442,8 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
                   {isSeller ? 'حساب بائع' : 'حساب مشتري'}
                 </span>
                 <span className="deba-profile-trust-badge">
-                  <ShieldCheck size={14} />
-                  بريد الحساب موثق
+                  {account.emailConfirmed ? <ShieldCheck size={14} /> : <Bell size={14} />}
+                  {account.emailConfirmed ? 'البريد الإلكتروني موثق' : 'البريد الإلكتروني غير مؤكد'}
                 </span>
               </div>
               <div className="deba-profile-contact-line">
