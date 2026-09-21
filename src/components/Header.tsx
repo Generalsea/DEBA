@@ -31,6 +31,12 @@ type HeaderProps = {
   cartCount?: number
 }
 
+type HeaderIdentity = {
+  username: string | null
+  displayName: string | null
+  avatarUrl: string | null
+}
+
 function badge(value: number) {
   return value > 99 ? '99+' : new Intl.NumberFormat('ar-EG').format(Math.max(0, value))
 }
@@ -47,6 +53,7 @@ export default function Header({
   const [category, setCategory] = useState(initialCategory || 'all')
   const [menuOpen, setMenuOpen] = useState(false)
   const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'anonymous'>('loading')
+  const [identity, setIdentity] = useState<HeaderIdentity | null>(null)
   const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
@@ -60,31 +67,70 @@ export default function Header({
   useEffect(() => {
     let mounted = true
 
+    const loadIdentity = async (userId: string) => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('username,display_name,avatar_url')
+        .eq('id', userId)
+        .maybeSingle()
+
+      if (!mounted || !data) return
+
+      let avatarUrl = data.avatar_url as string | null
+      if (avatarUrl && !/^https?:\/\//i.test(avatarUrl)) {
+        avatarUrl = supabase.storage.from('deba-profile-media').getPublicUrl(avatarUrl).data.publicUrl
+      }
+
+      setIdentity({
+        username: data.username,
+        displayName: data.display_name,
+        avatarUrl,
+      })
+    }
+
     const syncAuth = async () => {
       try {
         const { data } = await supabase.auth.getClaims()
+        const userId = typeof data?.claims?.sub === 'string' ? data.claims.sub : null
         if (!mounted) return
-        setAuthState(data?.claims?.sub ? 'authenticated' : 'anonymous')
+
+        setAuthState(userId ? 'authenticated' : 'anonymous')
+        if (userId) void loadIdentity(userId)
+        else setIdentity(null)
       } catch {
-        if (mounted) setAuthState('anonymous')
+        if (mounted) {
+          setAuthState('anonymous')
+          setIdentity(null)
+        }
       }
     }
 
+    const handleProfileUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<HeaderIdentity>).detail
+      if (!detail) return
+      setIdentity(detail)
+    }
+
     void syncAuth()
+    window.addEventListener('deba:profile-updated', handleProfileUpdated)
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
         setAuthState('authenticated')
+        const userId = session?.user?.id
+        if (userId) void loadIdentity(userId)
       } else if (event === 'SIGNED_OUT') {
         setAuthState('anonymous')
+        setIdentity(null)
       }
     })
 
     return () => {
       mounted = false
+      window.removeEventListener('deba:profile-updated', handleProfileUpdated)
       subscription.unsubscribe()
     }
   }, [supabase])
@@ -165,11 +211,21 @@ export default function Header({
 
           <nav className="deba-header-actions" aria-label="الحساب والتسوق">
             <Link href={accountHref} className="deba-action">
-              <span className="deba-action-icon">
-                {authState === 'loading' ? <LoaderCircle size={18} className="deba-spin" /> : <UserRound size={19} />}
+              <span className={'deba-action-icon' + (authState === 'authenticated' ? ' deba-account-avatar' : '')}>
+                {authState === 'loading' ? (
+                  <LoaderCircle size={18} className="deba-spin" />
+                ) : identity?.avatarUrl ? (
+                  <img src={identity.avatarUrl} alt="" />
+                ) : (
+                  <UserRound size={19} />
+                )}
               </span>
               <span className="deba-action-text">
-                <small>{authState === 'authenticated' ? 'مرحبًا بك' : 'مرحبًا'}</small>
+                <small className="deba-account-greeting">
+                  {authState === 'authenticated'
+                    ? 'أهلاً يا ' + (identity?.username || identity?.displayName || 'بك')
+                    : 'مرحبًا'}
+                </small>
                 <strong>حسابي</strong>
               </span>
             </Link>
