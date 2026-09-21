@@ -113,6 +113,7 @@ export async function GET() {
         ...(reviewsResult.data || []).map((row) => row.reviewer_id).filter(Boolean),
         ...(reportsResult.data || []).map((row) => row.reporter_id).filter(Boolean),
         ...(reportsResult.data || []).map((row) => row.reported_user_id).filter(Boolean),
+        ...(disputesResult.data || []).map((row) => row.raised_by).filter(Boolean),
       ]),
     ) as string[]
 
@@ -360,7 +361,7 @@ export async function POST(request: Request) {
 
       const { data: dispute, error: disputeError } = await admin
         .from('disputes')
-        .select('id,order_id,status,resolution_code,resolution_note')
+        .select('id,order_id,status,resolution_code,resolution_note,resolved_by,resolved_at')
         .eq('id', id)
         .maybeSingle()
 
@@ -382,8 +383,8 @@ export async function POST(request: Request) {
 
       let nextDisputeStatus = 'under_review'
       let nextResolutionCode: string | null = dispute.resolution_code
-      let nextResolvedBy: string | null = null
-      let nextResolvedAt: string | null = null
+      let nextResolvedBy: string | null = dispute.resolved_by
+      let nextResolvedAt: string | null = dispute.resolved_at
 
       if (action === 'resolve_dispute_seller') {
         nextDisputeStatus = 'resolved_seller'
