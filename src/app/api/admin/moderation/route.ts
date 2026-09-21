@@ -10,6 +10,14 @@ type ActionBody = {
     | 'hide_review'
     | 'resolve_report'
     | 'dismiss_report'
+    | 'review_dispute'
+    | 'resolve_dispute_buyer'
+    | 'resolve_dispute_seller'
+    | 'close_dispute'
+    | 'assign_ticket'
+    | 'resolve_ticket'
+    | 'close_ticket'
+    | 'reply_ticket'
   id?: string
   note?: string
 }
@@ -39,7 +47,7 @@ export async function GET() {
 
     const admin = createAdminClient()
 
-    const [productsResult, reviewsResult, reportsResult] = await Promise.all([
+    const [productsResult, reviewsResult, reportsResult, disputesResult, ticketsResult] = await Promise.all([
       admin
         .from('products')
         .select(
@@ -64,13 +72,37 @@ export async function GET() {
         .eq('status', 'open')
         .order('created_at', { ascending: true })
         .limit(100),
+      admin
+        .from('disputes')
+        .select(
+          'id,order_id,raised_by,category,subject,description,status,priority,resolution_code,resolution_note,resolved_by,resolved_at,created_at,updated_at',
+        )
+        .in('status', ['open', 'under_review'])
+        .order('created_at', { ascending: true })
+        .limit(100),
+      admin
+        .from('support_tickets')
+        .select(
+          'id,user_id,order_id,category,subject,description,status,priority,assigned_to,last_response_at,resolved_at,created_at,updated_at',
+        )
+        .in('status', ['open', 'in_progress', 'waiting_user'])
+        .order('updated_at', { ascending: true })
+        .limit(100),
     ])
 
-    if (productsResult.error || reviewsResult.error || reportsResult.error) {
+    if (
+      productsResult.error ||
+      reviewsResult.error ||
+      reportsResult.error ||
+      disputesResult.error ||
+      ticketsResult.error
+    ) {
       console.error('DEBA moderation queue lookup failed', {
         products: productsResult.error,
         reviews: reviewsResult.error,
         reports: reportsResult.error,
+        disputes: disputesResult.error,
+        tickets: ticketsResult.error,
       })
       return NextResponse.json({ error: 'تعذر تحميل قائمة المراجعة.' }, { status: 500 })
     }
@@ -107,6 +139,53 @@ export async function GET() {
       (productsByIdResult.data || []).map((product) => [product.id, product]),
     )
 
+    const disputeOrderIds = Array.from(
+      new Set((disputesResult.data || []).map((row) => row.order_id).filter(Boolean)),
+    ) as string[]
+
+    const ticketUserIds = Array.from(
+      new Set((ticketsResult.data || []).map((row) => row.user_id).filter(Boolean)),
+    ) as string[]
+
+    const [disputeOrdersResult, ticketProfilesResult] = await Promise.all([
+      disputeOrderIds.length
+        ? admin
+            .from('orders')
+            .select('id,reference_code,buyer_id,seller_id,payment_status,status,total,currency')
+            .in('id', disputeOrderIds)
+        : Promise.resolve({
+            data: [] as Array<{
+              id: string
+              reference_code: string
+              buyer_id: string
+              seller_id: string
+              payment_status: string
+              status: string
+              total: number | string
+              currency: string
+            }>,
+          }),
+      ticketUserIds.length
+        ? admin
+            .from('profiles')
+            .select('id,username,display_name')
+            .in('id', ticketUserIds)
+        : Promise.resolve({
+            data: [] as Array<{
+              id: string
+              username: string | null
+              display_name: string | null
+            }>,
+          }),
+    ])
+
+    const disputeOrderMap = new Map(
+      (disputeOrdersResult.data || []).map((order) => [order.id, order]),
+    )
+    const ticketProfileMap = new Map(
+      (ticketProfilesResult.data || []).map((profile) => [profile.id, profile]),
+    )
+
     return NextResponse.json({
       products: productsResult.data || [],
       reviews: (reviewsResult.data || []).map((review) => ({
@@ -121,6 +200,15 @@ export async function GET() {
           ? profileMap.get(report.reported_user_id) || null
           : null,
         product: report.product_id ? productMap.get(report.product_id) || null : null,
+      })),
+      disputes: (disputesResult.data || []).map((dispute) => ({
+        ...dispute,
+        order: disputeOrderMap.get(dispute.order_id) || null,
+        raisedBy: profileMap.get(dispute.raised_by) || null,
+      })),
+      tickets: (ticketsResult.data || []).map((ticket) => ({
+        ...ticket,
+        user: ticketProfileMap.get(ticket.user_id) || null,
       })),
     })
   } catch (error) {
