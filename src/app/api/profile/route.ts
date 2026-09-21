@@ -120,7 +120,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      accountType: currentProfile.account_type,
+      accountType: requestedAccountType || currentProfile.account_type,
     })
   } catch (error) {
     console.error('DEBA profile route failed', error)
