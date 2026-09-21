@@ -74,6 +74,7 @@ export type ProfileFavorite = {
 export type ProfileAccountData = {
   userId: string
   email: string | null
+  emailConfirmed: boolean
   profile: {
     username: string | null
     displayName: string
