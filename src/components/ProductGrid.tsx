@@ -1,7 +1,6 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
 
 export type ProductGridItem = {
   id: string
@@ -50,7 +49,7 @@ function locationText(item: ProductGridItem) {
 function Card({ item }: { item: ProductGridItem }) {
   return (
     <article className="product-card">
-      <Link href={'/products/' + item.slug} className="product-image">
+      <a href={'/products/' + item.slug} className="product-image">
         {item.imageUrl ? (
           <Image
             src={item.imageUrl}
@@ -73,7 +72,7 @@ function Card({ item }: { item: ProductGridItem }) {
         >
           {item.listingType === 'donation' ? 'تبرع' : 'للبيع'}
         </span>
-      </Link>
+      </a>
 
       <div className="product-content">
         <div className="product-meta">
@@ -120,13 +119,13 @@ export default function ProductGrid({
 }: ProductGridProps) {
   return (
     <div className="listing-sections">
-      <section>
+      <section id="marketplace">
         <div className="section-heading">
           <div>
             <span>MARKETPLACE</span>
             <h2>منتجات معروضة للبيع</h2>
           </div>
-          <Link href="/marketplace">عرض الكل ←</Link>
+          <a href="#marketplace">عرض الكل ←</a>
         </div>
 
         {products.length > 0 ? (
@@ -140,13 +139,13 @@ export default function ProductGrid({
         )}
       </section>
 
-      <section>
+      <section id="donations">
         <div className="section-heading">
           <div>
             <span>DEBA IMPACT</span>
             <h2>تبرعات تحتاج إلى من يكمل أثرها</h2>
           </div>
-          <Link href="/donations">عرض الكل ←</Link>
+          <a href="#donations">عرض الكل ←</a>
         </div>
 
         {donations.length > 0 ? (
