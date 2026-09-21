@@ -56,8 +56,7 @@ export default async function SellPage({
               <span className="deba-detail-state-kicker">SELLER ACCESS</span>
               <h1>الحساب الحالي ليس حساب بائع</h1>
               <p>
-                أنشئ حسابًا من نوع بائع أو حدّث نوع الحساب من إعدادات الملف الشخصي،
-                ثم ستتمكن من إدخال السلعة وفق عقد بيانات DEBA الإلزامي.
+                فعّل وضع البائع من صفحة حسابك، ثم ستتمكن من إدخال السلعة وفق عقد بيانات DEBA الإلزامي.
               </p>
               <Link href="/" className="deba-detail-state-action">العودة إلى السوق</Link>
             </div>
