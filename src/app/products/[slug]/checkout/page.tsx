@@ -17,7 +17,7 @@ type Product = {
   owner_id: string | null
   title: string
   slug: string
-  listing_type: 'sale' | 'free'
+  listing_type: 'sale'
   price: number | string | null
   currency: string
   quantity: number
@@ -59,7 +59,7 @@ export async function generateMetadata({
     .eq('slug', slug)
     .eq('status', 'published')
     .eq('moderation_status', 'approved')
-    .in('listing_type', ['sale', 'free'])
+    .eq('listing_type', 'sale')
     .maybeSingle()
 
   return {
@@ -83,7 +83,7 @@ export default async function CheckoutPage({
         .eq('slug', slug)
         .eq('status', 'published')
         .eq('moderation_status', 'approved')
-        .in('listing_type', ['sale', 'free'])
+        .eq('listing_type', 'sale')
         .maybeSingle(),
       supabase
         .from('categories')
@@ -102,15 +102,15 @@ export default async function CheckoutPage({
   const row = product as unknown as Product
   const price = normalizePrice(row.price)
   const isAuthenticated = Boolean(claimsData?.claims?.sub)
+  const isOwner = Boolean(row.owner_id && claimsData?.claims?.sub === row.owner_id)
+
+  if (price <= 0) notFound()
 
   const mappedCategories = ((categories || []) as CategoryRow[]).map((item) => ({
     id: item.id,
     nameAr: item.name_ar,
     slug: item.slug,
   }))
-
-  const sellerCanBuy =
-    Boolean(row.owner_id) && row.quantity > 0 && !isAuthenticated
 
   return (
     <>
@@ -133,10 +133,9 @@ export default async function CheckoutPage({
         <div className="deba-checkout-layout">
           <section className="deba-checkout-intro">
             <span>DEBA CHECKOUT</span>
-            <h1>{row.listing_type === 'free' ? 'طلب المنتج' : 'إتمام شراء المنتج'}</h1>
+            <h1>إتمام شراء المنتج</h1>
             <p>
-              راجع المنتج مرة أخيرة، اختر طريقة الاستلام، ثم سجّل الطلب داخل حساب
-              DEBA.
+              راجع المنتج والسعر الثابت، اختر الكمية وطريقة الاستلام، ثم أكد طلب الشراء داخل DEBA.
             </p>
 
             <div className="deba-checkout-product">
@@ -147,9 +146,7 @@ export default async function CheckoutPage({
               <div>
                 <span>السعر</span>
                 <strong>
-                  {row.listing_type === 'free'
-                    ? 'مجاني'
-                    : formatMoney(price, row.currency)}
+                  {formatMoney(price, row.currency)}
                 </strong>
               </div>
               <div>
@@ -171,16 +168,26 @@ export default async function CheckoutPage({
           </section>
 
           <section className="deba-checkout-form-column">
-            <CheckoutForm
-              productId={row.id}
-              productSlug={row.slug}
-              productTitle={row.title}
-              listingType={row.listing_type}
-              price={price}
-              currency={row.currency || 'EGP'}
-              productDeliveryMethod={row.delivery_method}
-              isAuthenticated={isAuthenticated}
-            />
+            {!isOwner && row.quantity > 0 && row.owner_id ? (
+              <CheckoutForm
+                productId={row.id}
+                productSlug={row.slug}
+                productTitle={row.title}
+                price={price}
+                currency={row.currency || 'EGP'}
+                availableQuantity={row.quantity}
+                productDeliveryMethod={row.delivery_method}
+                isAuthenticated={isAuthenticated}
+              />
+            ) : (
+              <div className="deba-checkout-blocker">
+                {isOwner
+                  ? 'لا يمكنك شراء منتجك الخاص.'
+                  : !row.owner_id
+                    ? 'لا يوجد بائع مرتبط بهذا الإعلان، لذلك لا يمكن إنشاء طلب شراء.'
+                    : 'المنتج غير متاح للشراء حاليًا.'}
+              </div>
+            )}
 
             {!row.owner_id && (
               <div className="deba-checkout-blocker">
