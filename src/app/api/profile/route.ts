@@ -32,6 +32,9 @@ export async function PATCH(request: Request) {
     }
 
     const body = (await request.json()) as Record<string, unknown>
+    const hasAvatarUrl = Object.prototype.hasOwnProperty.call(body, 'avatarUrl')
+    const requestedAvatarUrl =
+      hasAvatarUrl && body.avatarUrl === null ? null : clean(body.avatarUrl, 200)
     const displayName = clean(body.displayName, 120)
     const username = cleanNullable(body.username, 40)
     const bio = cleanNullable(body.bio, 500)
@@ -63,6 +66,11 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'رقم الهاتف المصري غير صالح.' }, { status: 400 })
     }
 
+    const expectedAvatarPath = userId + '/avatar.webp'
+    if (hasAvatarUrl && requestedAvatarUrl && requestedAvatarUrl !== expectedAvatarPath) {
+      return NextResponse.json({ error: 'مسار الصورة الشخصية غير صالح.' }, { status: 400 })
+    }
+
     const { data: currentProfile, error: currentProfileError } = await supabase
       .from('profiles')
       .select('id,account_type')
@@ -83,6 +91,7 @@ export async function PATCH(request: Request) {
         governorate,
         is_public: isPublic,
         ...(requestedAccountType === 'seller' ? { account_type: 'seller' } : {}),
+        ...(hasAvatarUrl ? { avatar_url: requestedAvatarUrl } : {}),
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId)
@@ -121,6 +130,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({
       ok: true,
       accountType: requestedAccountType || currentProfile.account_type,
+      ...(hasAvatarUrl ? { avatarUrl: requestedAvatarUrl } : {}),
     })
   } catch (error) {
     console.error('DEBA profile route failed', error)
