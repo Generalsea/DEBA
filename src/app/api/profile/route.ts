@@ -43,6 +43,10 @@ export async function PATCH(request: Request) {
     const district = cleanNullable(body.district, 100)
     const postalCode = cleanNullable(body.postalCode, 20)
     const isPublic = body.isPublic === true
+    const requestedAccountType =
+      body.accountType === 'seller' || body.accountType === 'buyer'
+        ? body.accountType
+        : null
 
     if (displayName.length < 2) {
       return NextResponse.json({ error: 'الاسم الظاهر يجب ألا يقل عن حرفين.' }, { status: 400 })
@@ -78,6 +82,7 @@ export async function PATCH(request: Request) {
         city,
         governorate,
         is_public: isPublic,
+        ...(requestedAccountType === 'seller' ? { account_type: 'seller' } : {}),
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId)
