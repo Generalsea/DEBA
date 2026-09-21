@@ -415,6 +415,71 @@
             font-weight: 600;
         }
 
+/* Donation Section */
+.donation-section{
+  background:linear-gradient(135deg,var(--accent) 0%,#00C9B7 100%);
+  padding:60px 20px;
+  color:white;
+  margin:40px 0;
+}
+.donation-content{
+  max-width:1200px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:40px;
+  align-items:center;
+}
+.donation-info h2{
+  font-size:2rem;
+  font-weight:900;
+  margin-bottom:16px;
+}
+.donation-info p{
+  font-size:1.1rem;
+  margin-bottom:24px;
+  opacity:.95;
+}
+.donation-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:24px;
+  margin-top:32px;
+}
+.donation-stat{text-align:center}
+.donation-stat-number{font-size:2rem;font-weight:900}
+.donation-stat-label{font-size:.9rem;opacity:.9}
+.donation-visual{
+  background:rgba(255,255,255,.1);
+  border-radius:16px;
+  padding:32px;
+  backdrop-filter:blur(10px);
+}
+.charity-card{
+  background:white;
+  color:var(--dark);
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.charity-logo{
+  width:60px;
+  height:60px;
+  background:var(--light-gray);
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:2rem;
+  overflow:hidden;
+  flex:0 0 60px;
+}
+.charity-info h4{font-weight:700;margin-bottom:4px}
+.charity-info p{font-size:.85rem;color:var(--gray)}
+
         /* Trust Section */
         .trust-section {
             max-width: 1200px;
@@ -505,6 +570,11 @@
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
+
+            .donation-content {
+                grid-template-columns: 1fr;
+            }
+
             .header-main {
                 flex-wrap: wrap;
                 gap: 16px;
