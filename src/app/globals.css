@@ -2955,3 +2955,75 @@
 .deba-checkout-inline-hint{background:#FFF8F5;color:var(--primary-dark)}
 .deba-product-badge.free{background:#E7F8F4;color:#047857}
 .deba-category-free{color:var(--accent)!important}
+
+
+/* DEBA fixed-price purchase refinement */
+.deba-detail-negotiable.is-fixed-price{
+  background:#ECFDF5;
+  color:#047857 !important;
+}
+.deba-checkout-summary{
+  grid-template-columns:minmax(0,1fr) auto auto;
+}
+.deba-quantity-control{
+  display:grid;
+  grid-template-columns:44px 76px 44px minmax(0,1fr);
+  align-items:center;
+  gap:8px;
+  min-height:48px;
+}
+.deba-quantity-control button{
+  width:44px;
+  height:44px;
+  border:1px solid #E5E7EB;
+  border-radius:12px;
+  background:#fff;
+  color:var(--dark);
+  font:inherit;
+  font-size:1.2rem;
+  font-weight:900;
+  cursor:pointer;
+  transition:.2s ease;
+}
+.deba-quantity-control button:hover:not(:disabled){
+  border-color:#F6B9A1;
+  color:var(--primary);
+  background:#FFF8F5;
+}
+.deba-quantity-control button:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+}
+.deba-quantity-control input{
+  width:76px;
+  height:44px;
+  padding:0 8px;
+  border:1px solid #D1D5DB;
+  border-radius:12px;
+  outline:0;
+  background:#fff;
+  color:var(--dark);
+  font:inherit;
+  font-weight:900;
+  text-align:center;
+}
+.deba-quantity-control input:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 4px rgba(255,107,53,.08);
+}
+.deba-quantity-control > span{
+  color:var(--gray);
+  font-size:.68rem;
+  font-weight:700;
+}
+@media (max-width:700px){
+  .deba-checkout-summary{
+    grid-template-columns:1fr 1fr;
+  }
+  .deba-checkout-summary > div:first-child{
+    grid-column:1 / -1;
+  }
+  .deba-quantity-control{
+    grid-template-columns:44px 76px 44px minmax(0,1fr);
+  }
+}
