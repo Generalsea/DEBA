@@ -2440,9 +2440,6 @@
   background: var(--primary);
 }
 
-.deba-product-badge.donation {
-  background: var(--success);
-}
 
 .deba-product-favorite {
   position: absolute !important;
