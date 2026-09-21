@@ -306,9 +306,9 @@ export default async function HomePage({
     governorate: governorate?.trim().slice(0, 80) || undefined,
     minPrice: minPrice ?? undefined,
     maxPrice:
-      maxPrice !== null && minPrice !== null && maxPrice >= minPrice
+      maxPrice !== null && (minPrice === null || maxPrice >= minPrice)
         ? maxPrice
-        : maxPrice ?? undefined,
+        : undefined,
     sort: safeSort,
   })
 
