@@ -1,13 +1,13 @@
 'use client'
 
-import { ArrowLeft, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Loader2, Repeat2, ShieldCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 
 type OfferFormProps = {
   productId: string
   ownerId: string | null
-  listingType: 'sale' | 'donation' | 'free'
+  listingType: 'sale' | 'free'
   currency: string
   price: number | null
   minimumOfferAmount: number | null
@@ -75,7 +75,7 @@ export default function OfferForm({
 
       if (ownerId && ownerId === user.id) {
         setStatus('error')
-        setFeedback('لا يمكنك تقديم عرض على سلعتك الخاصة.')
+        setFeedback('لا يمكنك التفاوض على سلعتك الخاصة.')
         return
       }
 
@@ -110,18 +110,31 @@ export default function OfferForm({
         .eq('id', productId)
         .eq('status', 'published')
         .eq('moderation_status', 'approved')
+        .in('listing_type', ['sale', 'free'])
         .maybeSingle()
 
       if (productError || !product) {
         setStatus('error')
-        setFeedback('هذه السلعة لم تعد متاحة للعروض.')
+        setFeedback('هذه السلعة لم تعد متاحة للطلبات أو العروض.')
         return
       }
 
-      const expectedType = isSale ? 'sale' : listingType
+      const expectedType = isSale ? 'sale' : 'free'
       if (product.listing_type !== expectedType) {
         setStatus('error')
         setFeedback('تغيّرت حالة السلعة، أعد تحميل الصفحة وحاول مرة أخرى.')
+        return
+      }
+
+      if (isSale && !product.owner_id) {
+        setStatus('error')
+        setFeedback('لا يمكن إنشاء عرض لسلعة لا يملكها بائع معرّف.')
+        return
+      }
+
+      if (!isSale) {
+        setStatus('error')
+        setFeedback('الطلب المجاني لا يحتاج عرض سعر. استخدم زر طلب المنتج مجانًا.')
         return
       }
 
@@ -134,24 +147,18 @@ export default function OfferForm({
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         message:
           cleanMessage ||
-          (isSale
-            ? 'أرغب في التفاوض على المنتج: ' + productTitle
-            : 'أرغب في الحصول على هذه السلعة عبر DEBA.'),
+          'أرغب في التفاوض على المنتج: ' + productTitle,
       })
 
       if (error) throw error
 
       setStatus('success')
-      setFeedback(
-        isSale
-          ? 'تم إرسال عرضك للبائع. ستظهر أي استجابة ضمن المفاوضات.'
-          : 'تم إرسال طلبك. ستظهر أي استجابة ضمن المفاوضات.',
-      )
+      setFeedback('تم إرسال عرضك للبائع. ستظهر أي استجابة ضمن المفاوضات.')
       setMessage('')
     } catch (error) {
       console.error('DEBA offer submission failed', error)
       setStatus('error')
-      setFeedback('تعذر إرسال الطلب الآن. حاول مرة أخرى.')
+      setFeedback('تعذر إرسال العرض الآن. حاول مرة أخرى.')
     }
   }
 
@@ -160,42 +167,35 @@ export default function OfferForm({
       <div className="deba-offer-form-head">
         <div>
           <span>DEBA NEGOTIATION</span>
-          <h2>{isSale ? 'قدّم عرضك مباشرة' : 'أرسل طلب الحصول'}</h2>
+          <h2>تفاوض على السعر</h2>
         </div>
-        <ShieldCheck size={22} />
+        <Repeat2 size={22} />
       </div>
 
-      {isSale ? (
-        <label>
-          <span>قيمة العرض</span>
-          <div className="deba-amount-input">
-            <input
-              name="amount"
-              type="number"
-              min={0}
-              step="1"
-              inputMode="decimal"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              placeholder={price !== null ? String(Math.round(price)) : 'اكتب قيمة عرضك'}
-              required
-            />
-            <b>{currency}</b>
-          </div>
-          <small>
-            {minimumOfferAmount !== null
-              ? 'الحد الأدنى: ' + formatMoney(minimumOfferAmount, currency)
-              : price !== null
-                ? 'السعر المعلن: ' + formatMoney(price, currency)
-                : 'اختَر سعرًا مناسبًا للتفاوض.'}
-          </small>
-        </label>
-      ) : (
-        <div className="deba-free-request">
-          <strong>بدون مقابل مالي</strong>
-          <span>سيتم تسجيل طلبك بقيمة 0 {currency} وإرساله لصاحب السلعة.</span>
+      <label>
+        <span>قيمة العرض</span>
+        <div className="deba-amount-input">
+          <input
+            name="amount"
+            type="number"
+            min={0}
+            step="1"
+            inputMode="decimal"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            placeholder={price !== null ? String(Math.round(price)) : 'اكتب قيمة عرضك'}
+            required
+          />
+          <b>{currency}</b>
         </div>
-      )}
+        <small>
+          {minimumOfferAmount !== null
+            ? 'الحد الأدنى: ' + formatMoney(minimumOfferAmount, currency)
+            : price !== null
+              ? 'السعر المعلن: ' + formatMoney(price, currency)
+              : 'اختَر سعرًا مناسبًا للتفاوض.'}
+        </small>
+      </label>
 
       <label>
         <span>رسالة للبائع</span>
@@ -205,11 +205,7 @@ export default function OfferForm({
           onChange={(event) => setMessage(event.target.value)}
           maxLength={500}
           rows={4}
-          placeholder={
-            isSale
-              ? 'اكتب رسالة قصيرة توضّح عرضك أو موعد الاستلام المقترح...'
-              : 'اكتب سبب احتياجك للسلعة وموعد الاستلام المناسب...'
-          }
+          placeholder="اكتب رسالة قصيرة توضّح عرضك أو موعد الاستلام المقترح..."
         />
       </label>
 
@@ -240,15 +236,16 @@ export default function OfferForm({
           </>
         ) : (
           <>
-            {isSale ? 'إرسال العرض' : 'إرسال الطلب'}
+            إرسال العرض
             <ArrowLeft size={17} />
           </>
         )}
       </button>
 
-      <p className="deba-offer-note">
-        لا تُرسل رقم هاتفك أو بيانات دفعك داخل الرسالة. DEBA يحتفظ بالعملية داخل حسابك.
-      </p>
+      <div className="deba-offer-note">
+        <ShieldCheck size={14} />
+        <span>لا ترسل بيانات دفع أو أرقام حساسة داخل الرسالة.</span>
+      </div>
     </form>
   )
 }
