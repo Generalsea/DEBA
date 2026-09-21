@@ -336,7 +336,7 @@ export default function AdminModeration() {
                           onClick={() => void act('review_dispute', dispute.id)}
                         >
                           {busy === dispute.id + ':review_dispute'
-                            ? <Loader2 size={15} className="deba-spin")
+                            ? <Loader2 size={15} className="deba-spin" />
                             : <MessageSquare size={15} />}
                           بدء المراجعة
                         </button>
