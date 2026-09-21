@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import HomeAuthActions from '@/components/HomeAuthActions'
 import { createClient } from '@/utils/supabase/server'
 
 export const metadata: Metadata = {
@@ -380,10 +381,7 @@ export default async function HomePage({
             <button className="search-btn" type="submit" aria-label="بحث">🔍</button>
           </form>
 
-          <div className="header-actions">
-            <Link href="/login" className="header-btn btn-outline">تسجيل الدخول</Link>
-            <Link href="/login" className="header-btn btn-primary">ابدأ البيع</Link>
-          </div>
+          <HomeAuthActions />
         </div>
 
         <nav className="nav">
