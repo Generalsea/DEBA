@@ -335,7 +335,7 @@ export default async function ProductDetailPage({
         negotiationCount={data.negotiationCount}
       />
 
-      <main className="deba-detail-page">
+      <main className="deba-detail-page" dir="rtl">
         <div className="deba-breadcrumbs">
           <Link href="/">الرئيسية</Link>
           <span>/</span>
