@@ -29,6 +29,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import Link from 'next/link'
+import NotificationPreferences from '@/components/NotificationPreferences'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 
@@ -1043,6 +1044,8 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
               </div>
             </form>
           ) : null}
+
+          {activeTab === 'settings' ? <NotificationPreferences /> : null}
 
           {activeTab === 'security' ? (
             <div className="deba-profile-security-grid">
