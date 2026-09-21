@@ -278,7 +278,7 @@ function OrderCard({
           <div>
             <strong>{order.productTitle}</strong>
             <small>
-              {order.referenceCode{'}'} · {formatDate(order.createdAt){'}'}
+              {order.referenceCode} · {formatDate(order.createdAt)}
             </small>
           </div>
           <span className="deba-profile-order-total">
