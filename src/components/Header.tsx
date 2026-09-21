@@ -53,8 +53,6 @@ export default function Header({
     setCategory(initialCategory || 'all')
   }, [initialCategory])
 
-  const items = categories
-
   return (
     <header className="deba-site-header">
       <div className="deba-header-main">
@@ -86,7 +84,7 @@ export default function Header({
                 aria-label="اختيار قسم البحث"
               >
                 <option value="all">كل الأقسام</option>
-                {items.map((item) => (
+                {categories.map((item) => (
                   <option key={item.id} value={item.slug}>
                     {item.nameAr}
                   </option>
@@ -102,7 +100,7 @@ export default function Header({
               type="search"
               inputMode="search"
               autoComplete="off"
-              placeholder="ابحث عن سلعة، تبرع، أو قسم..."
+              placeholder="ابحث عن سلعة أو قسم..."
               aria-label="البحث في DEBA"
             />
 
@@ -167,7 +165,7 @@ export default function Header({
             تصفح جميع الأقسام
           </Link>
 
-          {items.map((item) => (
+          {categories.map((item) => (
             <Link
               key={item.id}
               href={'/?category=' + encodeURIComponent(item.slug)}
@@ -177,8 +175,8 @@ export default function Header({
             </Link>
           ))}
 
-          <Link href="/?type=donation" className="deba-category-impact">
-            التبرعات المجانية
+          <Link href="/?type=free" className="deba-category-free">
+            السلع المجانية
           </Link>
         </div>
       </div>
