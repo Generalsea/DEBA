@@ -90,6 +90,14 @@ type Action =
   | 'hide_review'
   | 'resolve_report'
   | 'dismiss_report'
+  | 'review_dispute'
+  | 'resolve_dispute_buyer'
+  | 'resolve_dispute_seller'
+  | 'close_dispute'
+  | 'assign_ticket'
+  | 'resolve_ticket'
+  | 'close_ticket'
+  | 'reply_ticket'
 
 const REASONS: Record<string, string> = {
   fraud: 'احتيال',
