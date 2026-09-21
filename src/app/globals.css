@@ -1542,6 +1542,130 @@
   padding: 28px 0 72px;
 }
 
+
+.deba-detail-state-page {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+}
+
+.deba-detail-state-card {
+  width: min(100%, 720px);
+  padding: 36px;
+  border: 1px solid #E5E7EB;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 22px 60px rgba(31,41,55,.09);
+  text-align: center;
+}
+
+.deba-detail-state-kicker {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: var(--primary);
+  font-size: .65rem;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+}
+
+.deba-detail-state-card h1 {
+  margin: 0;
+  color: var(--dark);
+  font-size: clamp(1.7rem, 4vw, 2.6rem);
+  font-weight: 900;
+}
+
+.deba-detail-state-card p {
+  max-width: 560px;
+  margin: 12px auto 0;
+  color: var(--gray);
+  font-size: .9rem;
+  line-height: 1.9;
+}
+
+.deba-detail-state-icon {
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #FFF1EB;
+  color: var(--primary);
+}
+
+.deba-detail-state-icon.is-error {
+  background: #FEF2F2;
+  color: #B91C1C;
+}
+
+.deba-detail-state-action {
+  min-height: 46px;
+  margin-top: 20px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--primary);
+  color: #fff;
+  text-decoration: none;
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(255,107,53,.2);
+  transition: .2s ease;
+}
+
+.deba-detail-state-action:hover {
+  transform: translateY(-2px);
+}
+
+.deba-state-skeleton {
+  height: 18px;
+  margin-inline: auto;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #F1F3F5, #E5E7EB, #F1F3F5);
+  background-size: 220% 100%;
+  animation: deba-skeleton 1.25s linear infinite;
+}
+
+.deba-state-skeleton-lg { width: 72%; height: 44px; }
+.deba-state-skeleton-md { width: 54%; margin-top: 16px; }
+.deba-state-skeleton-sm { width: 34%; margin-top: 10px; }
+
+.deba-state-skeleton-grid {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 10px;
+}
+
+.deba-state-skeleton-grid span {
+  height: 78px;
+  border-radius: 16px;
+  background: #F1F3F5;
+}
+
+@keyframes deba-skeleton {
+  from { background-position: 200% 0; }
+  to { background-position: -20% 0; }
+}
+
+@media (max-width: 640px) {
+  .deba-detail-state-card {
+    padding: 26px 18px;
+    border-radius: 22px;
+  }
+
+  .deba-state-skeleton-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+
 .deba-breadcrumbs {
   display: flex;
   flex-wrap: wrap;
