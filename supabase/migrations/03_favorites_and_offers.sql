@@ -28,13 +28,13 @@ create table if not exists public.offers (
 alter table public.favorites enable row level security;
 alter table public.offers enable row level security;
 
-create index if not exists favorites_product_id_idx
+create index if not exists favorites_product_idx
   on public.favorites (product_id);
 
-create index if not exists offers_product_id_status_created_at_idx
+create index if not exists offers_product_status_idx
   on public.offers (product_id, status, created_at desc);
 
-create index if not exists offers_buyer_id_created_at_idx
+create index if not exists offers_buyer_idx
   on public.offers (buyer_id, created_at desc);
 
 do $$
