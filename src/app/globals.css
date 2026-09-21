@@ -415,95 +415,6 @@
             font-weight: 600;
         }
 
-        /* Donation Section */
-        .donation-section {
-            background: linear-gradient(135deg, var(--accent) 0%, #00C9B7 100%);
-            padding: 60px 20px;
-            color: white;
-            margin: 40px 0;
-        }
-
-        .donation-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            align-items: center;
-        }
-
-        .donation-info h2 {
-            font-size: 2rem;
-            font-weight: 900;
-            margin-bottom: 16px;
-        }
-
-        .donation-info p {
-            font-size: 1.1rem;
-            margin-bottom: 24px;
-            opacity: 0.95;
-        }
-
-        .donation-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-            margin-top: 32px;
-        }
-
-        .donation-stat {
-            text-align: center;
-        }
-
-        .donation-stat-number {
-            font-size: 2rem;
-            font-weight: 900;
-        }
-
-        .donation-stat-label {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-
-        .donation-visual {
-            background: rgba(255,255,255,0.1);
-            border-radius: 16px;
-            padding: 32px;
-            backdrop-filter: blur(10px);
-        }
-
-        .charity-card {
-            background: white;
-            color: var(--dark);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .charity-logo {
-            width: 60px;
-            height: 60px;
-            background: var(--light-gray);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-        }
-
-        .charity-info h4 {
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .charity-info p {
-            font-size: 0.85rem;
-            color: var(--gray);
-        }
-
         /* Trust Section */
         .trust-section {
             max-width: 1200px;
@@ -2851,4 +2762,179 @@
   .deba-related-grid {
     grid-template-columns: 1fr;
   }
+}
+
+
+/* DEBA product detail — purchase-first UI */
+.deba-primary-purchase-zone{margin-top:18px;display:grid;gap:9px}
+.deba-purchase-primary{min-height:76px;display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:12px;padding:13px 15px;border-radius:18px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;text-decoration:none;box-shadow:0 14px 30px rgba(255,107,53,.24);transition:transform .2s ease,box-shadow .2s ease}
+.deba-purchase-primary:hover{transform:translateY(-2px);box-shadow:0 18px 36px rgba(255,107,53,.3)}
+.deba-purchase-primary-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:rgba(255,255,255,.16)}
+.deba-purchase-primary span:nth-child(2){min-width:0;display:flex;flex-direction:column;gap:3px}
+.deba-purchase-primary strong{font-size:1rem;font-weight:900}
+.deba-purchase-primary small{font-size:.67rem;line-height:1.55;opacity:.86}
+.deba-purchase-secondary{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:0 12px;border:1px solid #E5E7EB;border-radius:13px;background:#fff;color:var(--dark);text-decoration:none;font-size:.75rem;font-weight:800;transition:.2s ease}
+.deba-purchase-secondary:hover{border-color:#F5C8B8;color:var(--primary);background:#FFF8F5}
+.deba-owner-notice{display:flex;align-items:flex-start;gap:9px;padding:13px 14px;border:1px dashed #D1D5DB;border-radius:15px;background:#FAFAFA;color:var(--gray)}
+.deba-owner-notice svg{flex:0 0 auto;color:var(--primary);margin-top:2px}
+.deba-owner-notice>div{display:flex;flex-direction:column;gap:3px}
+.deba-owner-notice strong{color:var(--dark);font-size:.78rem;font-weight:900}
+.deba-owner-notice span{font-size:.68rem;line-height:1.6}
+.deba-owner-notice.is-muted svg{color:var(--gray)}
+.deba-spec-card-expanded{grid-template-columns:repeat(2,minmax(0,1fr))}
+.deba-metadata-section{margin-top:18px;padding-top:18px;border-top:1px solid #E5E7EB}
+.deba-metadata-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.deba-metadata-grid>div{min-height:74px;padding:11px 12px;display:flex;flex-direction:column;justify-content:center;gap:6px;border:1px solid #E5E7EB;border-radius:14px;background:#FCFCFC}
+.deba-metadata-grid span{color:var(--gray);font-size:.66rem;font-weight:700}
+.deba-metadata-grid strong{color:var(--dark);font-size:.79rem;font-weight:900;line-height:1.55}
+.deba-seller-copy p{margin:0;color:rgba(255,255,255,.72);font-size:.68rem;line-height:1.65}
+.deba-offer-note{display:flex;align-items:flex-start;gap:6px}
+.deba-offer-note svg{flex:0 0 auto;color:var(--success);margin-top:1px}
+.deba-purchase-steps{margin-top:30px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.deba-purchase-steps>div{min-height:114px;padding:14px;border:1px solid #E5E7EB;border-radius:18px;background:#fff}
+.deba-purchase-steps span{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:#FFF1EB;color:var(--primary);font-size:.7rem;font-weight:900}
+.deba-purchase-steps strong{display:block;margin-top:10px;color:var(--dark);font-size:.77rem;font-weight:900}
+.deba-purchase-steps small{display:block;margin-top:4px;color:var(--gray);font-size:.65rem;line-height:1.6}
+
+/* DEBA checkout */
+.deba-checkout-page{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:28px 0 72px}
+.deba-checkout-breadcrumbs{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-bottom:18px;color:var(--gray);font-size:.74rem}
+.deba-checkout-breadcrumbs a{display:inline-flex;align-items:center;gap:4px;color:var(--gray);text-decoration:none}
+.deba-checkout-breadcrumbs a:hover{color:var(--primary)}
+.deba-checkout-breadcrumbs strong{color:var(--dark)}
+.deba-checkout-layout{display:grid;grid-template-columns:minmax(0,.9fr) minmax(420px,1.1fr);gap:22px;align-items:start}
+.deba-checkout-intro{position:sticky;top:118px;padding:24px;border-radius:24px;background:linear-gradient(145deg,#004E89 0%,#003D6B 100%);color:#fff;box-shadow:0 18px 42px rgba(0,78,137,.2)}
+.deba-checkout-intro>span{color:#FFB08F;font-size:.62rem;font-weight:900;letter-spacing:1.6px}
+.deba-checkout-intro h1{margin:10px 0 8px;font-size:clamp(1.75rem,3vw,2.55rem);line-height:1.2;font-weight:900}
+.deba-checkout-intro>p{margin:0;color:rgba(255,255,255,.8);font-size:.79rem;line-height:1.9}
+.deba-checkout-product{display:grid;gap:10px;margin-top:22px}
+.deba-checkout-product>div{padding:12px 13px;border-radius:14px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.1)}
+.deba-checkout-product span{display:block;color:rgba(255,255,255,.6);font-size:.65rem}
+.deba-checkout-product strong{display:block;margin-top:4px;color:#fff;font-size:.84rem;line-height:1.6}
+.deba-checkout-note-card{display:flex;align-items:flex-start;gap:9px;margin-top:16px;padding:12px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+.deba-checkout-note-card svg{flex:0 0 auto;color:#A7F3D0;margin-top:2px}
+.deba-checkout-note-card div{display:flex;flex-direction:column;gap:4px}
+.deba-checkout-note-card strong{font-size:.72rem}
+.deba-checkout-note-card span{color:rgba(255,255,255,.7);font-size:.66rem;line-height:1.65}
+.deba-checkout-form-column{min-width:0}
+.deba-checkout-form{padding:22px;border:1px solid #E5E7EB;border-radius:24px;background:#fff;box-shadow:0 18px 45px rgba(31,41,55,.08)}
+.deba-checkout-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #E5E7EB}
+.deba-checkout-summary span{color:var(--gray);font-size:.65rem;font-weight:700}
+.deba-checkout-summary strong{display:block;margin-top:4px;color:var(--dark);font-size:.84rem;line-height:1.55}
+.deba-checkout-summary>div:last-child{text-align:left}
+.deba-checkout-summary>div:last-child strong{color:var(--primary);font-size:1.15rem}
+.deba-checkout-fieldset{margin:0 0 16px;padding:0;border:0}
+.deba-checkout-fieldset legend{margin-bottom:9px;color:var(--dark);font-size:.78rem;font-weight:900}
+.deba-delivery-options{display:grid;gap:8px}
+.deba-delivery-options label{display:flex;align-items:flex-start;gap:9px;padding:12px;border:1px solid #E5E7EB;border-radius:14px;background:#fff;cursor:pointer;transition:.2s ease}
+.deba-delivery-options label.is-selected{border-color:#F6B9A1;background:#FFF8F5;box-shadow:0 0 0 3px rgba(255,107,53,.06)}
+.deba-delivery-options input{margin-top:3px;accent-color:var(--primary)}
+.deba-delivery-options svg{color:var(--primary);flex:0 0 auto;margin-top:1px}
+.deba-delivery-options label>span{display:flex;flex-direction:column;gap:3px}
+.deba-delivery-options strong{color:var(--dark);font-size:.74rem}
+.deba-delivery-options small{color:var(--gray);font-size:.64rem;line-height:1.5}
+.deba-checkout-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.deba-checkout-grid label{display:block}
+.deba-checkout-grid label.is-wide{grid-column:1 / -1}
+.deba-checkout-grid label>span,.deba-checkout-form label>span{display:block;margin-bottom:6px;color:var(--dark);font-size:.68rem;font-weight:800}
+.deba-checkout-grid input,.deba-checkout-form textarea{width:100%;min-height:46px;padding:10px 12px;border:1px solid #D1D5DB;border-radius:12px;outline:0;background:#fff;color:var(--dark);font:inherit;font-size:.75rem}
+.deba-checkout-form textarea{min-height:100px;resize:vertical}
+.deba-checkout-grid input:focus,.deba-checkout-form textarea:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(255,107,53,.08)}
+.deba-checkout-error{display:flex;align-items:flex-start;gap:7px;margin:4px 0 12px;padding:11px 12px;border:1px solid #FECACA;border-radius:12px;background:#FEF2F2;color:#991B1B;font-size:.7rem;line-height:1.6}
+.deba-checkout-error svg{flex:0 0 auto;margin-top:1px}
+.deba-checkout-total{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:2px;padding:14px 0;border-top:1px solid #E5E7EB}
+.deba-checkout-total span{color:var(--gray);font-size:.72rem;font-weight:800}
+.deba-checkout-total strong{color:var(--primary);font-size:1.35rem;font-weight:900}
+.deba-checkout-confirm{width:100%;min-height:52px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;font:inherit;font-size:.82rem;font-weight:900;cursor:pointer;box-shadow:0 12px 26px rgba(255,107,53,.22);transition:.2s ease}
+.deba-checkout-confirm:hover:not(:disabled){transform:translateY(-2px)}
+.deba-checkout-confirm:disabled{opacity:.72;cursor:wait}
+.deba-checkout-note{margin:10px 0 0;color:var(--gray);font-size:.65rem;line-height:1.65}
+.deba-checkout-success{padding:28px;border:1px solid #BBF7D0;border-radius:24px;background:#fff;box-shadow:0 18px 45px rgba(31,41,55,.08);text-align:center}
+.deba-checkout-success-icon{width:58px;height:58px;display:grid;place-items:center;margin:0 auto 13px;border-radius:18px;background:#ECFDF5;color:#047857}
+.deba-checkout-success>span{color:var(--primary);font-size:.62rem;font-weight:900;letter-spacing:1.5px}
+.deba-checkout-success h2{margin:8px 0;color:var(--dark);font-size:1.6rem;font-weight:900}
+.deba-checkout-success p{margin:0 auto;max-width:560px;color:var(--gray);font-size:.78rem;line-height:1.9}
+.deba-checkout-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:18px}
+.deba-checkout-status-grid>div{min-height:78px;padding:11px;display:flex;flex-direction:column;justify-content:center;gap:5px;border:1px solid #E5E7EB;border-radius:14px;background:#FAFAFA}
+.deba-checkout-status-grid span{color:var(--gray);font-size:.62rem}
+.deba-checkout-status-grid strong{color:var(--dark);font-size:.72rem;line-height:1.5}
+.deba-checkout-success-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
+.deba-checkout-primary,.deba-checkout-secondary{min-height:46px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;text-decoration:none;font-size:.75rem;font-weight:900}
+.deba-checkout-primary{background:var(--primary);color:#fff}
+.deba-checkout-secondary{border:1px solid #E5E7EB;color:var(--dark);background:#fff}
+.deba-checkout-blocker,.deba-checkout-inline-hint{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:.68rem;line-height:1.6}
+.deba-checkout-blocker{background:#FEF2F2;color:#991B1B}
+.deba-checkout-inline-hint{background:#FFF8F5;color:var(--primary-dark)}
+.deba-product-badge.free{background:#E7F8F4;color:#047857}
+.deba-category-free{color:var(--accent)!important}
+
+/* Lean marketplace home */
+.deba-home-page{min-height:100vh;background:linear-gradient(135deg,#FAFAFA 0%,#F5F5F5 100%)}
+.deba-home-hero{width:min(1240px,calc(100% - 40px));margin:0 auto;padding:52px 0 34px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:28px;align-items:end}
+.deba-home-hero>div:first-child{padding:30px 34px;border-radius:28px;background:linear-gradient(135deg,#004E89,#003D6B);color:#fff;box-shadow:0 20px 44px rgba(0,78,137,.16)}
+.deba-home-hero>div:first-child>span{color:#FFB08F;font-size:.64rem;font-weight:900;letter-spacing:1.6px}
+.deba-home-hero h1{max-width:780px;margin:10px 0 12px;font-size:clamp(2rem,4.6vw,3.8rem);line-height:1.15;font-weight:900}
+.deba-home-hero p{max-width:700px;margin:0;color:rgba(255,255,255,.8);font-size:.9rem;line-height:1.9}
+.deba-home-hero-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:20px}
+.deba-home-hero-actions a{min-height:44px;padding:0 17px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;text-decoration:none;font-size:.76rem;font-weight:900}
+.deba-home-hero-actions .btn-primary{color:#fff}
+.deba-home-hero-actions .btn-outline{border:1px solid rgba(255,255,255,.3);color:#fff;background:rgba(255,255,255,.08)}
+.deba-home-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.deba-home-stats>div{min-height:122px;padding:17px;display:flex;flex-direction:column;justify-content:center;border:1px solid #E5E7EB;border-radius:18px;background:#fff;box-shadow:0 12px 28px rgba(31,41,55,.06)}
+.deba-home-stats strong{color:var(--primary);font-size:1.7rem;font-weight:900}
+.deba-home-stats span{margin-top:3px;color:var(--gray);font-size:.68rem;font-weight:700}
+.deba-home-section{width:min(1240px,calc(100% - 40px));margin:0 auto;padding:30px 0}
+.deba-home-section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:18px}
+.deba-home-section-head>div>span{color:var(--primary);font-size:.6rem;font-weight:900;letter-spacing:1.5px}
+.deba-home-section-head h2{margin-top:4px;color:var(--dark);font-size:1.45rem;font-weight:900}
+.deba-home-section-head>a{color:var(--primary);text-decoration:none;font-size:.72rem;font-weight:900}
+.deba-home-category-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}
+.deba-home-category-card{min-height:106px;padding:14px 10px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;border:1px solid #E5E7EB;border-radius:16px;background:#fff;color:var(--dark);text-decoration:none;box-shadow:0 8px 20px rgba(31,41,55,.04);transition:.2s ease}
+.deba-home-category-card:hover{transform:translateY(-3px);border-color:#F5C8B8}
+.deba-home-category-card span{font-size:1.75rem}
+.deba-home-category-card strong{text-align:center;font-size:.7rem;font-weight:800;line-height:1.5}
+.deba-home-free-band{width:min(1240px,calc(100% - 40px));margin:18px auto 38px;padding:24px;display:flex;align-items:center;justify-content:space-between;gap:18px;border-radius:24px;background:linear-gradient(135deg,#FFF8F5,#F0FDFA);border:1px solid #F4DDD4}
+.deba-home-free-band span{color:var(--accent);font-size:.62rem;font-weight:900;letter-spacing:1.6px}
+.deba-home-free-band h2{margin-top:5px;color:var(--dark);font-size:1.35rem;font-weight:900}
+.deba-home-free-band p{margin:5px 0 0;color:var(--gray);font-size:.72rem;line-height:1.7}
+.deba-home-free-band .btn-primary{min-height:44px;padding:0 16px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;color:#fff;text-decoration:none;font-size:.72rem;font-weight:900;white-space:nowrap}
+.deba-home-empty{padding:40px 18px;display:grid;place-items:center;text-align:center;border:1px dashed #D1D5DB;border-radius:20px;background:#fff}
+.deba-home-empty>span{font-size:2.4rem}
+.deba-home-empty h3{margin-top:8px;color:var(--dark);font-size:1rem}
+.deba-home-empty p{max-width:440px;margin:6px 0 16px;color:var(--gray);font-size:.72rem;line-height:1.7}
+.deba-home-empty .btn-primary{min-height:42px;padding:0 16px;display:inline-flex;align-items:center;border-radius:11px;color:#fff;text-decoration:none;font-size:.72rem;font-weight:900}
+.deba-home-footer{margin-top:30px;padding:24px 20px 18px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;background:#1F2937;color:#fff}
+.deba-home-footer>div{display:flex;flex-direction:column;gap:2px}
+.deba-home-footer strong{color:var(--primary);font-size:1.4rem;font-weight:900}
+.deba-home-footer span{color:rgba(255,255,255,.6);font-size:.65rem}
+.deba-home-footer nav{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
+.deba-home-footer a{color:rgba(255,255,255,.76);text-decoration:none;font-size:.68rem}
+.deba-home-footer a:hover{color:#fff}
+.deba-home-footer>small{color:rgba(255,255,255,.48);font-size:.62rem;text-align:left}
+
+@media(max-width:960px){
+  .deba-detail-info,.deba-checkout-intro{position:static}
+  .deba-detail-layout,.deba-checkout-layout{grid-template-columns:1fr}
+  .deba-purchase-steps{grid-template-columns:1fr}
+  .deba-home-hero{grid-template-columns:1fr}
+  .deba-home-category-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(max-width:680px){
+  .deba-detail-page,.deba-checkout-page,.deba-home-section,.deba-home-hero,.deba-home-free-band{width:min(100% - 24px,1240px)}
+  .deba-gallery-main,.deba-gallery-fallback{min-height:390px}
+  .deba-gallery-main>img,.deba-gallery-main-image{padding:18px}
+  .deba-detail-info h1{font-size:1.7rem;letter-spacing:-.3px}
+  .deba-detail-price-row strong{font-size:1.55rem}
+  .deba-spec-card-expanded,.deba-metadata-grid,.deba-checkout-grid,.deba-checkout-success-actions{grid-template-columns:1fr}
+  .deba-checkout-summary{grid-template-columns:1fr}
+  .deba-checkout-summary>div:last-child{text-align:right}
+  .deba-checkout-status-grid{grid-template-columns:1fr}
+  .deba-purchase-primary{grid-template-columns:40px minmax(0,1fr) 18px}
+  .deba-home-hero>div:first-child{padding:24px 20px}
+  .deba-home-hero h1{font-size:2rem}
+  .deba-home-stats{grid-template-columns:1fr}
+  .deba-home-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .deba-home-free-band{flex-direction:column;align-items:flex-start}
+  .deba-home-footer{grid-template-columns:1fr}
+  .deba-home-footer>small{text-align:right}
 }
