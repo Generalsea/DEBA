@@ -80,7 +80,7 @@ type ProductRow = {
 }
 
 const SELECT =
-  'id,owner_id,title,slug,description,listing_type,status,moderation_status,condition_grade,condition_details,price,currency,is_negotiable,minimum_offer_amount,quantity,city,governorate,district,delivery_method,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary),seller:profiles!products_owner_id_fkey(display_name,username,avatar_url,bio,city,governorate,is_public)'
+  'id,owner_id,title,slug,description,listing_type,status,moderation_status,condition_grade,condition_details,price,currency,is_negotiable,minimum_offer_amount,quantity,city,governorate,district,delivery_method,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
 
 const CONDITION_LABELS: Record<string, string> = {
   new: 'جديد',
@@ -176,9 +176,31 @@ async function getProduct(slug: string) {
     .eq('moderation_status', 'approved')
     .maybeSingle()
 
-  if (error || !data) return null
+  if (error) {
+    console.error('DEBA product detail query failed', error)
+    throw new Error('تعذر تحميل بيانات السلعة من Supabase.')
+  }
+
+  if (!data) return null
 
   const product = data as unknown as ProductRow
+
+  if (product.owner_id) {
+    const { data: seller, error: sellerError } = await supabase
+      .from('profiles')
+      .select('display_name,username,avatar_url,bio,city,governorate,is_public')
+      .eq('id', product.owner_id)
+      .maybeSingle()
+
+    if (sellerError) {
+      console.error('DEBA seller query failed', sellerError)
+    }
+
+    product.seller = seller || null
+  } else {
+    product.seller = null
+  }
+
   const userId = await getUserId(supabase)
 
   let isFavorite = false
@@ -226,6 +248,10 @@ async function getProduct(slug: string) {
       .eq('moderation_status', 'approved')
       .order('published_at', { ascending: false, nullsFirst: false })
       .limit(4)
+
+    if (relatedResponse.error) {
+      console.error('DEBA related products query failed', relatedResponse.error)
+    }
 
     related = ((relatedResponse.data || []) as unknown as ProductRow[]).map((row) =>
       mapCard(supabase, row),
