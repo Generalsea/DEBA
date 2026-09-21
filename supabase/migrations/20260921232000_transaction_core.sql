@@ -948,3 +948,122 @@ for each row execute function private.set_payment_updated_at();
 drop trigger if exists notification_preferences_set_updated_at on public.notification_preferences;
 create trigger notification_preferences_set_updated_at before update on public.notification_preferences
 for each row execute function private.set_payment_updated_at();
+
+
+create or replace function private.transition_shipment_status(
+  p_shipment_id uuid,
+  p_new_status text,
+  p_actor_id uuid,
+  p_reason text,
+  p_idempotency_key text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_shipment public.shipments%rowtype;
+  v_order public.orders%rowtype;
+  v_is_admin boolean;
+  v_event_id uuid;
+begin
+  if p_actor_id is null or p_actor_id <> (select auth.uid()) then
+    raise exception 'Authenticated actor is required' using errcode = '42501';
+  end if;
+
+  if p_idempotency_key is null or length(trim(p_idempotency_key)) < 16 or length(trim(p_idempotency_key)) > 128 then
+    raise exception 'Valid idempotency key is required' using errcode = '22023';
+  end if;
+
+  select s.* into v_shipment from public.shipments s where s.id = p_shipment_id for update;
+  if not found then raise exception 'Shipment not found' using errcode = 'P0002'; end if;
+
+  select o.* into v_order from public.orders o where o.id = v_shipment.order_id for update;
+
+  v_is_admin := (select private.is_admin());
+  if not v_is_admin and p_actor_id <> v_order.seller_id then
+    raise exception 'Not allowed to update this shipment' using errcode = '42501';
+  end if;
+
+  if not (
+    (v_shipment.status = 'pending' and p_new_status in ('label_created','ready','cancelled'))
+    or (v_shipment.status = 'label_created' and p_new_status in ('ready','cancelled'))
+    or (v_shipment.status = 'ready' and p_new_status in ('picked_up','cancelled'))
+    or (v_shipment.status = 'picked_up' and p_new_status in ('in_transit','failed','cancelled'))
+    or (v_shipment.status = 'in_transit' and p_new_status in ('out_for_delivery','delivered','failed','returned'))
+    or (v_shipment.status = 'out_for_delivery' and p_new_status in ('delivered','failed','returned'))
+    or (v_shipment.status = 'failed' and p_new_status in ('in_transit','cancelled'))
+    or (v_shipment.status = 'cancelled' and p_new_status = 'pending')
+  ) then
+    raise exception 'Invalid shipment status transition: % -> %', v_shipment.status, p_new_status;
+  end if;
+
+  update public.shipments
+  set status = p_new_status,
+      shipped_at = case when p_new_status in ('picked_up','in_transit','out_for_delivery') then coalesce(shipped_at, now()) else shipped_at end,
+      delivered_at = case when p_new_status = 'delivered' then coalesce(delivered_at, now()) else delivered_at end
+  where id = p_shipment_id;
+
+  insert into public.shipment_events(
+    shipment_id, event_code, status, description, occurred_at, payload
+  )
+  values (
+    p_shipment_id, 'status_changed', p_new_status,
+    nullif(trim(coalesce(p_reason,'')), ''), now(),
+    jsonb_build_object('source','deba','actor_id',p_actor_id)
+  )
+  returning id into v_event_id;
+
+  update public.orders
+  set fulfillment_status = case
+    when p_new_status in ('label_created','ready') then 'ready'
+    when p_new_status in ('picked_up','in_transit','out_for_delivery') then 'in_transit'
+    when p_new_status = 'delivered' then 'delivered'
+    when p_new_status in ('cancelled','returned') then 'cancelled'
+    else fulfillment_status
+  end
+  where id = v_order.id;
+
+  insert into public.audit_logs(actor_id, action, entity_type, entity_id, before_data, after_data, metadata)
+  values (
+    p_actor_id, 'shipment.status_changed', 'shipment', p_shipment_id,
+    jsonb_build_object('status',v_shipment.status),
+    jsonb_build_object('status',p_new_status),
+    jsonb_build_object('order_id',v_order.id,'event_id',v_event_id)
+  );
+
+  insert into public.notifications(user_id, type, title, body, href, metadata)
+  values (
+    v_order.buyer_id, 'shipment.updated', 'تحديث الشحنة',
+    'تم تحديث حالة شحنتك.',
+    '/orders/' || v_order.id,
+    jsonb_build_object('shipment_id',p_shipment_id,'order_id',v_order.id,'status',p_new_status)
+  );
+
+  return jsonb_build_object(
+    'shipment_id',p_shipment_id,'order_id',v_order.id,'status',p_new_status,'event_id',v_event_id
+  );
+end;
+$$;
+
+create or replace function public.transition_shipment_status(
+  p_shipment_id uuid,
+  p_new_status text,
+  p_reason text,
+  p_idempotency_key text
+)
+returns jsonb
+language plpgsql
+security invoker
+set search_path = 'public','private','pg_temp'
+as $$
+begin
+  return private.transition_shipment_status(
+    p_shipment_id, p_new_status, (select auth.uid()), p_reason, p_idempotency_key
+  );
+end;
+$$;
+
+revoke execute on function public.transition_shipment_status(uuid,text,text,text) from public, anon;
+grant execute on function public.transition_shipment_status(uuid,text,text,text) to authenticated;
