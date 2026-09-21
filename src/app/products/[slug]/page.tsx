@@ -75,6 +75,7 @@ type ProductRow = {
         city: string | null
         governorate: string | null
         is_public: boolean
+        account_type: 'buyer' | 'seller'
       }
     | null
 }
@@ -254,7 +255,7 @@ async function getProduct(slug: string) {
         ? supabase
             .from('profiles')
             .select(
-              'display_name,username,avatar_url,bio,city,governorate,is_public',
+              'display_name,username,avatar_url,bio,city,governorate,is_public,account_type',
             )
             .eq('id', product.owner_id)
             .maybeSingle()
