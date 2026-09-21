@@ -598,25 +598,35 @@ begin
     update public.orders
     set status = 'confirmed', status_reason = 'Payment confirmed'
     where id = v_order.id;
+  elsif p_status = 'refunded' and v_order.status in ('completed','disputed') then
+    perform set_config('deba.order_status_idempotency_key','payment-refund',true);
+    update public.orders
+    set status = 'refunded', status_reason = 'Payment refunded'
+    where id = v_order.id;
   end if;
 
   insert into public.audit_logs(actor_id, action, entity_type, entity_id, after_data, metadata)
   values (
-    null, 'payment.state_changed', 'payment', v_payment.id,
+    null,
+    'payment.state_changed',
+    'payment',
+    v_payment.id,
     jsonb_build_object('status',p_status,'order_id',v_order.id),
     jsonb_build_object('provider_payment_id',p_provider_payment_id)
   );
 
-  insert into public.notifications(
-    user_id, type, title, body, href, metadata
-  )
+  insert into public.notifications(user_id, type, title, body, href, metadata)
   values (
-    v_order.buyer_id, 'payment.updated', 'تحديث الدفع',
-    case when p_status = 'paid'
-      then 'تم تأكيد الدفع بنجاح.'
+    v_order.buyer_id,
+    'payment.updated',
+    'تحديث الدفع',
+    case
+      when p_status = 'paid' then 'تم تأكيد الدفع بنجاح.'
+      when p_status = 'refunded' then 'تم تأكيد استرداد المبلغ.'
+      when p_status = 'partially_refunded' then 'تم تسجيل استرداد جزئي للمبلغ.'
       else 'تم تحديث حالة الدفع الخاصة بطلبك.'
     end,
-    '/profile?tab=orders',
+    '/orders/' || v_order.id,
     jsonb_build_object('payment_id',v_payment.id,'order_id',v_order.id,'status',p_status)
   );
 
