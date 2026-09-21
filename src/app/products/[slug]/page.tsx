@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   MapPin,
   Package,
-  Repeat2,
   ShieldCheck,
   ShoppingBag,
   Truck,
@@ -19,7 +18,6 @@ import { notFound } from 'next/navigation'
 import Header, { type HeaderCategory } from '@/components/Header'
 import ProductCard, { type ProductCardItem } from '@/components/ProductCard'
 import FavoriteButton from '@/components/FavoriteButton'
-import OfferForm from '@/components/OfferForm'
 import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGallery'
 import { createClient } from '@/utils/supabase/server'
 
@@ -27,7 +25,6 @@ const BUCKET = 'deba-product-media'
 
 type RouteParams = {
   params: Promise<{ slug: string }>
-  searchParams?: Promise<{ action?: string | string[] | undefined }>
 }
 
 type Category = {
@@ -53,15 +50,13 @@ type ProductRow = {
   title: string
   slug: string
   description: string | null
-  listing_type: 'sale' | 'free'
+  listing_type: 'sale'
   status: string
   moderation_status: string
   condition_grade: string | null
   condition_details: string | null
   price: number | string | null
   currency: string
-  is_negotiable: boolean
-  minimum_offer_amount: number | string | null
   quantity: number
   city: string | null
   governorate: string | null
@@ -86,7 +81,7 @@ type ProductRow = {
 }
 
 const SELECT =
-  'id,owner_id,title,slug,description,listing_type,status,moderation_status,condition_grade,condition_details,price,currency,is_negotiable,minimum_offer_amount,quantity,city,governorate,district,delivery_method,metadata,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
+  'id,owner_id,title,slug,description,listing_type,status,moderation_status,condition_grade,condition_details,price,currency,quantity,city,governorate,district,delivery_method,metadata,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
 
 const CONDITION_LABELS: Record<string, string> = {
   new: 'جديد',
@@ -176,7 +171,7 @@ function mapCard(
     listingType: row.listing_type,
     price: normalizePrice(row.price),
     currency: row.currency || 'EGP',
-    isNegotiable: row.is_negotiable,
+    isNegotiable: false,
     conditionGrade: row.condition_grade,
     city: row.city,
     governorate: row.governorate,
@@ -246,7 +241,7 @@ async function getProduct(slug: string) {
     .eq('slug', slug)
     .eq('status', 'published')
     .eq('moderation_status', 'approved')
-    .in('listing_type', ['sale', 'free'])
+    .eq('listing_type', 'sale')
     .maybeSingle()
 
   if (error) {
@@ -283,7 +278,7 @@ async function getProduct(slug: string) {
             .neq('id', product.id)
             .eq('status', 'published')
             .eq('moderation_status', 'approved')
-            .in('listing_type', ['sale', 'free'])
+            .eq('listing_type', 'sale')
             .order('published_at', { ascending: false, nullsFirst: false })
             .limit(4)
         : Promise.resolve({ data: [], error: null }),
@@ -296,10 +291,9 @@ async function getProduct(slug: string) {
 
   let isFavorite = false
   let favoriteCount = 0
-  let negotiationCount = 0
 
   if (userId) {
-    const [favorite, favoritesCountResult, offersCountResult] = await Promise.all([
+    const [favorite, favoritesCountResult] = await Promise.all([
       supabase
         .from('favorites')
         .select('id')
@@ -310,16 +304,10 @@ async function getProduct(slug: string) {
         .from('favorites')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId),
-      supabase
-        .from('offers')
-        .select('id', { count: 'exact', head: true })
-        .eq('buyer_id', userId)
-        .in('status', ['pending', 'countered']),
     ])
 
     isFavorite = Boolean(favorite.data)
     favoriteCount = favoritesCountResult.count || 0
-    negotiationCount = offersCountResult.count || 0
   }
 
   const related = ((relatedResponse.data || []) as unknown as ProductRow[]).map(
@@ -332,7 +320,7 @@ async function getProduct(slug: string) {
     userId,
     isFavorite,
     favoriteCount,
-    negotiationCount,
+    negotiationCount: 0,
     categories: ((categoriesResponse.data || []) as Category[]).map(mapCategory),
     related,
   }
@@ -351,7 +339,7 @@ export async function generateMetadata({
     .eq('slug', slug)
     .eq('status', 'published')
     .eq('moderation_status', 'approved')
-    .in('listing_type', ['sale', 'free'])
+    .eq('listing_type', 'sale')
     .maybeSingle()
 
   if (!data) {
@@ -376,7 +364,6 @@ export default async function ProductDetailPage({
   searchParams,
 }: RouteParams) {
   const { slug } = await params
-  const action = firstParam((await searchParams)?.action)
   const data = await getProduct(slug)
 
   if (!data) notFound()
@@ -395,9 +382,7 @@ export default async function ProductDetailPage({
     }))
     .filter((image) => image.url)
 
-  const isFree = product.listing_type === 'free'
   const price = normalizePrice(product.price)
-  const minimumOfferAmount = normalizePrice(product.minimum_offer_amount)
   const sellerName =
     product.seller?.display_name ||
     product.seller?.username ||
@@ -414,7 +399,7 @@ export default async function ProductDetailPage({
       : 'حالة غير محددة'
   const details = publicMetadata(product.metadata)
   const isOwner = Boolean(product.owner_id && data.userId === product.owner_id)
-  const canBuy = isFree || price !== null
+  const canBuy = price !== null && price > 0 && product.quantity > 0
   const purchaseHref = '/products/' + encodeURIComponent(product.slug) + '/checkout'
 
   return (
@@ -451,9 +436,9 @@ export default async function ProductDetailPage({
                 <span>الإعلان اجتاز حالة المراجعة المطلوبة للظهور العام.</span>
               </div>
               <div>
-                <Repeat2 size={20} />
-                <strong>التفاوض محفوظ</strong>
-                <span>العروض والرسائل مرتبطة بحسابك داخل DEBA.</span>
+                <BadgeCheck size={20} />
+                <strong>سعر ثابت</strong>
+                <span>السعر المعلن ثابت ويمكنك إتمام الطلب مباشرة.</span>
               </div>
               <div>
                 <Truck size={20} />
@@ -470,18 +455,10 @@ export default async function ProductDetailPage({
                   <BadgeCheck size={14} />
                   {condition}
                 </span>
-                {product.is_negotiable && !isFree && (
-                  <span className="deba-detail-badge is-muted">
-                    <Repeat2 size={14} />
-                    قابل للتفاوض
-                  </span>
-                )}
-                {isFree && (
-                  <span className="deba-detail-badge is-green">
-                    <Package size={14} />
-                    متاح مجانًا
-                  </span>
-                )}
+                <span className="deba-detail-badge is-muted">
+                  <CheckCircle2 size={14} />
+                  سعر ثابت
+                </span>
               </div>
 
               <FavoriteButton
@@ -497,17 +474,13 @@ export default async function ProductDetailPage({
 
             <div className="deba-detail-price-row">
               <div>
-                <span>{isFree ? 'القيمة' : 'السعر المعلن'}</span>
-                <strong>
-                  {isFree ? 'مجاني' : formatMoney(price, product.currency)}
-                </strong>
+                <span>السعر</span>
+                <strong>{formatMoney(price, product.currency)}</strong>
               </div>
-              {product.is_negotiable && !isFree && (
-                <span className="deba-detail-negotiable">
-                  <Repeat2 size={15} />
-                  التفاوض متاح
-                </span>
-              )}
+              <span className="deba-detail-negotiable is-fixed-price">
+                <CheckCircle2 size={15} />
+                سعر ثابت
+              </span>
             </div>
 
             <div className="deba-detail-location">
@@ -521,7 +494,7 @@ export default async function ProductDetailPage({
                   <UserRound size={18} />
                   <div>
                     <strong>هذا إعلانك</strong>
-                    <span>لا يمكنك شراء منتج من إعلانك أو إرسال عرض عليه.</span>
+                    <span>يمكنك إدارة إعلانك، لكن لا يمكنك شراء سلعتك الخاصة.</span>
                   </div>
                 </div>
               ) : canBuy ? (
@@ -530,8 +503,8 @@ export default async function ProductDetailPage({
                     <ShoppingBag size={21} />
                   </span>
                   <span>
-                    <strong>{isFree ? 'طلب المنتج مجانًا' : 'إتمام الشراء'}</strong>
-                    <small>أكمل بيانات الاستلام وسجّل طلبك داخل DEBA</small>
+                    <strong>اشترِ الآن</strong>
+                    <small>السعر ثابت — اختر الكمية وطريقة الاستلام ثم أكد طلبك</small>
                   </span>
                   <ArrowLeft size={20} />
                 </Link>
@@ -539,26 +512,10 @@ export default async function ProductDetailPage({
                 <div className="deba-owner-notice is-muted">
                   <Package size={18} />
                   <div>
-                    <strong>السعر غير محدد</strong>
-                    <span>استخدم نموذج التفاوض أدناه للتواصل على السعر.</span>
+                    <strong>المنتج غير متاح للشراء حاليًا</strong>
+                    <span>تحقق من توفر الكمية والسعر ثم حاول مرة أخرى.</span>
                   </div>
                 </div>
-              )}
-
-              {!isOwner && product.is_negotiable && !isFree && (
-                <a
-                  href="#deba-offer-form"
-                  className="deba-purchase-secondary"
-                  onClick={(event) => {
-                    event.preventDefault()
-                    document
-                      .getElementById('deba-offer-form')
-                      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                  }}
-                >
-                  <Repeat2 size={18} />
-                  تفاوض على السعر بدلًا من الشراء بالسعر المعلن
-                </a>
               )}
             </section>
 
@@ -646,24 +603,13 @@ export default async function ProductDetailPage({
               </div>
             </section>
 
-            {product.listing_type === 'sale' && product.is_negotiable && !isOwner && (
-              <OfferForm
-                productId={product.id}
-                ownerId={product.owner_id}
-                listingType="sale"
-                currency={product.currency || 'EGP'}
-                price={price}
-                minimumOfferAmount={minimumOfferAmount}
-                productTitle={product.title}
-                autoFocus={action === 'offer'}
-              />
-            )}
+
 
             <div className="deba-detail-security">
               <ShieldCheck size={17} />
               <span>
-                لا يتم تنفيذ خصم إلكتروني من هذه الصفحة. طلب الشراء يُسجل داخل
-                DEBA، ثم يتابع المشتري والبائع خطوات الاستلام والاتفاق.
+                السعر الظاهر هو السعر الثابت للمنتج. طلب الشراء يُسجل داخل DEBA،
+                والدفع الإلكتروني غير مفعل في النسخة الحالية.
               </span>
             </div>
           </div>
@@ -677,13 +623,13 @@ export default async function ProductDetailPage({
           </div>
           <div>
             <span>2</span>
-            <strong>أتمم الطلب</strong>
-            <small>اختر طريقة الاستلام وأدخل بياناتك.</small>
+            <strong>اختر الكمية والاستلام</strong>
+            <small>حدد الكمية وطريقة الاستلام وأدخل البيانات المطلوبة.</small>
           </div>
           <div>
             <span>3</span>
-            <strong>تابع داخل DEBA</strong>
-            <small>حالة الطلب والتواصل لا تخرج عن حسابك.</small>
+            <strong>أكد طلب الشراء</strong>
+            <small>يسجل الطلب بالسعر الثابت ويظهر لك رقم الطلب.</small>
           </div>
         </section>
 
