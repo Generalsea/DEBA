@@ -28,6 +28,8 @@ type ProfileRow = {
   updated_at: string
 }
 
+const BUCKET = 'deba-product-media'
+
 type PrivateRow = {
   phone: string | null
   address_line1: string | null
@@ -266,6 +268,7 @@ export default async function ProfilePage({
   const account: ProfileAccountData = {
     userId,
     email,
+    emailConfirmed: Boolean(authUserData.user?.email_confirmed_at),
     profile: {
       username: profile.username,
       displayName: profile.display_name,
