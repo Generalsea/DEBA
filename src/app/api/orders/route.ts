@@ -4,6 +4,7 @@ import { createAdminClient } from '@/utils/supabase/admin'
 
 type OrderBody = {
   productId?: string
+  quantity?: number
   deliveryMethod?: 'pickup' | 'seller_delivery' | 'platform_delivery'
   deliveryAddress?: {
     addressLine1?: string
@@ -60,6 +61,11 @@ export async function POST(request: Request) {
       )
     }
 
+    const requestedQuantity = Number.isInteger(body.quantity) ? Number(body.quantity) : 1
+    if (requestedQuantity < 1 || requestedQuantity > 100) {
+      return NextResponse.json({ error: 'الكمية المطلوبة غير صالحة.' }, { status: 400 })
+    }
+
     const requestedDelivery = body.deliveryMethod || 'pickup'
 
     if (!ALLOWED_DELIVERIES.has(requestedDelivery)) {
@@ -85,7 +91,7 @@ export async function POST(request: Request) {
       .eq('id', productId)
       .eq('status', 'published')
       .eq('moderation_status', 'approved')
-      .in('listing_type', ['sale', 'free'])
+      .eq('listing_type', 'sale')
       .maybeSingle()
 
     if (productError) {
@@ -110,9 +116,9 @@ export async function POST(request: Request) {
       )
     }
 
-    if (product.quantity < 1) {
+    if (product.quantity < requestedQuantity) {
       return NextResponse.json(
-        { error: 'المنتج نفد حاليًا.' },
+        { error: 'الكمية المطلوبة غير متاحة حاليًا.' },
         { status: 409 },
       )
     }
@@ -164,9 +170,14 @@ export async function POST(request: Request) {
         : Number(product.price ?? 0)
 
     const unitPrice =
-      product.listing_type === 'free' || !Number.isFinite(numericPrice)
-        ? 0
-        : numericPrice
+      Number.isFinite(numericPrice) && numericPrice > 0 ? numericPrice : NaN
+
+    if (!Number.isFinite(unitPrice)) {
+      return NextResponse.json(
+        { error: 'سعر المنتج غير صالح للشراء.' },
+        { status: 409 },
+      )
+    }
 
     const orderAddress =
       requestedDelivery === 'pickup'
@@ -187,10 +198,10 @@ export async function POST(request: Request) {
         status: 'pending',
         payment_status: 'unpaid',
         fulfillment_status: 'pending',
-        subtotal: unitPrice,
+        subtotal: unitPrice * requestedQuantity,
         shipping_fee: 0,
         platform_fee: 0,
-        total: unitPrice,
+        total: unitPrice * requestedQuantity,
         currency: product.currency || 'EGP',
         delivery_method: requestedDelivery,
         delivery_address_snapshot: orderAddress,
@@ -211,9 +222,9 @@ export async function POST(request: Request) {
       order_id: order.id,
       product_id: product.id,
       seller_id: product.owner_id,
-      quantity: 1,
+      quantity: requestedQuantity,
       unit_price: unitPrice,
-      line_total: unitPrice,
+      line_total: unitPrice * requestedQuantity,
     })
 
     if (itemError) {
@@ -225,7 +236,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const nextQuantity = product.quantity - 1
+    const nextQuantity = product.quantity - requestedQuantity
     const nextStatus = nextQuantity === 0 ? 'reserved' : 'published'
 
     const { data: updatedProduct, error: reserveError } = await admin
@@ -236,7 +247,7 @@ export async function POST(request: Request) {
       })
       .eq('id', product.id)
       .eq('status', 'published')
-      .gte('quantity', 1)
+      .gte('quantity', requestedQuantity)
       .select('id,quantity,status')
       .maybeSingle()
 
@@ -252,6 +263,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       orderId: order.id,
+      quantity: requestedQuantity,
+      total: unitPrice * requestedQuantity,
+      currency: product.currency || 'EGP',
       existing: false,
     })
   } catch (error) {
