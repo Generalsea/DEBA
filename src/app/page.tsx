@@ -165,8 +165,6 @@ async function loadHomeData(filters: SearchFilters) {
     .eq('listing_type', 'sale')
     .eq('status', 'published')
     .eq('moderation_status', 'approved')
-    .order('published_at', { ascending: false, nullsFirst: false })
-    .order('created_at', { ascending: false })
     .limit(PRODUCT_LIMIT)
 
   if (categoryId) productQuery = productQuery.eq('category_id', categoryId)
@@ -191,6 +189,10 @@ async function loadHomeData(filters: SearchFilters) {
     productQuery = productQuery.order('price', { ascending: true, nullsFirst: false })
   } else if (filters.sort === 'price_high') {
     productQuery = productQuery.order('price', { ascending: false, nullsFirst: false })
+  } else {
+    productQuery = productQuery
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
   }
 
   if (searchTerm) {
