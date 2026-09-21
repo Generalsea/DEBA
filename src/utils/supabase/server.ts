@@ -1,18 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import {
+  SUPABASE_PUBLISHABLE_KEY,
+  SUPABASE_URL,
+} from '@/utils/supabase/config'
 
 export async function createClient() {
   const cookieStore = await cookies()
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
-  if (!url || !publishableKey) {
-    throw new Error(
-      'Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.',
-    )
-  }
-
-  return createServerClient(url, publishableKey, {
+  return createServerClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     cookies: {
       getAll() {
         return cookieStore.getAll()
