@@ -477,7 +477,6 @@ export default async function HomePage({
             {productRows.slice(0, PRODUCT_LIMIT).map((product) => {
               const image = data.imageByProduct.get(product.id)
               const seller = product.owner_id ? data.profileById.get(product.owner_id) : null
-              const productCategory = product.category_id ? data.categoryById.get(product.category_id) : null
               const sellerName =
                 seller?.display_name ||
                 seller?.username ||
@@ -530,18 +529,6 @@ export default async function HomePage({
                       <span>{sellerName}</span>
                       <span className="trust-badge">✓ DEBA</span>
                     </div>
-
-                    {productCategory && (
-                      <div
-                        style={{
-                          marginTop: 4,
-                          fontSize: '0.75rem',
-                          color: 'var(--gray)',
-                        }}
-                      >
-                        {productCategory.name_ar}
-                      </div>
-                    )}
                   </div>
                 </Link>
               )
