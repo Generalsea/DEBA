@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { ArrowRight, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import Header, { type HeaderCategory } from '@/components/Header'
+import Header from '@/components/Header'
 import CheckoutForm from '@/components/CheckoutForm'
 import { createClient } from '@/utils/supabase/server'
 
