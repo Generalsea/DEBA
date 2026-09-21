@@ -34,14 +34,23 @@ export async function GET(request: Request) {
   }
 
   const requestedAccountType = requestUrl.searchParams.get('account_type')
-  if (requestedAccountType === 'buyer' || requestedAccountType === 'seller') {
+  const { data: claimsData } = await supabase.auth.getClaims()
+  const userId =
+    claimsData?.claims && typeof claimsData.claims.sub === 'string'
+      ? claimsData.claims.sub
+      : null
+
+  if (
+    userId &&
+    (requestedAccountType === 'buyer' || requestedAccountType === 'seller')
+  ) {
     await supabase
       .from('profiles')
       .update({
         account_type: requestedAccountType,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', requestUrl.searchParams.get('user_id') || '')
+      .eq('id', userId)
   }
 
   return NextResponse.redirect(new URL(nextPath, origin))
