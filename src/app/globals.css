@@ -2107,3 +2107,42 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Final commerce polish */
+.market-search {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.market-search input {
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.market-search-category {
+  border-left: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+}
+
+.market-service-strip strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.market-section-heading > div > span,
+.market-result-context > div > span {
+  font-weight: 600;
+}
+
+.market-empty-state {
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.market-product-card {
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.045);
+}
