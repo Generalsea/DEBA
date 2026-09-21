@@ -320,12 +320,16 @@ export default async function HomePage({
   const data = await loadHomeData(q, category)
 
   const categoryMap = new Map(data.categories.map((item) => [item.slug, item]))
-  const presentationCategories = CATEGORY_PRESENTATION
-    .map((presentation) => ({
-      ...presentation,
-      row: categoryMap.get(presentation.slug),
-    }))
-    .filter((item): item is { slug: string; icon: string; label: string; row: CategoryRow } => Boolean(item.row))
+  const presentationCategories = CATEGORY_PRESENTATION.map((presentation) => ({
+    ...presentation,
+    row: categoryMap.get(presentation.slug) || {
+      id: 'static-' + presentation.slug,
+      name_ar: presentation.label,
+      name_en: null,
+      slug: presentation.slug,
+      sort_order: 0,
+    },
+  }))
 
   const donationCategory = {
     id: 'donations',
