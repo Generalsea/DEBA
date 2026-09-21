@@ -153,6 +153,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Payment state update failed.' }, { status: 500 })
     }
 
+    if (status === 'refunded' || status === 'partially_refunded') {
+      const transactionData = obj as {
+        refunded_amount_cents?: number | string
+      }
+      const refundedCents = Number(transactionData.refunded_amount_cents || 0)
+
+      if (refundedCents > 0) {
+        const { data: refundRows } = await admin
+          .from('refunds')
+          .select('id,amount,status,created_at')
+          .eq('payment_id', payment.id)
+          .in('status', ['processing','succeeded'])
+          .order('created_at', { ascending: true })
+
+        let covered = 0
+        for (const refundRow of refundRows || []) {
+          if (refundRow.status === 'succeeded') {
+            covered += Number(refundRow.amount || 0)
+            continue
+          }
+
+          const nextCovered = covered + Number(refundRow.amount || 0)
+          if (refundedCents >= Math.round(nextCovered * 100)) {
+            await admin
+              .from('refunds')
+              .update({
+                status: 'succeeded',
+                provider_ref: externalEventId,
+              })
+              .eq('id', refundRow.id)
+            covered = nextCovered
+          }
+        }
+      }
+    }
+
     await admin
       .from('payment_webhooks')
       .update({
