@@ -4,8 +4,8 @@ import ProductGrid, { type ProductGridItem } from '@/components/ProductGrid'
 import { createClient } from '@/utils/supabase/server'
 
 export const metadata: Metadata = {
-  title: 'DEBA — سوق التبادل المصري',
-  description: 'المنتجات المعروضة للبيع وفرص التبرع المعتمدة على DEBA.',
+  title: 'DEBA — Marketplace',
+  description: 'سوق DEBA للبيع والتبادل والتبرع في مصر.',
 }
 
 const BUCKET = 'deba-product-media'
@@ -147,38 +147,68 @@ export default async function HomePage() {
     <>
       <Header />
 
-      <main>
-        <section className="hero">
-          <div className="hero-inner">
-            <span className="hero-kicker">DEBA / MARKETPLACE</span>
+      <main className="market-home">
+        <section className="market-hero">
+          <div className="market-hero-content">
+            <span className="market-hero-kicker">DEBA / MARKETPLACE</span>
 
             <h1>
-              قيمة ما لا تحتاجه
+              اشترِ بذكاء.
               <br />
-              تبدأ مع من يحتاجها.
+              بع، بدّل، وتبرّع.
             </h1>
 
             <p>
-              سوق واحد للبيع والتبادل والتبرع، مع إعلانات منشورة ومعتمدة من قاعدة
-              DEBA مباشرة.
+              كل ما تحتاجه في سوق واحد: سلع مختارة، عروض محلية، وتبرعات تصل إلى
+              من يحتاجها فعلًا.
             </p>
+
+            <div className="market-hero-actions">
+              <a href="#marketplace" className="market-hero-primary">
+                تسوق الآن
+              </a>
+              <a href="#donations" className="market-hero-secondary">
+                اكتشف التبرعات
+              </a>
+            </div>
+
+            <div className="market-hero-trust">
+              <span>✓ إعلانات معتمدة</span>
+              <span>✓ تفاوض مباشر</span>
+              <span>✓ تبرعات مجانية</span>
+            </div>
+          </div>
+
+          <div className="market-hero-offer">
+            <span>عرض الأسبوع</span>
+            <strong>حوّل الأشياء غير المستخدمة إلى قيمة.</strong>
+            <p>أضف سلعتك في دقائق وابدأ استقبال العروض أو طلبات التبرع.</p>
+            <a href="/login">أضف أول إعلان ←</a>
           </div>
         </section>
 
-        <section className="home-content">
-          <div className="stats">
-            <article>
-              <strong>{products.length.toLocaleString('ar-EG')}</strong>
-              <span>منتجات للبيع</span>
-            </article>
-            <article>
-              <strong>{donations.length.toLocaleString('ar-EG')}</strong>
-              <span>فرص تبرع</span>
-            </article>
-            <article>
+        <section className="market-home-content">
+          <div className="market-service-strip">
+            <div>
+              <span>01</span>
+              <strong>بيع محلي</strong>
+              <small>اعرض سلعتك واجعل التفاوض مباشرًا</small>
+            </div>
+            <div>
+              <span>02</span>
+              <strong>تبرع مؤثر</strong>
+              <small>امنح ما لا تحتاجه لمن يحتاجه</small>
+            </div>
+            <div>
+              <span>03</span>
+              <strong>اكتشف بسهولة</strong>
+              <small>فئات واضحة وبحث أسرع</small>
+            </div>
+            <div>
+              <span>04</span>
               <strong>EGP</strong>
-              <span>العملة الأساسية</span>
-            </article>
+              <small>السوق مصمم للمستخدم المصري</small>
+            </div>
           </div>
 
           <ProductGrid products={products} donations={donations} />
