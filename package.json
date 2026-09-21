@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "seed:demo-catalog-images": "node scripts/seed-demo-catalog-images.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
