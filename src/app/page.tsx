@@ -13,6 +13,16 @@ const PRODUCT_LIMIT = 6
 
 type SearchParamValue = string | string[] | undefined
 
+type SearchFilters = {
+  q?: string
+  category?: string
+  minPrice?: number
+  maxPrice?: number
+  condition?: string
+  governorate?: string
+  sort?: 'newest' | 'price_low' | 'price_high'
+}
+
 type CategoryRow = {
   id: string
   name_ar: string
@@ -91,6 +101,12 @@ function cleanSearch(value: string | undefined) {
   return result || null
 }
 
+function parsePositiveNumber(value: string | undefined) {
+  if (!value) return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
+}
+
 function normalizePrice(value: number | string | null) {
   if (value === null) return null
   const number = typeof value === 'number' ? value : Number(value)
@@ -123,9 +139,10 @@ function locationText(product: ProductRow) {
   return [product.city, product.governorate].filter(Boolean).join('، ') || 'مصر'
 }
 
-async function loadHomeData(searchValue: string | undefined, categoryValue: string | undefined) {
+async function loadHomeData(filters: SearchFilters) {
   const supabase = await createClient()
-  const searchTerm = cleanSearch(searchValue)
+  const searchTerm = cleanSearch(filters.q)
+  const categoryValue = filters.category
 
   let categoryId: string | null = null
 
@@ -153,6 +170,28 @@ async function loadHomeData(searchValue: string | undefined, categoryValue: stri
     .limit(PRODUCT_LIMIT)
 
   if (categoryId) productQuery = productQuery.eq('category_id', categoryId)
+
+  if (filters.minPrice !== undefined) {
+    productQuery = productQuery.gte('price', filters.minPrice)
+  }
+
+  if (filters.maxPrice !== undefined) {
+    productQuery = productQuery.lte('price', filters.maxPrice)
+  }
+
+  if (filters.condition) {
+    productQuery = productQuery.eq('condition_grade', filters.condition)
+  }
+
+  if (filters.governorate) {
+    productQuery = productQuery.ilike('governorate', filters.governorate)
+  }
+
+  if (filters.sort === 'price_low') {
+    productQuery = productQuery.order('price', { ascending: true, nullsFirst: false })
+  } else if (filters.sort === 'price_high') {
+    productQuery = productQuery.order('price', { ascending: false, nullsFirst: false })
+  }
 
   if (searchTerm) {
     const pattern = '%' + searchTerm + '%'
@@ -247,7 +286,29 @@ export default async function HomePage({
   const params = await searchParams
   const q = firstParam(params.q)
   const category = firstParam(params.category)
-  const data = await loadHomeData(q, category)
+  const condition = firstParam(params.condition)
+  const governorate = firstParam(params.governorate)
+  const sortValue = firstParam(params.sort)
+  const minPrice = parsePositiveNumber(firstParam(params.minPrice))
+  const maxPrice = parsePositiveNumber(firstParam(params.maxPrice))
+
+  const safeSort: SearchFilters['sort'] =
+    sortValue === 'price_low' || sortValue === 'price_high'
+      ? sortValue
+      : 'newest'
+
+  const data = await loadHomeData({
+    q,
+    category,
+    condition: condition && Object.hasOwn(CONDITION_LABELS, condition) ? condition : undefined,
+    governorate: governorate?.trim().slice(0, 80) || undefined,
+    minPrice: minPrice ?? undefined,
+    maxPrice:
+      maxPrice !== null && minPrice !== null && maxPrice >= minPrice
+        ? maxPrice
+        : maxPrice ?? undefined,
+    sort: safeSort,
+  })
 
   const categoryMap = new Map(data.categories.map((item) => [item.slug, item]))
   const presentationCategories = CATEGORY_PRESENTATION.map((presentation) => ({
@@ -282,7 +343,7 @@ export default async function HomePage({
               name="q"
               type="search"
               defaultValue={q || ''}
-              placeholder="ابحث عن منتجات، بائعين، أو فئات..."
+              placeholder="ابحث عن منتج أو وصف أو مواصفة..."
               aria-label="البحث في DEBA"
             />
             {category && category !== 'all' && (
@@ -361,6 +422,64 @@ export default async function HomePage({
             </Link>
           ))}
         </div>
+      </section>
+
+      <section className="deba-search-filters" aria-label="خيارات البحث المتقدم">
+        <div className="deba-search-filters-head">
+          <div>
+            <span>ADVANCED SEARCH</span>
+            <h2>صفِّ النتائج كما تريد</h2>
+          </div>
+          <span>{data.products.length.toLocaleString('ar-EG')} نتيجة ظاهرة</span>
+        </div>
+
+        <form action="/" method="get" className="deba-search-filters-form">
+          <input
+            name="minPrice"
+            type="number"
+            min="0"
+            step="1"
+            inputMode="numeric"
+            placeholder="أقل سعر"
+            defaultValue={minPrice ?? ''}
+            aria-label="أقل سعر"
+          />
+          <input
+            name="maxPrice"
+            type="number"
+            min="0"
+            step="1"
+            inputMode="numeric"
+            placeholder="أعلى سعر"
+            defaultValue={maxPrice ?? ''}
+            aria-label="أعلى سعر"
+          />
+          <select name="condition" defaultValue={condition || ''} aria-label="الحالة">
+            <option value="">كل الحالات</option>
+            {Object.entries(CONDITION_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+          <input
+            name="governorate"
+            type="text"
+            maxLength={80}
+            placeholder="المحافظة"
+            defaultValue={governorate || ''}
+            aria-label="المحافظة"
+          />
+          <select name="sort" defaultValue={safeSort} aria-label="ترتيب النتائج">
+            <option value="newest">الأحدث</option>
+            <option value="price_low">السعر: من الأقل</option>
+            <option value="price_high">السعر: من الأعلى</option>
+          </select>
+          {q ? <input type="hidden" name="q" value={q} /> : null}
+          {category ? <input type="hidden" name="category" value={category} /> : null}
+          <button type="submit">تطبيق</button>
+          {q || category || condition || governorate || minPrice !== null || maxPrice !== null || safeSort !== 'newest' ? (
+            <Link href="/#featured" className="deba-search-filter-reset">مسح الفلاتر</Link>
+          ) : null}
+        </form>
       </section>
 
       <section className="products" id="featured">
