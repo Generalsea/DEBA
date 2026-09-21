@@ -29,6 +29,7 @@ type ProfileRow = {
 }
 
 const BUCKET = 'deba-product-media'
+const PROFILE_AVATAR_BUCKET = 'deba-profile-media'
 
 type PrivateRow = {
   phone: string | null
@@ -298,6 +299,11 @@ export default async function ProfilePage({
     })
     .filter((item): item is ProfileFavorite => item !== null)
 
+  let avatarUrl = profile.avatar_url
+  if (avatarUrl && !/^https?:\/\//i.test(avatarUrl)) {
+    avatarUrl = supabase.storage.from(PROFILE_AVATAR_BUCKET).getPublicUrl(avatarUrl).data.publicUrl
+  }
+
   const account: ProfileAccountData = {
     userId,
     email,
@@ -305,7 +311,7 @@ export default async function ProfilePage({
     profile: {
       username: profile.username,
       displayName: profile.display_name,
-      avatarUrl: profile.avatar_url,
+      avatarUrl,
       bio: profile.bio,
       city: profile.city,
       governorate: profile.governorate,
