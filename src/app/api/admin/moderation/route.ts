@@ -43,7 +43,7 @@ async function requireModerator() {
 
 export async function GET() {
   try {
-    const { user, allowed } = await requireModerator()
+    const { supabase, user, allowed } = await requireModerator()
     if (!user) return NextResponse.json({ error: 'يجب تسجيل الدخول.' }, { status: 401 })
     if (!allowed) return NextResponse.json({ error: 'لا تملك صلاحية الإدارة.' }, { status: 403 })
 
