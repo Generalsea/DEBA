@@ -415,68 +415,94 @@
             font-weight: 600;
         }
 
-/* Donation Section */
-.donation-section{
-  background:linear-gradient(135deg,var(--accent) 0%,#00C9B7 100%);
-  padding:60px 20px;
-  color:white;
-  margin:40px 0;
-}
-.donation-content{
-  max-width:1200px;
-  margin:0 auto;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:40px;
-  align-items:center;
-}
-.donation-info h2{
-  font-size:2rem;
-  font-weight:900;
-  margin-bottom:16px;
-}
-.donation-info p{
-  font-size:1.1rem;
-  margin-bottom:24px;
-  opacity:.95;
-}
-.donation-stats{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:24px;
-  margin-top:32px;
-}
-.donation-stat{text-align:center}
-.donation-stat-number{font-size:2rem;font-weight:900}
-.donation-stat-label{font-size:.9rem;opacity:.9}
-.donation-visual{
-  background:rgba(255,255,255,.1);
-  border-radius:16px;
-  padding:32px;
-  backdrop-filter:blur(10px);
-}
-.charity-card{
-  background:white;
-  color:var(--dark);
-  padding:20px;
-  border-radius:12px;
-  margin-bottom:16px;
-  display:flex;
-  align-items:center;
-  gap:16px;
-}
-.charity-logo{
-  width:60px;
-  height:60px;
-  background:var(--light-gray);
-  border-radius:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:2rem;
-}
-.charity-info h4{font-weight:700;margin-bottom:4px}
-.charity-info p{font-size:.85rem;color:var(--gray)}
+        /* Donation Section */
+        .donation-section {
+            background: linear-gradient(135deg, var(--accent) 0%, #00C9B7 100%);
+            padding: 60px 20px;
+            color: white;
+            margin: 40px 0;
+        }
+
+        .donation-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .donation-info h2 {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 16px;
+        }
+
+        .donation-info p {
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+            opacity: 0.95;
+        }
+
+        .donation-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .donation-stat {
+            text-align: center;
+        }
+
+        .donation-stat-number {
+            font-size: 2rem;
+            font-weight: 900;
+        }
+
+        .donation-stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .donation-visual {
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 32px;
+            backdrop-filter: blur(10px);
+        }
+
+        .charity-card {
+            background: white;
+            color: var(--dark);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .charity-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--light-gray);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .charity-info h4 {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .charity-info p {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
 
         /* Trust Section */
         .trust-section {
@@ -568,11 +594,6 @@
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
-
-            .donation-content {
-                grid-template-columns: 1fr;
-            }
-
             .header-main {
                 flex-wrap: wrap;
                 gap: 16px;
@@ -590,6 +611,10 @@
 
             .hero-stats {
                 gap: 24px;
+            }
+
+            .donation-content {
+                grid-template-columns: 1fr;
             }
 
             .products-grid {
@@ -2508,6 +2533,9 @@
   background: var(--primary);
 }
 
+.deba-product-badge.donation {
+  background: var(--success);
+}
 
 .deba-product-favorite {
   position: absolute !important;
@@ -2825,7 +2853,6 @@
   }
 }
 
-
 /* DEBA product detail — purchase-first UI */
 .deba-primary-purchase-zone{margin-top:18px;display:grid;gap:9px}
 .deba-purchase-primary{min-height:76px;display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:12px;padding:13px 15px;border-radius:18px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;text-decoration:none;box-shadow:0 14px 30px rgba(255,107,53,.24);transition:transform .2s ease,box-shadow .2s ease}
@@ -2928,74 +2955,3 @@
 .deba-checkout-inline-hint{background:#FFF8F5;color:var(--primary-dark)}
 .deba-product-badge.free{background:#E7F8F4;color:#047857}
 .deba-category-free{color:var(--accent)!important}
-
-/* Lean marketplace home */
-.deba-home-page{min-height:100vh;background:linear-gradient(135deg,#FAFAFA 0%,#F5F5F5 100%)}
-.deba-home-hero{width:min(1240px,calc(100% - 40px));margin:0 auto;padding:52px 0 34px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:28px;align-items:end}
-.deba-home-hero>div:first-child{padding:30px 34px;border-radius:28px;background:linear-gradient(135deg,#004E89,#003D6B);color:#fff;box-shadow:0 20px 44px rgba(0,78,137,.16)}
-.deba-home-hero>div:first-child>span{color:#FFB08F;font-size:.64rem;font-weight:900;letter-spacing:1.6px}
-.deba-home-hero h1{max-width:780px;margin:10px 0 12px;font-size:clamp(2rem,4.6vw,3.8rem);line-height:1.15;font-weight:900}
-.deba-home-hero p{max-width:700px;margin:0;color:rgba(255,255,255,.8);font-size:.9rem;line-height:1.9}
-.deba-home-hero-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:20px}
-.deba-home-hero-actions a{min-height:44px;padding:0 17px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;text-decoration:none;font-size:.76rem;font-weight:900}
-.deba-home-hero-actions .btn-primary{color:#fff}
-.deba-home-hero-actions .btn-outline{border:1px solid rgba(255,255,255,.3);color:#fff;background:rgba(255,255,255,.08)}
-.deba-home-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.deba-home-stats>div{min-height:122px;padding:17px;display:flex;flex-direction:column;justify-content:center;border:1px solid #E5E7EB;border-radius:18px;background:#fff;box-shadow:0 12px 28px rgba(31,41,55,.06)}
-.deba-home-stats strong{color:var(--primary);font-size:1.7rem;font-weight:900}
-.deba-home-stats span{margin-top:3px;color:var(--gray);font-size:.68rem;font-weight:700}
-.deba-home-section{width:min(1240px,calc(100% - 40px));margin:0 auto;padding:30px 0}
-.deba-home-section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:18px}
-.deba-home-section-head>div>span{color:var(--primary);font-size:.6rem;font-weight:900;letter-spacing:1.5px}
-.deba-home-section-head h2{margin-top:4px;color:var(--dark);font-size:1.45rem;font-weight:900}
-.deba-home-section-head>a{color:var(--primary);text-decoration:none;font-size:.72rem;font-weight:900}
-.deba-home-category-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}
-.deba-home-category-card{min-height:106px;padding:14px 10px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;border:1px solid #E5E7EB;border-radius:16px;background:#fff;color:var(--dark);text-decoration:none;box-shadow:0 8px 20px rgba(31,41,55,.04);transition:.2s ease}
-.deba-home-category-card:hover{transform:translateY(-3px);border-color:#F5C8B8}
-.deba-home-category-card span{font-size:1.75rem}
-.deba-home-category-card strong{text-align:center;font-size:.7rem;font-weight:800;line-height:1.5}
-.deba-home-free-band{width:min(1240px,calc(100% - 40px));margin:18px auto 38px;padding:24px;display:flex;align-items:center;justify-content:space-between;gap:18px;border-radius:24px;background:linear-gradient(135deg,#FFF8F5,#F0FDFA);border:1px solid #F4DDD4}
-.deba-home-free-band span{color:var(--accent);font-size:.62rem;font-weight:900;letter-spacing:1.6px}
-.deba-home-free-band h2{margin-top:5px;color:var(--dark);font-size:1.35rem;font-weight:900}
-.deba-home-free-band p{margin:5px 0 0;color:var(--gray);font-size:.72rem;line-height:1.7}
-.deba-home-free-band .btn-primary{min-height:44px;padding:0 16px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;color:#fff;text-decoration:none;font-size:.72rem;font-weight:900;white-space:nowrap}
-.deba-home-empty{padding:40px 18px;display:grid;place-items:center;text-align:center;border:1px dashed #D1D5DB;border-radius:20px;background:#fff}
-.deba-home-empty>span{font-size:2.4rem}
-.deba-home-empty h3{margin-top:8px;color:var(--dark);font-size:1rem}
-.deba-home-empty p{max-width:440px;margin:6px 0 16px;color:var(--gray);font-size:.72rem;line-height:1.7}
-.deba-home-empty .btn-primary{min-height:42px;padding:0 16px;display:inline-flex;align-items:center;border-radius:11px;color:#fff;text-decoration:none;font-size:.72rem;font-weight:900}
-.deba-home-footer{margin-top:30px;padding:24px 20px 18px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;background:#1F2937;color:#fff}
-.deba-home-footer>div{display:flex;flex-direction:column;gap:2px}
-.deba-home-footer strong{color:var(--primary);font-size:1.4rem;font-weight:900}
-.deba-home-footer span{color:rgba(255,255,255,.6);font-size:.65rem}
-.deba-home-footer nav{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
-.deba-home-footer a{color:rgba(255,255,255,.76);text-decoration:none;font-size:.68rem}
-.deba-home-footer a:hover{color:#fff}
-.deba-home-footer>small{color:rgba(255,255,255,.48);font-size:.62rem;text-align:left}
-
-@media(max-width:960px){
-  .deba-detail-info,.deba-checkout-intro{position:static}
-  .deba-detail-layout,.deba-checkout-layout{grid-template-columns:1fr}
-  .deba-purchase-steps{grid-template-columns:1fr}
-  .deba-home-hero{grid-template-columns:1fr}
-  .deba-home-category-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
-}
-@media(max-width:680px){
-  .deba-detail-page,.deba-checkout-page,.deba-home-section,.deba-home-hero,.deba-home-free-band{width:min(100% - 24px,1240px)}
-  .deba-gallery-main,.deba-gallery-fallback{min-height:390px}
-  .deba-gallery-main>img,.deba-gallery-main-image{padding:18px}
-  .deba-detail-info h1{font-size:1.7rem;letter-spacing:-.3px}
-  .deba-detail-price-row strong{font-size:1.55rem}
-  .deba-spec-card-expanded,.deba-metadata-grid,.deba-checkout-grid,.deba-checkout-success-actions{grid-template-columns:1fr}
-  .deba-checkout-summary{grid-template-columns:1fr}
-  .deba-checkout-summary>div:last-child{text-align:right}
-  .deba-checkout-status-grid{grid-template-columns:1fr}
-  .deba-purchase-primary{grid-template-columns:40px minmax(0,1fr) 18px}
-  .deba-home-hero>div:first-child{padding:24px 20px}
-  .deba-home-hero h1{font-size:2rem}
-  .deba-home-stats{grid-template-columns:1fr}
-  .deba-home-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .deba-home-free-band{flex-direction:column;align-items:flex-start}
-  .deba-home-footer{grid-template-columns:1fr}
-  .deba-home-footer>small{text-align:right}
-}
