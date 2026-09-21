@@ -86,6 +86,8 @@ export async function POST(request: Request) {
       )
     }
 
+    const admin = createAdminClient()
+
     const [{ data: order, error: orderError }, { data: items, error: itemsError }, { data: profile, error: profileError }, { data: privateProfile, error: privateError }] =
       await Promise.all([
         supabase
@@ -133,7 +135,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { data: risk } = await supabase
+    const { data: risk } = await admin
       .from('risk_assessments')
       .select('id,score,level,status,reasons,model_version')
       .eq('order_id', order.id)
@@ -217,8 +219,6 @@ export async function POST(request: Request) {
         { status: 503 },
       )
     }
-
-    const admin = createAdminClient()
 
     const { data: existingPayment } = await admin
       .from('payments')
