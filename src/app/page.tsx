@@ -275,13 +275,16 @@ async function fetchListings(
     let negotiationCount = 0
 
     if (userId) {
-      const [favorites, negotiations] = await Promise.all([
+      const [favorites, favoritesTotal, negotiations] = await Promise.all([
         productIds.length
           ? supabase
               .from('favorites')
               .select('product_id')
               .in('product_id', productIds)
           : Promise.resolve({ data: [], error: null }),
+        supabase
+          .from('favorites')
+          .select('id', { count: 'exact', head: true }),
         supabase
           .from('offers')
           .select('id', { count: 'exact', head: true })
@@ -293,7 +296,7 @@ async function fetchListings(
           (row) => row.product_id,
         ),
       )
-      favoriteCount = favoriteIds.size
+      favoriteCount = favoritesTotal.count || 0
       negotiationCount = negotiations.count || 0
     }
 

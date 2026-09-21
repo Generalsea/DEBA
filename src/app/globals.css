@@ -4147,3 +4147,14 @@ body {
     font-size: 9px;
   }
 }
+
+
+@media (max-width: 700px) {
+  .deba-category-row {
+    display: none;
+  }
+
+  .deba-category-row.is-open {
+    display: block;
+  }
+}

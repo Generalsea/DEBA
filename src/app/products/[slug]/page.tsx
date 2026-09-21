@@ -250,24 +250,29 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const data = await getProduct(slug)
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('products')
+    .select('title,description')
+    .eq('slug', slug)
+    .eq('status', 'published')
+    .eq('moderation_status', 'approved')
+    .maybeSingle()
 
   if (!data) {
-    return {
-      title: 'المنتج غير موجود — DEBA',
-    }
+    return { title: 'المنتج غير موجود — DEBA' }
   }
 
+  const description =
+    data.description ||
+    'تفاصيل المنتج والعرض والتفاوض المباشر عبر DEBA.'
+
   return {
-    title: data.product.title + ' — DEBA',
-    description:
-      data.product.description ||
-      'تفاصيل المنتج والعرض والتفاوض المباشر عبر DEBA.',
+    title: data.title + ' — DEBA',
+    description,
     openGraph: {
-      title: data.product.title + ' — DEBA',
-      description:
-        data.product.description ||
-        'تفاصيل المنتج والعرض والتفاوض المباشر عبر DEBA.',
+      title: data.title + ' — DEBA',
+      description,
     },
   }
 }
