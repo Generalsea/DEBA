@@ -303,7 +303,7 @@ function OrderCard({
 }
 
 export default function ProfileDashboard({ account, initialTab }: Props) {
-  const isSeller = account.profile.accountType === 'seller'
+  const [isSeller, setIsSeller] = useState(account.profile.accountType === 'seller')
   const [activeTab, setActiveTab] = useState<TabId>(() => safeTab(initialTab, isSeller))
   const [profile, setProfile] = useState(account.profile)
   const [email] = useState(account.email || '')
@@ -344,6 +344,7 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
           city: profile.city,
           governorate: profile.governorate,
           phone: profile.phone,
+          accountType: isSeller ? 'seller' : 'buyer',
           addressLine1: profile.addressLine1,
           addressLine2: profile.addressLine2,
           district: profile.district,
@@ -502,7 +503,32 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
             إضافة إعلان
             <Plus size={17} />
           </Link>
-        ) : null}
+        ) : (
+          <button
+            type="button"
+            className="deba-profile-primary-action"
+            onClick={async () => {
+              setErrorMessage(null)
+              setStatusMessage(null)
+              try {
+                const response = await fetch('/api/profile', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ displayName: profile.displayName, accountType: 'seller' }),
+                })
+                const result = (await response.json()) as { error?: string }
+                if (!response.ok) throw new Error(result.error || 'تعذر تفعيل وضع البائع.')
+                setIsSeller(true)
+                setStatusMessage('تم تفعيل وضع البائع. يمكنك الآن إنشاء إعلانات.')
+              } catch (error) {
+                setErrorMessage(error instanceof Error ? error.message : 'تعذر تفعيل وضع البائع.')
+              }
+            }}
+          >
+            تفعيل وضع البائع
+            <Store size={17} />
+          </button>
+        )}
       </div>
 
       {statusMessage ? (
