@@ -5847,3 +5847,13 @@
   .deba-order-actions{grid-template-columns:1fr}
   .deba-order-metrics{grid-template-columns:1fr}
 }
+
+.deba-profile-preferences-card{margin-top:16px;padding:18px;border:1px solid #E5E7EB;border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(31,41,55,.05)}
+.deba-profile-preferences-list{display:grid;gap:8px;margin-top:14px}
+.deba-profile-preference-row{display:grid;grid-template-columns:minmax(0,1fr) auto 18px;align-items:center;gap:10px;padding:11px 12px;border:1px solid #E5E7EB;border-radius:13px;background:#FAFAFA;cursor:pointer}
+.deba-profile-preference-row>span{display:flex;flex-direction:column;gap:3px}
+.deba-profile-preference-row strong{color:var(--dark);font-size:.68rem}
+.deba-profile-preference-row small{color:var(--gray);font-size:.59rem;line-height:1.5}
+.deba-profile-preference-row input{width:18px;height:18px;accent-color:var(--primary)}
+.deba-profile-preferences-loading{display:flex;align-items:center;justify-content:center;gap:7px;min-height:90px;color:var(--gray);font-size:.66rem}
+.deba-profile-preference-message{margin:10px 0 0;color:var(--gray);font-size:.61rem}
