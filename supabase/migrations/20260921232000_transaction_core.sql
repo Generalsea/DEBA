@@ -398,11 +398,12 @@ as $$
 begin
   if new.status is distinct from old.status then
     insert into public.order_status_history(
-      order_id, from_status, to_status, actor_id, reason, metadata
+      order_id, from_status, to_status, actor_id, reason, metadata, idempotency_key
     )
     values (
       new.id, old.status, new.status, auth.uid(), new.status_reason,
-      jsonb_build_object('source','order_transition')
+      jsonb_build_object('source','order_transition'),
+      nullif(current_setting('deba.order_status_idempotency_key', true), '')
     );
   end if;
   return new;
@@ -413,269 +414,6 @@ drop trigger if exists orders_log_status_change on public.orders;
 create trigger orders_log_status_change
 after update of status on public.orders
 for each row execute function private.log_order_status_change();
-
-create or replace function private.secure_product_write()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $$
-begin
-  if tg_op = 'INSERT' then
-    if (select auth.uid()) is not null and not (select private.is_admin()) then
-      new.owner_id := (select auth.uid());
-      new.status := 'draft';
-      new.moderation_status := 'pending';
-      new.published_at := null;
-      new.sold_at := null;
-      new.donated_at := null;
-    end if;
-    return new;
-  end if;
-
-  if tg_op = 'UPDATE' then
-    if current_setting('deba.internal_operation', true) = 'order_create' then
-      return new;
-    end if;
-
-    if (select auth.uid()) is not null and not (select private.is_admin()) then
-      if new.owner_id is distinct from old.owner_id then
-        raise exception 'Changing product ownership is not allowed';
-      end if;
-      if new.status is distinct from old.status then
-        raise exception 'Changing product lifecycle status directly is not allowed';
-      end if;
-      if new.moderation_status is distinct from old.moderation_status then
-        raise exception 'Changing moderation status directly is not allowed';
-      end if;
-      if new.published_at is distinct from old.published_at
-         or new.sold_at is distinct from old.sold_at
-         or new.donated_at is distinct from old.donated_at then
-        raise exception 'Lifecycle timestamps are server controlled';
-      end if;
-
-      if old.moderation_status = 'approved'
-         and (
-           new.title is distinct from old.title
-           or new.description is distinct from old.description
-           or new.category_id is distinct from old.category_id
-           or new.listing_type is distinct from old.listing_type
-           or new.condition_grade is distinct from old.condition_grade
-           or new.condition_details is distinct from old.condition_details
-           or new.price is distinct from old.price
-           or new.is_negotiable is distinct from old.is_negotiable
-           or new.minimum_offer_amount is distinct from old.minimum_offer_amount
-           or new.quantity is distinct from old.quantity
-           or new.delivery_method is distinct from old.delivery_method
-           or new.metadata is distinct from old.metadata
-         ) then
-        new.moderation_status := 'pending';
-        new.status := 'draft';
-      end if;
-    end if;
-    return new;
-  end if;
-
-  return new;
-end;
-$$;
-
-create or replace function private.create_fixed_price_order(
-  p_buyer_id uuid,
-  p_product_id uuid,
-  p_quantity integer,
-  p_delivery_method text,
-  p_delivery_address jsonb,
-  p_notes text,
-  p_idempotency_key text
-)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_existing public.orders%rowtype;
-  v_product public.products%rowtype;
-  v_order public.orders%rowtype;
-  v_item_total numeric;
-  v_address jsonb := coalesce(p_delivery_address, '{}'::jsonb);
-begin
-  if p_buyer_id is null or p_buyer_id <> (select auth.uid()) then
-    raise exception 'Authenticated buyer is required' using errcode = '42501';
-  end if;
-
-  if p_quantity is null or p_quantity < 1 or p_quantity > 100 then
-    raise exception 'Invalid quantity' using errcode = '22023';
-  end if;
-
-  if p_delivery_method not in ('pickup','seller_delivery','platform_delivery') then
-    raise exception 'Invalid delivery method' using errcode = '22023';
-  end if;
-
-  if p_idempotency_key is null
-     or length(trim(p_idempotency_key)) < 16
-     or length(trim(p_idempotency_key)) > 128 then
-    raise exception 'Valid idempotency key is required' using errcode = '22023';
-  end if;
-
-  select * into v_existing
-  from public.orders
-  where buyer_id = p_buyer_id and idempotency_key = trim(p_idempotency_key)
-  order by created_at desc limit 1;
-
-  if found then
-    return jsonb_build_object(
-      'order_id', v_existing.id,
-      'reference_code', v_existing.reference_code,
-      'status', v_existing.status,
-      'quantity', (select coalesce(sum(quantity),0) from public.order_items where order_id = v_existing.id),
-      'total', v_existing.total,
-      'currency', v_existing.currency,
-      'existing', true
-    );
-  end if;
-
-  select * into v_product
-  from public.products
-  where id = p_product_id
-    and status = 'published'
-    and moderation_status = 'approved'
-    and listing_type = 'sale'
-    and owner_id is not null
-  for update;
-
-  if not found then
-    raise exception 'Product is not available' using errcode = 'P0002';
-  end if;
-
-  if v_product.owner_id = p_buyer_id then
-    raise exception 'Cannot buy your own product' using errcode = '42501';
-  end if;
-
-  if v_product.quantity < p_quantity then
-    raise exception 'Insufficient stock' using errcode = 'P0003';
-  end if;
-
-  if (
-    (v_product.delivery_method = 'pickup' and p_delivery_method <> 'pickup')
-    or (v_product.delivery_method = 'seller_delivery' and p_delivery_method <> 'seller_delivery')
-    or (v_product.delivery_method = 'platform_delivery' and p_delivery_method <> 'platform_delivery')
-    or (v_product.delivery_method = 'both' and p_delivery_method not in ('pickup','seller_delivery'))
-  ) then
-    raise exception 'Delivery method not available' using errcode = '22023';
-  end if;
-
-  if p_delivery_method <> 'pickup'
-     and (
-       coalesce(v_address->>'address_line1','') = ''
-       or coalesce(v_address->>'city','') = ''
-       or coalesce(v_address->>'governorate','') = ''
-     ) then
-    raise exception 'Delivery address is required' using errcode = '22023';
-  end if;
-
-  if v_product.price is null or v_product.price <= 0 then
-    raise exception 'Product price is invalid' using errcode = 'P0004';
-  end if;
-
-  v_item_total := v_product.price * p_quantity;
-
-  perform set_config('deba.internal_operation','order_create',true);
-
-  update public.products
-  set quantity = quantity - p_quantity,
-      status = case when quantity - p_quantity = 0 then 'reserved' else 'published' end
-  where id = v_product.id
-    and quantity >= p_quantity
-    and status = 'published';
-
-  if not found then
-    raise exception 'Stock changed during order creation' using errcode = 'P0003';
-  end if;
-
-  insert into public.orders(
-    buyer_id, seller_id, product_id, offer_id, idempotency_key,
-    status, payment_status, fulfillment_status,
-    subtotal, shipping_fee, platform_fee, total, currency,
-    delivery_method, delivery_address_snapshot, notes, status_reason
-  )
-  values (
-    p_buyer_id, v_product.owner_id, v_product.id, null, trim(p_idempotency_key),
-    'pending', 'unpaid', 'pending',
-    v_item_total, 0, 0, v_item_total, coalesce(v_product.currency,'EGP'),
-    p_delivery_method,
-    case when p_delivery_method='pickup' then '{}'::jsonb else v_address end,
-    nullif(trim(coalesce(p_notes,'')),''), 'Order created'
-  )
-  returning * into v_order;
-
-  insert into public.order_items(order_id, product_id, seller_id, quantity, unit_price, line_total)
-  values (v_order.id, v_product.id, v_product.owner_id, p_quantity, v_product.price, v_item_total);
-
-  insert into public.order_status_history(
-    order_id, from_status, to_status, actor_id, reason, metadata, idempotency_key
-  )
-  values (
-    v_order.id, null, 'pending', p_buyer_id, 'Order created',
-    jsonb_build_object('source','checkout'), trim(p_idempotency_key)
-  );
-
-  insert into public.audit_logs(actor_id, action, entity_type, entity_id, after_data, metadata)
-  values (
-    p_buyer_id, 'order.created', 'order', v_order.id,
-    jsonb_build_object('status','pending','total',v_order.total,'currency',v_order.currency),
-    jsonb_build_object('source','checkout','reference_code',v_order.reference_code)
-  );
-
-  insert into public.notifications(user_id, type, title, body, href, metadata)
-  values (
-    v_order.seller_id, 'order.created', 'طلب شراء جديد',
-    'لديك طلب شراء جديد على منتجك.',
-    '/profile?tab=seller-orders',
-    jsonb_build_object('order_id',v_order.id,'reference_code',v_order.reference_code)
-  );
-
-  return jsonb_build_object(
-    'order_id', v_order.id,
-    'reference_code', v_order.reference_code,
-    'status', v_order.status,
-    'quantity', p_quantity,
-    'total', v_order.total,
-    'currency', v_order.currency,
-    'existing', false
-  );
-end;
-$$;
-
-create or replace function public.create_fixed_price_order(
-  p_product_id uuid,
-  p_quantity integer,
-  p_delivery_method text,
-  p_delivery_address jsonb,
-  p_notes text,
-  p_idempotency_key text
-)
-returns jsonb
-language plpgsql
-security invoker
-set search_path = 'public','private','pg_temp'
-as $$
-begin
-  return private.create_fixed_price_order(
-    (select auth.uid()),
-    p_product_id,
-    p_quantity,
-    p_delivery_method,
-    p_delivery_address,
-    p_notes,
-    p_idempotency_key
-  );
-end;
-$$;
-
-revoke execute on function public.create_fixed_price_order(uuid,integer,text,jsonb,text,text) from public, anon;
-grant execute on function public.create_fixed_price_order(uuid,integer,text,jsonb,text,text) to authenticated;
 
 create or replace function private.transition_order_status(
   p_order_id uuid,
@@ -699,36 +437,30 @@ begin
     raise exception 'Authenticated actor is required' using errcode = '42501';
   end if;
 
-  if p_idempotency_key is null
-     or length(trim(p_idempotency_key)) < 16
-     or length(trim(p_idempotency_key)) > 128 then
+  if p_idempotency_key is null or length(trim(p_idempotency_key)) < 16 or length(trim(p_idempotency_key)) > 128 then
     raise exception 'Valid idempotency key is required' using errcode = '22023';
   end if;
 
   select * into v_existing
   from public.order_status_history
-  where order_id = p_order_id
-    and idempotency_key = trim(p_idempotency_key)
+  where order_id = p_order_id and idempotency_key = trim(p_idempotency_key)
   order by created_at desc limit 1;
 
   if found then
-    return jsonb_build_object(
-      'order_id', p_order_id,
-      'status', v_existing.to_status,
-      'idempotent', true
-    );
+    return jsonb_build_object('order_id', p_order_id, 'status', v_existing.to_status, 'idempotent', true);
   end if;
 
   select * into v_order from public.orders where id = p_order_id for update;
-
-  if not found then
-    raise exception 'Order not found' using errcode = 'P0002';
-  end if;
+  if not found then raise exception 'Order not found' using errcode = 'P0002'; end if;
 
   v_is_admin := (select private.is_admin());
 
   if not v_is_admin and p_actor_id <> v_order.buyer_id and p_actor_id <> v_order.seller_id then
     raise exception 'Not allowed to update this order' using errcode = '42501';
+  end if;
+
+  if p_new_status = 'cancelled' and v_order.payment_status in ('paid','partially_refunded') then
+    raise exception 'Paid orders require a refund workflow before cancellation' using errcode = '42501';
   end if;
 
   if not v_is_admin then
@@ -750,6 +482,7 @@ begin
     end if;
   end if;
 
+  perform set_config('deba.order_status_idempotency_key', trim(p_idempotency_key), true);
   perform set_config('deba.internal_operation','order_create',true);
 
   if p_new_status = 'cancelled' and v_order.status <> 'cancelled' then
@@ -757,8 +490,14 @@ begin
     from public.order_items where order_id = v_order.id;
 
     update public.products
-    set quantity = quantity + v_item_quantity,
-        status = 'published'
+    set quantity = quantity + v_item_quantity, status = 'published'
+    where id = v_order.product_id;
+  end if;
+
+  if p_new_status = 'completed' and v_order.product_id is not null then
+    update public.products
+    set status = case when quantity = 0 then 'sold' else status end,
+        sold_at = case when quantity = 0 then coalesce(sold_at, now()) else sold_at end
     where id = v_order.product_id;
   end if;
 
@@ -770,27 +509,20 @@ begin
   insert into public.audit_logs(actor_id, action, entity_type, entity_id, before_data, after_data, metadata)
   values (
     p_actor_id, 'order.status_changed', 'order', p_order_id,
-    jsonb_build_object('status',v_order.status),
-    jsonb_build_object('status',p_new_status),
+    jsonb_build_object('status',v_order.status,'payment_status',v_order.payment_status),
+    jsonb_build_object('status',p_new_status,'payment_status',v_order.payment_status),
     jsonb_build_object('reason',nullif(trim(coalesce(p_reason,'')), ''))
   );
 
-  insert into public.notifications(
-    user_id, type, title, body, href, metadata
-  )
+  insert into public.notifications(user_id, type, title, body, href, metadata)
   values (
     case when p_actor_id = v_order.buyer_id then v_order.seller_id else v_order.buyer_id end,
-    'order.updated', 'تحديث حالة الطلب',
-    'تم تحديث حالة أحد طلبات DEBA.',
-    '/profile?tab=orders',
+    'order.updated', 'تحديث حالة الطلب', 'تم تحديث حالة أحد طلبات DEBA.',
+    '/orders/' || p_order_id,
     jsonb_build_object('order_id',p_order_id,'status',p_new_status)
   );
 
-  return jsonb_build_object(
-    'order_id', p_order_id,
-    'status', p_new_status,
-    'idempotent', false
-  );
+  return jsonb_build_object('order_id', p_order_id, 'status', p_new_status, 'idempotent', false);
 end;
 $$;
 
