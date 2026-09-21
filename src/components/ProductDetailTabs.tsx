@@ -184,6 +184,7 @@ export default function ProductDetailTabs({
   const specifications = asObject(root.specifications)
   const identification = asObject(root.identification)
   const commerce = asObject(root.commerce)
+  const declaration = asObject(commerce.declaration)
   const returns = asObject(commerce.returns)
   const warranty = asObject(commerce.warranty)
   const authenticity = asObject(commerce.authenticity)
@@ -300,7 +301,7 @@ export default function ProductDetailTabs({
                 <DataRow label="بلد المنشأ / المصدر" value={identification.origin} />
                 <DataRow label="تاريخ الشراء الأصلي" value={identification.purchase_date} />
                 <DataRow label="باركود / GTIN" value={identification.barcode} />
-                <DataRow label="إصدار عقد البيانات" value={textValue(commerce.declaration && asObject(commerce.declaration).version)} />
+                <DataRow label="إصدار عقد البيانات" value={textValue(declaration.version)} />
               </div>
             </section>
           </div>
