@@ -18,6 +18,8 @@ type ActionBody = {
     | 'resolve_ticket'
     | 'close_ticket'
     | 'reply_ticket'
+    | 'approve_risk'
+    | 'block_risk'
   id?: string
   note?: string
 }
