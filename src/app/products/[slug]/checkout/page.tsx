@@ -189,17 +189,6 @@ export default async function CheckoutPage({
               </div>
             )}
 
-            {!row.owner_id && (
-              <div className="deba-checkout-blocker">
-                لا يوجد بائع مرتبط بهذا الإعلان، لذلك لا يمكن إنشاء طلب شراء حاليًا.
-              </div>
-            )}
-
-            {sellerCanBuy && (
-              <div className="deba-checkout-inline-hint">
-                سجّل الدخول أولًا حتى يرتبط الطلب بحسابك.
-              </div>
-            )}
           </section>
         </div>
       </main>
