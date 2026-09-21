@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 
 type AuthMode = 'login' | 'register'
+type AccountType = 'buyer' | 'seller'
 type FieldErrors = Record<string, string>
 
 function mapAuthError(message: string) {
@@ -50,6 +51,7 @@ function isValidEgyptianPhone(value: string) {
 export default function LoginPage() {
   const router = useRouter()
   const [mode, setMode] = useState<AuthMode>('login')
+  const [accountType, setAccountType] = useState<AccountType>('buyer')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -174,6 +176,7 @@ export default function LoginPage() {
             first_name: cleanFirstName,
             last_name: cleanLastName,
             phone: cleanPhone,
+            account_type: accountType,
           },
           emailRedirectTo:
             window.location.origin + '/auth/callback?next=/',
@@ -263,7 +266,7 @@ export default function LoginPage() {
             <p className="brand-subtitle">
               كل شيء له قيمة عندما يصل إلى من يحتاجه.
               <br />
-              سوق مصمم للبيع والتبادل والتبرع، بتجربة هادئة، واضحة وموثوقة.
+              سوق مصمم للبيع والشراء والتبادل، بتجربة هادئة، واضحة وموثوقة.
             </p>
           </div>
 
@@ -288,7 +291,7 @@ export default function LoginPage() {
               <div className="value-number">03</div>
               <div className="value-content">
                 <h3>أثر</h3>
-                <p>مساحة أكبر للتبرع</p>
+                <p>مساحة أكبر للبيع والشراء</p>
               </div>
             </div>
           </div>
@@ -520,6 +523,34 @@ export default function LoginPage() {
                     aria-invalid={Boolean(fieldErrors.lastName)}
                   />
                   {fieldErrors.lastName && <div className="field-error">{fieldErrors.lastName}</div>}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <span className="form-label">أنت هنا من أجل</span>
+                <div className="account-type-options" role="radiogroup" aria-label="نوع الحساب">
+                  <button
+                    type="button"
+                    className={'account-type-option ' + (accountType === 'buyer' ? 'active' : '')}
+                    role="radio"
+                    aria-checked={accountType === 'buyer'}
+                    onClick={() => setAccountType('buyer')}
+                    disabled={isPending}
+                  >
+                    <strong>مشتري</strong>
+                    <span>تصفح المنتجات وشراء ما تحتاجه.</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={'account-type-option ' + (accountType === 'seller' ? 'active' : '')}
+                    role="radio"
+                    aria-checked={accountType === 'seller'}
+                    onClick={() => setAccountType('seller')}
+                    disabled={isPending}
+                  >
+                    <strong>بائع</strong>
+                    <span>اعرض سلعك للبيع داخل DEBA.</span>
+                  </button>
                 </div>
               </div>
 
