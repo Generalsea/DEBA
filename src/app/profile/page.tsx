@@ -108,9 +108,15 @@ export default async function ProfilePage({
     privateResult,
     categoriesResult,
     buyerOrdersResult,
+    buyerOrderCountResult,
     sellerOrdersResult,
+    sellerOrderCountResult,
     sellerProductsResult,
+    sellerProductCountResult,
+    activeSellerProductCountResult,
+    pendingSellerProductCountResult,
     favoritesResult,
+    favoriteCountResult,
   ] = await Promise.all([
     supabase
       .from('profiles')
@@ -135,10 +141,18 @@ export default async function ProfilePage({
       .limit(20),
     supabase
       .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('buyer_id', userId),
+    supabase
+      .from('orders')
       .select('id,buyer_id,seller_id,product_id,status,payment_status,fulfillment_status,total,currency,delivery_method,created_at')
       .eq('seller_id', userId)
       .order('created_at', { ascending: false })
       .limit(20),
+    supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('seller_id', userId),
     supabase
       .from('products')
       .select('id,owner_id,title,slug,price,currency,quantity,status,moderation_status,condition_grade,created_at')
@@ -146,11 +160,30 @@ export default async function ProfilePage({
       .order('created_at', { ascending: false })
       .limit(50),
     supabase
+      .from('products')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', userId),
+    supabase
+      .from('products')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', userId)
+      .eq('status', 'published')
+      .eq('moderation_status', 'approved'),
+    supabase
+      .from('products')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', userId)
+      .or('moderation_status.eq.pending,status.eq.draft'),
+    supabase
       .from('favorites')
       .select('product_id,created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(50),
+    supabase
+      .from('favorites')
+      .select('product_id', { count: 'exact', head: true })
+      .eq('user_id', userId),
   ])
 
   if (profileResult.error) {
@@ -286,16 +319,12 @@ export default async function ProfilePage({
       postalCode: privateProfile?.postal_code || null,
     },
     stats: {
-      buyerOrders: buyerOrders.length,
-      favorites: favorites.length,
-      sellerProducts: sellerProducts.length,
-      sellerOrders: sellerOrders.length,
-      activeSellerProducts: sellerProducts.filter(
-        (item) => item.status === 'published' && item.moderation_status === 'approved',
-      ).length,
-      pendingSellerProducts: sellerProducts.filter(
-        (item) => item.moderation_status === 'pending' || item.status === 'draft',
-      ).length,
+      buyerOrders: buyerOrderCountResult.count || 0,
+      favorites: favoriteCountResult.count || 0,
+      sellerProducts: sellerProductCountResult.count || 0,
+      sellerOrders: sellerOrderCountResult.count || 0,
+      activeSellerProducts: activeSellerProductCountResult.count || 0,
+      pendingSellerProducts: pendingSellerProductCountResult.count || 0,
     },
     buyerOrders: buyerOrders.map(serializeOrder),
     sellerOrders: sellerOrders.map(serializeOrder),
