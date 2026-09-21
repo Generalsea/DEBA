@@ -565,6 +565,7 @@ export default async function ProductDetailPage({
         </div>
 
         <ProductDetailTabs
+          productId={product.id}
           metadata={product.metadata}
           description={product.description}
           conditionDetails={product.condition_details}
