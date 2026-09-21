@@ -1,46 +1,16 @@
 import type { Metadata } from 'next'
-import {
-  ArrowLeft,
-  BadgeCheck,
-  BookOpen,
-  Car,
-  Gamepad2,
-  Gift,
-  Home,
-  Laptop,
-  MoreHorizontal,
-  PackageOpen,
-  Shirt,
-  ShieldCheck,
-  Sofa,
-  Sparkles,
-  Trophy,
-  Wrench,
-  Baby,
-} from 'lucide-react'
 import Link from 'next/link'
-import Header, { type HeaderCategory } from '@/components/Header'
-import ProductGrid, { type ProductGridItem } from '@/components/ProductGrid'
 import { createClient } from '@/utils/supabase/server'
 
 export const metadata: Metadata = {
-  title: 'DEBA — Marketplace',
-  description: 'DEBA — سوق مصري للسلع، التفاوض المباشر، والتبرع.',
+  title: 'DEBA | Marketplace مصري - بيع، شراء، تبرع',
+  description: 'DEBA — منصة مصرية للبيع والشراء والتبرع بالسلع غير المستخدمة.',
 }
 
 const BUCKET = 'deba-product-media'
-const LIMIT = 24
+const PRODUCT_LIMIT = 6
 
 type SearchParamValue = string | string[] | undefined
-type ListingMode = 'all' | 'sale' | 'donation'
-
-type PageProps = {
-  searchParams: Promise<{
-    q?: SearchParamValue
-    category?: SearchParamValue
-    type?: SearchParamValue
-  }>
-}
 
 type CategoryRow = {
   id: string
@@ -59,33 +29,62 @@ type ProductRow = {
   listing_type: 'sale' | 'donation' | 'free'
   price: number | string | null
   currency: string
-  is_negotiable: boolean
   condition_grade: string | null
   city: string | null
   governorate: string | null
+  moderation_status: string
   published_at: string | null
   created_at: string
-  category: { id: string; name_ar: string; name_en: string | null; slug: string } | null
-  images: { id: string; storage_path: string; alt_text: string | null; sort_order: number; is_primary: boolean }[] | null
+  category_id: string | null
 }
 
-const CATEGORY_ICONS = [
-  Laptop,
-  Home,
-  Sofa,
-  Shirt,
-  BookOpen,
-  Gamepad2,
-  Car,
-  Wrench,
-  Trophy,
-  Baby,
-  Sparkles,
-  MoreHorizontal,
-]
+type ImageRow = {
+  id: string
+  product_id: string
+  storage_path: string
+  alt_text: string | null
+  sort_order: number
+  is_primary: boolean
+}
 
-const PRODUCT_SELECT =
-  'id,owner_id,title,slug,description,listing_type,price,currency,is_negotiable,condition_grade,city,governorate,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
+type ProfileRow = {
+  id: string
+  display_name: string | null
+  username: string | null
+  avatar_url: string | null
+}
+
+type CharityRow = {
+  id: string
+  name_ar: string
+  name_en: string | null
+  slug: string
+  description_ar: string | null
+  logo_url: string | null
+  website_url: string | null
+  city: string | null
+  governorate: string | null
+}
+
+const CONDITION_LABELS: Record<string, string> = {
+  new: 'جديد',
+  like_new: 'كالجديد',
+  excellent: 'ممتاز',
+  good: 'جيد',
+  fair: 'مقبول',
+  poor: 'يحتاج عناية',
+  for_parts: 'للقطع / الإصلاح',
+}
+
+const CATEGORY_PRESENTATION: { slug: string; icon: string }[] = [
+  { slug: 'electronics', icon: '📱' },
+  { slug: 'furniture-home', icon: '🛋️' },
+  { slug: 'home-appliances', icon: '🔌' },
+  { slug: 'fashion', icon: '👕' },
+  { slug: 'books-education', icon: '📚' },
+  { slug: 'tools-equipment', icon: '🔧' },
+  { slug: 'collectibles-antiques', icon: '🎨' },
+]
 
 function firstParam(value: SearchParamValue) {
   return Array.isArray(value) ? value[0] : value
@@ -103,368 +102,644 @@ function cleanSearch(value: string | undefined) {
   return result || null
 }
 
-function toNumber(value: number | string | null) {
+function normalizePrice(value: number | string | null) {
   if (value === null) return null
   const number = typeof value === 'number' ? value : Number(value)
   return Number.isFinite(number) ? number : null
 }
 
-function imageUrl(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  storagePath: string | null,
-) {
+function getImageUrl(storagePath: string | null) {
   if (!storagePath) return null
   if (/^https?:\/\//i.test(storagePath)) return storagePath
-  return supabase.storage.from(BUCKET).getPublicUrl(storagePath).data.publicUrl
+  return (
+    'https://gkwpjtbrecoesxyoybto.supabase.co/storage/v1/object/public/' +
+    BUCKET +
+    '/' +
+    storagePath
+  )
 }
 
-function mapCategory(row: CategoryRow): HeaderCategory {
-  return { id: row.id, nameAr: row.name_ar, slug: row.slug }
+function formatPrice(product: ProductRow) {
+  const price = normalizePrice(product.price)
+
+  if (product.listing_type !== 'sale') return 'مجاني'
+  if (price === null) return 'السعر عند التواصل'
+
+  return (
+    new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(price) +
+    ' ' +
+    (product.currency || 'EGP')
+  )
 }
 
-function mapProduct(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  row: ProductRow,
-): ProductGridItem {
-  const image = [...(row.images || [])].sort(
-    (a, b) => Number(b.is_primary) - Number(a.is_primary) || a.sort_order - b.sort_order,
-  )[0]
+function locationText(product: ProductRow) {
+  return [product.city, product.governorate].filter(Boolean).join('، ') || 'مصر'
+}
+
+async function loadHomeData(searchValue: string | undefined, categoryValue: string | undefined) {
+  const supabase = await createClient()
+  const searchTerm = cleanSearch(searchValue)
+
+  let categoryId: string | null = null
+
+  if (categoryValue && categoryValue !== 'all') {
+    const categoryResponse = await supabase
+      .from('categories')
+      .select('id')
+      .eq('slug', categoryValue)
+      .eq('is_active', true)
+      .maybeSingle()
+
+    categoryId = categoryResponse.data?.id || null
+  }
+
+  let productQuery = supabase
+    .from('products')
+    .select(
+      'id,owner_id,title,slug,description,listing_type,price,currency,condition_grade,city,governorate,moderation_status,published_at,created_at,category_id',
+    )
+    .in('listing_type', ['sale', 'donation', 'free'])
+    .eq('status', 'published')
+    .eq('moderation_status', 'approved')
+    .order('published_at', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .limit(PRODUCT_LIMIT)
+
+  if (categoryId) productQuery = productQuery.eq('category_id', categoryId)
+
+  if (searchTerm) {
+    const pattern = '%' + searchTerm + '%'
+    productQuery = productQuery.or('title.ilike.' + pattern + ',description.ilike.' + pattern)
+  }
+
+  const [
+    categoryResponse,
+    productsResponse,
+    productCountResponse,
+    membersCountResponse,
+    verifiedCharitiesCountResponse,
+    donationListingCountResponse,
+    featuredDonationsResponse,
+    charityResponse,
+  ] = await Promise.all([
+    supabase
+      .from('categories')
+      .select('id,name_ar,name_en,slug,sort_order')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .order('name_ar', { ascending: true }),
+    productQuery,
+    supabase
+      .from('products')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'published')
+      .eq('moderation_status', 'approved'),
+    supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_public', true),
+    supabase
+      .from('charities')
+      .select('id', { count: 'exact', head: true })
+      .eq('verification_status', 'verified')
+      .eq('is_active', true),
+    supabase
+      .from('products')
+      .select('id', { count: 'exact', head: true })
+      .in('listing_type', ['donation', 'free'])
+      .eq('status', 'published')
+      .eq('moderation_status', 'approved'),
+    supabase
+      .from('products')
+      .select(
+        'id,owner_id,title,slug,description,listing_type,price,currency,condition_grade,city,governorate,moderation_status,published_at,created_at,category_id',
+      )
+      .in('listing_type', ['donation', 'free'])
+      .eq('status', 'published')
+      .eq('moderation_status', 'approved')
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(3),
+    supabase
+      .from('charities')
+      .select('id,name_ar,name_en,slug,description_ar,logo_url,website_url,city,governorate')
+      .eq('verification_status', 'verified')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(3),
+  ])
+
+  const categories = (categoryResponse.data || []) as CategoryRow[]
+  const products = (productsResponse.data || []) as ProductRow[]
+  const featuredDonations = (featuredDonationsResponse.data || []) as ProductRow[]
+
+  const allProductIds = Array.from(
+    new Set([...products, ...featuredDonations].map((product) => product.id)),
+  )
+  const ownerIds = Array.from(
+    new Set(
+      [...products, ...featuredDonations]
+        .map((product) => product.owner_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  )
+  const categoryIds = Array.from(
+    new Set(
+      [...products, ...featuredDonations]
+        .map((product) => product.category_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  )
+
+  const [imagesResponse, profilesResponse, categoryRowsResponse] = await Promise.all([
+    allProductIds.length
+      ? supabase
+          .from('product_images')
+          .select('id,product_id,storage_path,alt_text,sort_order,is_primary')
+          .in('product_id', allProductIds)
+          .order('is_primary', { ascending: false })
+          .order('sort_order', { ascending: true })
+      : Promise.resolve({ data: [], error: null }),
+    ownerIds.length
+      ? supabase
+          .from('profiles')
+          .select('id,display_name,username,avatar_url')
+          .in('id', ownerIds)
+      : Promise.resolve({ data: [], error: null }),
+    categoryIds.length
+      ? supabase
+          .from('categories')
+          .select('id,name_ar,name_en,slug')
+          .in('id', categoryIds)
+      : Promise.resolve({ data: [], error: null }),
+  ])
+
+  const images = (imagesResponse.data || []) as ImageRow[]
+  const profiles = (profilesResponse.data || []) as ProfileRow[]
+  const categoryRows = (categoryRowsResponse.data || []) as CategoryRow[]
+
+  const imageByProduct = new Map<string, ImageRow>()
+  for (const image of images) {
+    if (!imageByProduct.has(image.product_id)) {
+      imageByProduct.set(image.product_id, image)
+    }
+  }
+
+  const profileById = new Map(profiles.map((profile) => [profile.id, profile]))
+  const categoryById = new Map(categoryRows.map((category) => [category.id, category]))
 
   return {
-    id: row.id,
-    slug: row.slug,
-    title: row.title,
-    description: row.description,
-    listingType: row.listing_type,
-    price: toNumber(row.price),
-    currency: row.currency || 'EGP',
-    isNegotiable: row.is_negotiable,
-    conditionGrade: row.condition_grade,
-    city: row.city,
-    governorate: row.governorate,
-    categoryName: row.category?.name_ar || row.category?.name_en || null,
-    imageUrl: imageUrl(supabase, image?.storage_path || null),
-    imageAlt: image?.alt_text?.trim() || row.title,
+    supabase,
+    categories,
+    products,
+    featuredDonations,
+    charities: (charityResponse.data || []) as CharityRow[],
+    imageByProduct,
+    profileById,
+    categoryById,
+    stats: {
+      products: productCountResponse.count || 0,
+      members: membersCountResponse.count || 0,
+      charities: verifiedCharitiesCountResponse.count || 0,
+      donationListings: donationListingCountResponse.count || 0,
+    },
   }
 }
 
-async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  try {
-    const { data } = await supabase.auth.getClaims()
-    return typeof data?.claims?.sub === 'string' ? data.claims.sub : null
-  } catch {
-    return null
-  }
-}
-
-async function resolveCategoryId(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  value: string | undefined,
-) {
-  if (!value || value === 'all') return null
-
-  const bySlug = await supabase
-    .from('categories')
-    .select('id')
-    .eq('slug', value)
-    .eq('is_active', true)
-    .maybeSingle()
-
-  if (bySlug.data?.id) return bySlug.data.id
-
-  const byArabicName = await supabase
-    .from('categories')
-    .select('id')
-    .eq('name_ar', value)
-    .eq('is_active', true)
-    .maybeSingle()
-
-  return byArabicName.data?.id || null
-}
-
-async function loadMarketplace(q: string | undefined, category: string | undefined, mode: ListingMode) {
-  const empty = {
-    categories: [] as CategoryRow[],
-    products: [] as ProductGridItem[],
-    donations: [] as ProductGridItem[],
-    favoriteCount: 0,
-    negotiationCount: 0,
-  }
-
-  try {
-    const supabase = await createClient()
-    const [{ data: categoryData }, userId] = await Promise.all([
-      supabase
-        .from('categories')
-        .select('id,name_ar,name_en,slug,sort_order')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
-        .order('name_ar', { ascending: true }),
-      getUserId(supabase),
-    ])
-
-    const categories = (categoryData || []) as CategoryRow[]
-
-    const categoryId = await resolveCategoryId(supabase, category)
-    if (category && category !== 'all' && !categoryId) {
-      return { ...empty, categories }
-    }
-
-    const searchTerm = cleanSearch(q)
-
-    const buildQuery = (types: ('sale' | 'donation' | 'free')[]) => {
-      let query = supabase
-        .from('products')
-        .select(PRODUCT_SELECT)
-        .in('listing_type', types)
-        .eq('status', 'published')
-        .eq('moderation_status', 'approved')
-        .order('published_at', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false })
-        .limit(LIMIT)
-
-      if (categoryId) query = query.eq('category_id', categoryId)
-
-      if (searchTerm) {
-        const pattern = '%' + searchTerm + '%'
-        query = query.or('title.ilike.' + pattern + ',description.ilike.' + pattern)
-      }
-
-      return query
-    }
-
-    const [sales, donations] = await Promise.all([
-      mode === 'donation' ? Promise.resolve({ data: [], error: null }) : buildQuery(['sale']),
-      mode === 'sale' ? Promise.resolve({ data: [], error: null }) : buildQuery(['donation', 'free']),
-    ])
-
-    if (sales.error || donations.error) {
-      console.error('DEBA marketplace query failed', sales.error?.message, donations.error?.message)
-      return { ...empty, categories }
-    }
-
-    const ids = [
-      ...((sales.data || []) as unknown as ProductRow[]),
-      ...((donations.data || []) as unknown as ProductRow[]),
-    ].map((row) => row.id)
-
-    let favoriteIds = new Set<string>()
-    let favoriteCount = 0
-    let negotiationCount = 0
-
-    if (userId) {
-      const [favorites, favoriteTotal, offers] = await Promise.all([
-        ids.length
-          ? supabase.from('favorites').select('product_id').in('product_id', ids)
-          : Promise.resolve({ data: [], error: null }),
-        supabase.from('favorites').select('id', { count: 'exact', head: true }),
-        supabase
-          .from('offers')
-          .select('id', { count: 'exact', head: true })
-          .in('status', ['pending', 'countered']),
-      ])
-
-      favoriteIds = new Set(
-        ((favorites.data || []) as { product_id: string }[]).map((row) => row.product_id),
-      )
-      favoriteCount = favoriteTotal.count || 0
-      negotiationCount = offers.count || 0
-    }
-
-    return {
-      categories,
-      products: ((sales.data || []) as unknown as ProductRow[]).map((row) => ({
-        ...mapProduct(supabase, row),
-        isFavorite: favoriteIds.has(row.id),
-      })),
-      donations: ((donations.data || []) as unknown as ProductRow[]).map((row) => ({
-        ...mapProduct(supabase, row),
-        isFavorite: favoriteIds.has(row.id),
-      })),
-      favoriteCount,
-      negotiationCount,
-    }
-  } catch (error) {
-    console.error('DEBA marketplace load failed', error)
-    return empty
-  }
-}
-
-export default async function HomePage({ searchParams }: PageProps) {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    q?: SearchParamValue
+    category?: SearchParamValue
+  }>
+}) {
   const params = await searchParams
   const q = firstParam(params.q)
   const category = firstParam(params.category)
-  const requestedType = firstParam(params.type)
-  const mode: ListingMode =
-    requestedType === 'sale' || requestedType === 'donation'
-      ? requestedType
-      : 'all'
+  const data = await loadHomeData(q, category)
 
-  const data = await loadMarketplace(q, category, mode)
-  const categories = data.categories.map(mapCategory)
-  const totalProducts = data.products.length + data.donations.length
+  const categoryMap = new Map(data.categories.map((item) => [item.slug, item]))
+  const presentationCategories = CATEGORY_PRESENTATION
+    .map((presentation) => ({
+      ...presentation,
+      row: categoryMap.get(presentation.slug),
+    }))
+    .filter((item): item is { slug: string; icon: string; row: CategoryRow } => Boolean(item.row))
+
+  const donationCategory = {
+    id: 'donations',
+    slug: '__donations__',
+    name_ar: 'تبرعات',
+    name_en: 'Donations',
+    sort_order: 10000,
+  }
+
+  const categoryFilterHref = (slug: string) =>
+    slug === '__donations__'
+      ? '/?type=donation#donations'
+      : '/?category=' + encodeURIComponent(slug) + '#featured'
+
+  const productRows = q || category
+    ? data.products
+    : data.products.filter((product) => product.listing_type === 'sale')
+
+  const donationRows = data.featuredDonations
 
   return (
     <>
-      <Header
-        categories={categories}
-        initialSearch={q || ''}
-        initialCategory={category || 'all'}
-        favoriteCount={data.favoriteCount}
-        negotiationCount={data.negotiationCount}
-      />
+      <header className="header">
+        <div className="header-top">
+          <div className="header-top-content">
+            <span>🚚 الاستلام وخيارات التوصيل موضحة داخل كل إعلان</span>
+            <span>💬 التفاوض والطلبات من داخل حساب DEBA</span>
+          </div>
+        </div>
 
-      <main className="deba-marketplace">
-        <section className="deba-hero">
-          <div className="deba-hero-copy">
-            <div className="deba-hero-kicker">
-              <Sparkles size={15} />
-              DEBA MARKETPLACE
-            </div>
-            <h1>
-              سوق مصري
-              <span> أذكى.</span>
-              <br />
-              قيمة تتحرك.
-            </h1>
-            <p>
-              اكتشف سلعًا حقيقية، قدّم عرضك مباشرة، أو امنح ما لا تحتاجه لمن
-              يحتاجه. تجربة DEBA تبدأ من المنتجات وتصل إلى الصفقة.
-            </p>
-            <div className="deba-hero-actions">
-              <a href="#marketplace" className="deba-primary-cta">
-                ابدأ التسوق
-                <ArrowLeft size={17} />
-              </a>
-              <Link href="/?type=donation#donations" className="deba-secondary-cta">
-                اكتشف المجاني
-                <Gift size={17} />
+        <div className="header-main">
+          <Link href="/" className="logo">
+            <div className="logo-icon">🛍️</div>
+            <span>DEBA</span>
+          </Link>
+
+          <form action="/" method="get" className="search-bar" role="search">
+            <input
+              name="q"
+              type="search"
+              defaultValue={q || ''}
+              placeholder="ابحث عن منتجات، بائعين، أو فئات..."
+              aria-label="البحث في DEBA"
+            />
+            {category && category !== 'all' && (
+              <input type="hidden" name="category" value={category} />
+            )}
+            <button className="search-btn" type="submit" aria-label="بحث">🔍</button>
+          </form>
+
+          <div className="header-actions">
+            <Link href="/login" className="header-btn btn-outline">تسجيل الدخول</Link>
+            <Link href="/login" className="header-btn btn-primary">ابدأ البيع</Link>
+          </div>
+        </div>
+
+        <nav className="nav">
+          <div className="nav-content">
+            <Link href="/" className={'nav-item' + (!category ? ' active' : '')}>الرئيسية</Link>
+
+            {presentationCategories.slice(0, 6).map((item) => (
+              <Link
+                key={item.row.id}
+                href={'/?category=' + encodeURIComponent(item.row.slug) + '#featured'}
+                className={'nav-item' + (category === item.row.slug ? ' active' : '')}
+              >
+                {item.row.name_ar}
               </Link>
-            </div>
-            <div className="deba-trust-row">
-              <span><ShieldCheck size={15} /> إعلانات معتمدة</span>
-              <span><BadgeCheck size={15} /> تفاوض مباشر</span>
-              <span><PackageOpen size={15} /> استلام واضح</span>
-            </div>
-          </div>
+            ))}
 
-          <aside className="deba-hero-card">
-            <span className="deba-hero-card-label">DEBA VALUE</span>
-            <strong>من سلعة غير مستخدمة إلى قيمة حقيقية.</strong>
-            <p>أضف إعلانك واستقبل عروضًا وطلبات من داخل المنصة.</p>
-            <Link href="/login" className="deba-hero-card-action">
-              أضف إعلانك
-              <ArrowLeft size={15} />
+            <Link
+              href="/?type=donation#donations"
+              className="nav-item"
+            >
+              تبرعات
             </Link>
-            <div className="deba-hero-stat">
-              <span>النتائج الحالية</span>
-              <b>{totalProducts.toLocaleString('ar-EG')}</b>
-            </div>
-          </aside>
-        </section>
 
-        <section className="deba-category-section" aria-labelledby="deba-categories-title">
-          <div className="deba-section-heading">
-            <div>
-              <span>SHOP BY CATEGORY</span>
-              <h2 id="deba-categories-title">كل الأقسام الـ12 النشطة</h2>
-            </div>
-            <span className="deba-section-caption">اختر قسمًا للبدء</span>
+            <Link href="/login" className="nav-item">البائعون</Link>
           </div>
+        </nav>
+      </header>
 
-          <div className="deba-category-grid">
-            {categories.map((item, index) => {
-              const Icon = CATEGORY_ICONS[index] || MoreHorizontal
+      <section className="hero fade-in">
+        <div className="hero-content">
+          <h1>Marketplace مصري للتجارة والتبرعات</h1>
+          <p>بيع، اشتري، أو تبرع بأغراضك غير المستخدمة في منصة DEBA واحدة موثوقة</p>
+          <Link
+            href={category || q ? '/#featured' : '#featured'}
+            className="header-btn btn-primary"
+            style={{ fontSize: '1.1rem', padding: '14px 32px' }}
+          >
+            ابدأ التسوق الآن
+          </Link>
+
+          <div className="hero-stats">
+            <div className="stat-item">
+              <div className="stat-number">{data.stats.products.toLocaleString('ar-EG')}+</div>
+              <div className="stat-label">منتج متاح</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-number">{data.stats.members.toLocaleString('ar-EG')}+</div>
+              <div className="stat-label">عضو عام</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-number">{data.stats.charities.toLocaleString('ar-EG')}+</div>
+              <div className="stat-label">جمعية موثقة</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-number">{data.stats.donationListings.toLocaleString('ar-EG')}+</div>
+              <div className="stat-label">إعلان تبرع متاح</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="categories" id="categories">
+        <div className="section-header">
+          <h2 className="section-title">تصفح الفئات</h2>
+          <Link href="#featured" className="section-link">عرض الكل ←</Link>
+        </div>
+
+        <div className="categories-grid">
+          {presentationCategories.map((item) => (
+            <Link
+              key={item.row.id}
+              href={categoryFilterHref(item.row.slug)}
+              className="category-card"
+            >
+              <div className="category-icon">{item.icon}</div>
+              <div className="category-name">{item.row.name_ar}</div>
+            </Link>
+          ))}
+
+          <Link href="/?type=donation#donations" className="category-card">
+            <div className="category-icon">🎁</div>
+            <div className="category-name">{donationCategory.name_ar}</div>
+          </Link>
+        </div>
+      </section>
+
+      <section className="products" id="featured">
+        <div className="section-header">
+          <h2 className="section-title">منتجات مميزة</h2>
+          <Link href="/?type=sale#featured" className="section-link">عرض المزيد ←</Link>
+        </div>
+
+        {productRows.length ? (
+          <div className="products-grid">
+            {productRows.slice(0, PRODUCT_LIMIT).map((product) => {
+              const image = data.imageByProduct.get(product.id)
+              const seller = product.owner_id ? data.profileById.get(product.owner_id) : null
+              const productCategory = product.category_id ? data.categoryById.get(product.category_id) : null
+              const sellerName =
+                seller?.display_name ||
+                seller?.username ||
+                'عضو DEBA'
+              const sellerInitial = (sellerName.trim().charAt(0) || 'D').toUpperCase()
+              const isNew = product.condition_grade === 'new'
+              const condition =
+                (product.condition_grade && CONDITION_LABELS[product.condition_grade]) ||
+                'غير محددة'
+
               return (
                 <Link
-                  key={item.id}
-                  href={'/?category=' + encodeURIComponent(item.slug)}
-                  className="deba-category-card"
+                  key={product.id}
+                  href={'/products/' + encodeURIComponent(product.slug)}
+                  className="product-card"
+                  style={{
+                    display: 'block',
+                    color: 'inherit',
+                    textDecoration: 'none',
+                  }}
                 >
-                  <span className="deba-category-icon"><Icon size={21} /></span>
-                  <span className="deba-category-card-copy">
-                    <strong>{item.nameAr}</strong>
-                    <small>استكشف القسم</small>
-                  </span>
-                  <ArrowLeft size={15} />
+                  <div className="product-image">
+                    {getImageUrl(image?.storage_path || null) ? (
+                      <img
+                        src={getImageUrl(image?.storage_path || null) || ''}
+                        alt={image?.alt_text?.trim() || product.title}
+                        loading="lazy"
+                      />
+                    ) : null}
+
+                    <span className={'product-badge ' + (isNew ? 'new' : 'verified')}>
+                      {isNew ? 'جديد' : '✓ معتمد'}
+                    </span>
+                  </div>
+
+                  <div className="product-info">
+                    <h3 className="product-title">{product.title}</h3>
+
+                    <div className="product-meta">
+                      <span className="product-condition">
+                        {condition}
+                      </span>
+                      <span>📍 {locationText(product)}</span>
+                    </div>
+
+                    <div className="product-price">{formatPrice(product)}</div>
+
+                    <div className="product-seller">
+                      <div className="seller-avatar">{sellerInitial}</div>
+                      <span>{sellerName}</span>
+                      <span className="trust-badge">✓ DEBA</span>
+                    </div>
+
+                    {productCategory && (
+                      <div
+                        style={{
+                          marginTop: 4,
+                          fontSize: '0.75rem',
+                          color: 'var(--gray)',
+                        }}
+                      >
+                        {productCategory.name_ar}
+                      </div>
+                    )}
+                  </div>
                 </Link>
               )
             })}
           </div>
-        </section>
+        ) : (
+          <div className="empty-state" style={{ padding: '40px', textAlign: 'center' }}>
+            <div className="empty-icon">📦</div>
+            <h3>لا توجد منتجات منشورة حاليًا</h3>
+            <p>
+              {q
+                ? 'لم نجد سلعًا منشورة تطابق بحثك.'
+                : 'ستظهر المنتجات هنا تلقائيًا بعد النشر والمراجعة.'}
+            </p>
+            <Link href="/login" className="header-btn btn-primary" style={{ marginTop: 16 }}>
+              أضف أول إعلان
+            </Link>
+          </div>
+        )}
+      </section>
 
-        <section id="marketplace" className="deba-results-shell">
-          <div className="deba-filter-bar">
-            <div>
-              <span>DEBA FILTERS</span>
-              <strong>
-                {q
-                  ? 'نتائج البحث عن «' + q + '»'
-                  : category && category !== 'all'
-                    ? 'قسم «' + category + '»'
-                    : mode === 'sale'
-                      ? 'السلع المعروضة للبيع'
-                      : mode === 'donation'
-                        ? 'التبرعات والسلع المجانية'
-                        : 'أحدث السلع والتبرعات'}
-              </strong>
-            </div>
+      <section className="donation-section" id="donations">
+        <div className="donation-content">
+          <div className="donation-info">
+            <h2>تبرع بأغراضك لمن يحتاجها</h2>
+            <p>
+              ساهم في إعادة توجيه قيمة الأغراض غير المستخدمة. التبرعات والسلع
+              المجانية المنشورة في DEBA تظهر للمستخدمين داخل نفس المنصة.
+            </p>
 
-            <div className="deba-filter-pills">
-              <Link href="/" className={mode === 'all' ? 'is-active' : ''}>الكل</Link>
-              <Link href="/?type=sale" className={mode === 'sale' ? 'is-active' : ''}>للبيع</Link>
-              <Link href="/?type=donation" className={mode === 'donation' ? 'is-active' : ''}>مجاني</Link>
-              {category && category !== 'all' && (
-                <Link href="/" className="deba-filter-reset">مسح الفلتر ×</Link>
-              )}
+            <Link
+              href="/login"
+              className="header-btn"
+              style={{ background: 'white', color: 'var(--accent)', fontSize: '1.1rem', padding: '14px 32px' }}
+            >
+              تبرع الآن
+            </Link>
+
+            <div className="donation-stats">
+              <div className="donation-stat">
+                <div className="donation-stat-number">{data.stats.donationListings.toLocaleString('ar-EG')}</div>
+                <div className="donation-stat-label">إعلان تبرع متاح</div>
+              </div>
+              <div className="donation-stat">
+                <div className="donation-stat-number">{data.stats.charities.toLocaleString('ar-EG')}</div>
+                <div className="donation-stat-label">جمعية موثقة</div>
+              </div>
+              <div className="donation-stat">
+                <div className="donation-stat-number">{data.stats.members.toLocaleString('ar-EG')}</div>
+                <div className="donation-stat-label">عضو عام</div>
+              </div>
             </div>
           </div>
 
-          {mode !== 'donation' && (
-            <div className="deba-results-section">
-              <div className="deba-mini-heading">
-                <div>
-                  <span>MARKET</span>
-                  <h2>أحدث السلع والعروض</h2>
-                </div>
-                <b>{data.products.length.toLocaleString('ar-EG')} نتيجة</b>
-              </div>
-              {data.products.length ? (
-                <ProductGrid products={data.products} donations={[]} mode="sale" />
-              ) : (
-                <div className="deba-empty-state">
-                  <div className="deba-empty-icon"><PackageOpen size={27} /></div>
-                  <h3>لا توجد منتجات منشورة للبيع حاليًا</h3>
-                  <p>القائمة جاهزة، وستظهر السلع تلقائيًا بعد النشر والمراجعة.</p>
-                  <Link href="/login">أضف أول إعلان ←</Link>
-                </div>
-              )}
-            </div>
-          )}
+          <div className="donation-visual">
+            {data.charities.length ? (
+              data.charities.map((charity, index) => {
+                const icon = ['🏥', '📚', '🎁'][index] || '🤝'
+                const description =
+                  charity.description_ar ||
+                  [charity.city, charity.governorate].filter(Boolean).join('، ') ||
+                  'جمعية موثقة ونشطة على DEBA'
 
-          {mode !== 'sale' && (
-            <div id="donations" className="deba-results-section">
-              <div className="deba-mini-heading">
-                <div>
-                  <span>DEBA IMPACT</span>
-                  <h2>تبرعات وسلع مجانية</h2>
+                const cardContent = (
+                  <>
+                    <div className="charity-logo">{icon}</div>
+                    <div className="charity-info">
+                      <h4>{charity.name_ar}</h4>
+                      <p>{description}</p>
+                    </div>
+                  </>
+                )
+
+                return charity.website_url ? (
+                  <a
+                    key={charity.id}
+                    href={charity.website_url}
+                    className="charity-card"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {cardContent}
+                  </a>
+                ) : (
+                  <div key={charity.id} className="charity-card">
+                    {cardContent}
+                  </div>
+                )
+              })
+            ) : (
+              <div className="charity-card">
+                <div className="charity-logo">🤝</div>
+                <div className="charity-info">
+                  <h4>لا توجد جمعيات موثقة بعد</h4>
+                  <p>ستظهر الجمعيات هنا تلقائيًا بعد التحقق منها داخل DEBA.</p>
                 </div>
-                <b>{data.donations.length.toLocaleString('ar-EG')} نتيجة</b>
               </div>
-              {data.donations.length ? (
-                <ProductGrid products={[]} donations={data.donations} mode="donation" />
-              ) : (
-                <div className="deba-empty-state deba-empty-state-green">
-                  <div className="deba-empty-icon"><Gift size={27} /></div>
-                  <h3>لا توجد تبرعات منشورة حاليًا</h3>
-                  <p>يمكن نشرها من لوحة الإعلان لتظهر هنا بعد الاعتماد.</p>
-                  <Link href="/login">قدّم تبرعًا ←</Link>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-      </main>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="trust-section" id="trust">
+        <div className="section-header">
+          <h2 className="section-title">لماذا DEBA؟</h2>
+        </div>
+
+        <div className="trust-grid">
+          <div className="trust-card">
+            <div className="trust-icon">🛡️</div>
+            <h3>إعلانات معتمدة</h3>
+            <p>المنتجات الظاهرة في السوق العام تظهر بعد النشر والمراجعة.</p>
+          </div>
+          <div className="trust-card">
+            <div className="trust-icon">💬</div>
+            <h3>تفاوض داخل المنصة</h3>
+            <p>تقديم العروض وطلبات السلع المجانية مرتبط بحساب DEBA.</p>
+          </div>
+          <div className="trust-card">
+            <div className="trust-icon">📦</div>
+            <h3>بيانات المنتج واضحة</h3>
+            <p>السعر والحالة والموقع والصور المعروضة تأتي من الإعلان نفسه.</p>
+          </div>
+          <div className="trust-card">
+            <div className="trust-icon">💚</div>
+            <h3>التبرعات جزء من السوق</h3>
+            <p>التبرعات والسلع المجانية لها مسار منفصل داخل نفس التجربة.</p>
+          </div>
+        </div>
+      </section>
+
+      <footer className="footer">
+        <div className="footer-content">
+          <div className="footer-section">
+            <h4>عن DEBA</h4>
+            <ul>
+              <li><Link href="/">الرئيسية</Link></li>
+              <li><Link href="#trust">لماذا DEBA</Link></li>
+              <li><Link href="#categories">الفئات</Link></li>
+              <li><Link href="#featured">المنتجات</Link></li>
+            </ul>
+          </div>
+
+          <div className="footer-section">
+            <h4>للبائعين</h4>
+            <ul>
+              <li><Link href="/login">ابدأ البيع</Link></li>
+              <li><Link href="/login">حساب البائع</Link></li>
+              <li><Link href="/login">إعلاناتي</Link></li>
+              <li><Link href="/login">العروض</Link></li>
+            </ul>
+          </div>
+
+          <div className="footer-section">
+            <h4>للمشترين</h4>
+            <ul>
+              <li><Link href="#featured">تصفح المنتجات</Link></li>
+              <li><Link href="/?type=sale#featured">السلع للبيع</Link></li>
+              <li><Link href="/?type=donation#donations">التبرعات</Link></li>
+              <li><Link href="/login">حسابي</Link></li>
+            </ul>
+          </div>
+
+          <div className="footer-section">
+            <h4>التبرعات</h4>
+            <ul>
+              <li><Link href="/?type=donation#donations">تبرعات وسلع مجانية</Link></li>
+              <li><Link href="#donations">الجمعيات الموثقة</Link></li>
+              <li><Link href="/login">قدّم تبرعًا</Link></li>
+              <li><Link href="#trust">كيف تعمل DEBA</Link></li>
+            </ul>
+          </div>
+
+          <div className="footer-section">
+            <h4>الحساب</h4>
+            <ul>
+              <li><Link href="/login">تسجيل الدخول</Link></li>
+              <li><Link href="/login">المفضلة</Link></li>
+              <li><Link href="/login">التفاوض والعروض</Link></li>
+              <li><Link href="/login">الطلبات</Link></li>
+            </ul>
+          </div>
+
+          <div className="footer-section">
+            <h4>DEBA</h4>
+            <ul>
+              <li><Link href="/">Marketplace المصري</Link></li>
+              <li><Link href="#categories">تصفح الفئات</Link></li>
+              <li><Link href="#featured">منتجات مميزة</Link></li>
+              <li><Link href="#donations">Impact & Donations</Link></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="footer-bottom">
+          <p>© 2026 DEBA. جميع الحقوق محفوظة.</p>
+        </div>
+      </footer>
     </>
   )
 }
