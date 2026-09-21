@@ -81,6 +81,26 @@ type Queue = {
     created_at: string
     updated_at: string
   }>
+  risks: Array<{
+    id: string
+    order_id: string
+    score: number
+    level: string
+    status: string
+    reasons: unknown[]
+    model_version: string
+    review_note: string | null
+    order: {
+      id: string
+      reference_code: string
+      buyer_id: string
+      seller_id: string
+      status: string
+      payment_status: string
+      total: number | string
+      currency: string
+    } | null
+  }>
 }
 
 type Action =
@@ -98,6 +118,8 @@ type Action =
   | 'resolve_ticket'
   | 'close_ticket'
   | 'reply_ticket'
+  | 'approve_risk'
+  | 'block_risk'
 
 const REASONS: Record<string, string> = {
   fraud: 'احتيال',
@@ -131,7 +153,7 @@ function dateLabel(value: string) {
 export default function AdminModeration() {
   const [queue, setQueue] = useState<Queue | null>(null)
   const [active, setActive] = useState<
-    'products' | 'reviews' | 'reports' | 'disputes' | 'tickets'
+    'products' | 'reviews' | 'reports' | 'disputes' | 'tickets' | 'risks'
   >('products')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
@@ -183,6 +205,7 @@ export default function AdminModeration() {
       reports: queue?.reports.length || 0,
       disputes: queue?.disputes.length || 0,
       tickets: queue?.tickets.length || 0,
+      risks: queue?.risks.length || 0,
     }),
     [queue],
   )
@@ -208,6 +231,7 @@ export default function AdminModeration() {
           ['reports', 'البلاغات', Flag],
           ['disputes', 'النزاعات', ShieldAlert],
           ['tickets', 'الدعم', LifeBuoy],
+          ['risks', 'المخاطر', ShieldAlert],
         ] as const).map(([value, label, Icon]) => (
           <button
             key={value}
@@ -391,6 +415,61 @@ export default function AdminModeration() {
               })
             ) : (
               <div className="deba-admin-empty"><CheckCircle2 size={22} /> لا توجد نزاعات مفتوحة.</div>
+            )
+          ) : null}
+
+          {active === 'risks' ? (
+            queue.risks.length ? (
+              queue.risks.map((risk) => (
+                <article key={risk.id} className="deba-admin-card">
+                  <div className="deba-admin-card-main">
+                    <div className="deba-admin-card-icon"><ShieldAlert size={19} /></div>
+                    <div>
+                      <span>
+                        high · score {risk.score}
+                      </span>
+                      <h2>{risk.order?.reference_code || risk.order_id}</h2>
+                      <p>
+                        {risk.order?.total
+                          ? money(risk.order.total, risk.order.currency)
+                          : 'قيمة الطلب غير متاحة'}
+                        {' · '}
+                        {risk.reasons.map((reason) => {
+                          if (!reason || typeof reason !== 'object') return ''
+                          const item = reason as { detail?: string }
+                          return item.detail || ''
+                        }).filter(Boolean).join(' · ') || 'تم تصنيف العملية للمراجعة الأمنية.'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="deba-admin-card-actions">
+                    <button
+                      type="button"
+                      className="primary"
+                      disabled={busy !== null}
+                      onClick={() => void act('approve_risk', risk.id, 'تمت مراجعة العملية واعتمادها.')}
+                    >
+                      {busy === risk.id + ':approve_risk'
+                        ? <Loader2 size={15} className="deba-spin" />
+                        : <CheckCircle2 size={15} />}
+                      اعتماد العملية
+                    </button>
+                    <button
+                      type="button"
+                      className="danger"
+                      disabled={busy !== null}
+                      onClick={() => void act('block_risk', risk.id, 'تم حظر العملية بعد المراجعة الأمنية.')}
+                    >
+                      {busy === risk.id + ':block_risk'
+                        ? <Loader2 size={15} className="deba-spin" />
+                        : <XCircle size={15} />}
+                      حظر العملية
+                    </button>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="deba-admin-empty"><CheckCircle2 size={22} /> لا توجد عمليات عالية المخاطر معلقة.</div>
             )
           ) : null}
 
