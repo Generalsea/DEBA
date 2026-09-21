@@ -350,6 +350,262 @@ export async function POST(request: Request) {
 
       afterData = updated
       entityType = 'report'
+    } else if (
+      action === 'review_dispute' ||
+      action === 'resolve_dispute_buyer' ||
+      action === 'resolve_dispute_seller' ||
+      action === 'close_dispute'
+    ) {
+      table = 'dispute'
+
+      const { data: dispute, error: disputeError } = await admin
+        .from('disputes')
+        .select('id,order_id,status,resolution_code,resolution_note')
+        .eq('id', id)
+        .maybeSingle()
+
+      if (disputeError || !dispute) {
+        return NextResponse.json({ error: 'المراجعة غير موجودة.' }, { status: 404 })
+      }
+
+      const { data: order, error: orderError } = await admin
+        .from('orders')
+        .select('id,reference_code,status,payment_status,total,currency')
+        .eq('id', dispute.order_id)
+        .maybeSingle()
+
+      if (orderError || !order) {
+        return NextResponse.json({ error: 'الطلب المرتبط غير موجود.' }, { status: 404 })
+      }
+
+      beforeData = { ...dispute, order }
+
+      let nextDisputeStatus = 'under_review'
+      let nextResolutionCode: string | null = dispute.resolution_code
+      let nextResolvedBy: string | null = null
+      let nextResolvedAt: string | null = null
+
+      if (action === 'resolve_dispute_seller') {
+        nextDisputeStatus = 'resolved_seller'
+        nextResolutionCode = 'seller_resolution'
+        nextResolvedBy = user.id
+        nextResolvedAt = new Date().toISOString()
+      } else if (action === 'resolve_dispute_buyer') {
+        const { data: successfulRefunds } = await admin
+          .from('refunds')
+          .select('amount')
+          .eq('order_id', order.id)
+          .eq('status', 'succeeded')
+
+        const refunded = (successfulRefunds || []).reduce(
+          (sum, refund) => sum + Number(refund.amount || 0),
+          0,
+        )
+        const orderTotal = Number(order.total || 0)
+
+        if (
+          order.payment_status === 'paid' &&
+          refunded + 0.0001 < orderTotal
+        ) {
+          return NextResponse.json(
+            {
+              error:
+                'لا يمكن حل النزاع لصالح المشتري قبل إثبات الاسترداد الكامل.',
+            },
+            { status: 409 },
+          )
+        }
+
+        if (!note) {
+          return NextResponse.json(
+            { error: 'أضف ملاحظة قرار عند حل النزاع لصالح المشتري.' },
+            { status: 400 },
+          )
+        }
+
+        nextDisputeStatus = 'resolved_buyer'
+        nextResolutionCode = 'buyer_resolution'
+        nextResolvedBy = user.id
+        nextResolvedAt = new Date().toISOString()
+      } else if (action === 'close_dispute') {
+        if (!['resolved_buyer', 'resolved_seller'].includes(dispute.status)) {
+          return NextResponse.json(
+            { error: 'لا يمكن إغلاق المراجعة قبل تسجيل قرار حل.' },
+            { status: 409 },
+          )
+        }
+        nextDisputeStatus = 'closed'
+      }
+
+      const { data: updatedDispute, error: updateDisputeError } = await admin
+        .from('disputes')
+        .update({
+          status: nextDisputeStatus,
+          resolution_code: nextResolutionCode,
+          resolution_note: note || dispute.resolution_note,
+          resolved_by: nextResolvedBy || null,
+          resolved_at: nextResolvedAt,
+        })
+        .eq('id', id)
+        .select(
+          'id,order_id,status,resolution_code,resolution_note,resolved_by,resolved_at',
+        )
+        .single()
+
+      if (updateDisputeError || !updatedDispute) {
+        console.error('DEBA dispute admin update failed', updateDisputeError)
+        return NextResponse.json({ error: 'تعذر تحديث المراجعة.' }, { status: 500 })
+      }
+
+      if (action === 'resolve_dispute_seller') {
+        const { error: orderUpdateError } = await admin
+          .from('orders')
+          .update({
+            status: 'completed',
+            status_reason: 'Dispute resolved in seller favor',
+          })
+          .eq('id', order.id)
+          .eq('status', 'disputed')
+
+        if (orderUpdateError) {
+          console.error('DEBA seller dispute order update failed', orderUpdateError)
+          return NextResponse.json(
+            { error: 'تم حل المراجعة لكن تعذر إنهاء حالة الطلب.' },
+            { status: 500 },
+          )
+        }
+      } else if (
+        action === 'resolve_dispute_buyer' &&
+        order.payment_status === 'refunded'
+      ) {
+        const { error: orderUpdateError } = await admin
+          .from('orders')
+          .update({
+            status: 'refunded',
+            status_reason: 'Dispute resolved in buyer favor',
+          })
+          .eq('id', order.id)
+          .eq('status', 'disputed')
+
+        if (orderUpdateError) {
+          console.error('DEBA buyer dispute order update failed', orderUpdateError)
+          return NextResponse.json(
+            { error: 'تم حل المراجعة لكن تعذر إنهاء حالة الطلب.' },
+            { status: 500 },
+          )
+        }
+      }
+
+      afterData = {
+        dispute: updatedDispute,
+        order_id: order.id,
+      }
+      entityType = 'dispute'
+    } else if (
+      action === 'assign_ticket' ||
+      action === 'resolve_ticket' ||
+      action === 'close_ticket' ||
+      action === 'reply_ticket'
+    ) {
+      table = 'support_ticket'
+
+      const { data: ticket, error: ticketError } = await admin
+        .from('support_tickets')
+        .select(
+          'id,user_id,order_id,status,priority,assigned_to,last_response_at,resolved_at',
+        )
+        .eq('id', id)
+        .maybeSingle()
+
+      if (ticketError || !ticket) {
+        return NextResponse.json(
+          { error: 'تذكرة الدعم غير موجودة.' },
+          { status: 404 },
+        )
+      }
+
+      beforeData = ticket
+
+      if (action === 'reply_ticket' && !note) {
+        return NextResponse.json(
+          { error: 'اكتب الرد قبل الإرسال.' },
+          { status: 400 },
+        )
+      }
+
+      if (action === 'reply_ticket') {
+        const { error: messageError } = await admin
+          .from('support_messages')
+          .insert({
+            ticket_id: ticket.id,
+            author_id: user.id,
+            body: note,
+            is_internal: false,
+          })
+
+        if (messageError) {
+          console.error('DEBA admin support reply failed', messageError)
+          return NextResponse.json(
+            { error: 'تعذر إرسال رد الدعم.' },
+            { status: 500 },
+          )
+        }
+      }
+
+      const nextStatus =
+        action === 'assign_ticket'
+          ? 'in_progress'
+          : action === 'resolve_ticket'
+            ? 'resolved'
+            : action === 'close_ticket'
+              ? 'closed'
+              : 'in_progress'
+
+      const { data: updatedTicket, error: updateTicketError } = await admin
+        .from('support_tickets')
+        .update({
+          status: nextStatus,
+          assigned_to: user.id,
+          last_response_at:
+            action === 'reply_ticket' || action === 'assign_ticket'
+              ? new Date().toISOString()
+              : ticket.last_response_at,
+          resolved_at:
+            action === 'resolve_ticket' || action === 'close_ticket'
+              ? new Date().toISOString()
+              : null,
+        })
+        .eq('id', ticket.id)
+        .select(
+          'id,user_id,order_id,status,priority,assigned_to,last_response_at,resolved_at',
+        )
+        .single()
+
+      if (updateTicketError || !updatedTicket) {
+        console.error('DEBA admin support update failed', updateTicketError)
+        return NextResponse.json(
+          { error: 'تعذر تحديث تذكرة الدعم.' },
+          { status: 500 },
+        )
+      }
+
+      await admin.from('notifications').insert({
+        user_id: ticket.user_id,
+        type: 'support.updated',
+        title:
+          action === 'reply_ticket'
+            ? 'رد جديد من دعم DEBA'
+            : 'تحديث تذكرة الدعم',
+        body:
+          action === 'reply_ticket'
+            ? 'تمت إضافة رد جديد إلى تذكرة الدعم الخاصة بك.'
+            : 'تم تحديث حالة تذكرة الدعم الخاصة بك.',
+        href: '/support',
+        metadata: { ticket_id: ticket.id, status: nextStatus },
+      })
+
+      afterData = updatedTicket
+      entityType = 'support_ticket'
     } else {
       return NextResponse.json({ error: 'عملية إدارية غير معروفة.' }, { status: 400 })
     }
