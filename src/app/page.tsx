@@ -69,21 +69,6 @@ type ProductRow = {
   images: { id: string; storage_path: string; alt_text: string | null; sort_order: number; is_primary: boolean }[] | null
 }
 
-const FALLBACK_CATEGORIES: CategoryRow[] = [
-  { id: 'electronics', name_ar: 'إلكترونيات', name_en: 'Electronics', slug: 'electronics', sort_order: 10 },
-  { id: 'home-appliances', name_ar: 'أجهزة منزلية', name_en: 'Home Appliances', slug: 'home-appliances', sort_order: 20 },
-  { id: 'furniture-home', name_ar: 'أثاث ومنزل', name_en: 'Furniture & Home', slug: 'furniture-home', sort_order: 30 },
-  { id: 'fashion', name_ar: 'ملابس وأحذية', name_en: 'Fashion', slug: 'fashion', sort_order: 40 },
-  { id: 'books-education', name_ar: 'كتب ومستلزمات تعليمية', name_en: 'Books & Education', slug: 'books-education', sort_order: 50 },
-  { id: 'toys-hobbies', name_ar: 'ألعاب وهوايات', name_en: 'Toys & Hobbies', slug: 'toys-hobbies', sort_order: 60 },
-  { id: 'vehicles-parts', name_ar: 'مركبات وقطع غيار', name_en: 'Vehicles & Parts', slug: 'vehicles-parts', sort_order: 70 },
-  { id: 'tools-equipment', name_ar: 'معدات وأدوات', name_en: 'Tools & Equipment', slug: 'tools-equipment', sort_order: 80 },
-  { id: 'collectibles-antiques', name_ar: 'مقتنيات وتحف', name_en: 'Collectibles & Antiques', slug: 'collectibles-antiques', sort_order: 90 },
-  { id: 'baby-kids', name_ar: 'مستلزمات أطفال', name_en: 'Baby & Kids', slug: 'baby-kids', sort_order: 100 },
-  { id: 'sports-fitness', name_ar: 'رياضة ولياقة', name_en: 'Sports & Fitness', slug: 'sports-fitness', sort_order: 110 },
-  { id: 'other', name_ar: 'أخرى', name_en: 'Other', slug: 'other', sort_order: 999 },
-]
-
 const CATEGORY_ICONS = [
   Laptop,
   Home,
@@ -129,7 +114,7 @@ function imageUrl(
   storagePath: string | null,
 ) {
   if (!storagePath) return null
-  if (/^https?:///i.test(storagePath)) return storagePath
+  if (/^https?:\/\//i.test(storagePath)) return storagePath
   return supabase.storage.from(BUCKET).getPublicUrl(storagePath).data.publicUrl
 }
 
@@ -199,7 +184,7 @@ async function resolveCategoryId(
 
 async function loadMarketplace(q: string | undefined, category: string | undefined, mode: ListingMode) {
   const empty = {
-    categories: FALLBACK_CATEGORIES,
+    categories: [] as CategoryRow[],
     products: [] as ProductGridItem[],
     donations: [] as ProductGridItem[],
     favoriteCount: 0,
@@ -218,10 +203,7 @@ async function loadMarketplace(q: string | undefined, category: string | undefin
       getUserId(supabase),
     ])
 
-    const categories =
-      categoryData?.length === 12
-        ? (categoryData as CategoryRow[])
-        : FALLBACK_CATEGORIES
+    const categories = (categoryData || []) as CategoryRow[]
 
     const categoryId = await resolveCategoryId(supabase, category)
     if (category && category !== 'all' && !categoryId) {

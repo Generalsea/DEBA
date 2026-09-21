@@ -12,28 +12,13 @@ import {
   X,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export type HeaderCategory = {
   id: string
   nameAr: string
   slug: string
 }
-
-const FALLBACK_CATEGORIES: HeaderCategory[] = [
-  { id: 'electronics', nameAr: 'إلكترونيات', slug: 'electronics' },
-  { id: 'home-appliances', nameAr: 'أجهزة منزلية', slug: 'home-appliances' },
-  { id: 'furniture-home', nameAr: 'أثاث ومنزل', slug: 'furniture-home' },
-  { id: 'fashion', nameAr: 'ملابس وأحذية', slug: 'fashion' },
-  { id: 'books-education', nameAr: 'كتب ومستلزمات تعليمية', slug: 'books-education' },
-  { id: 'toys-hobbies', nameAr: 'ألعاب وهوايات', slug: 'toys-hobbies' },
-  { id: 'vehicles-parts', nameAr: 'مركبات وقطع غيار', slug: 'vehicles-parts' },
-  { id: 'tools-equipment', nameAr: 'معدات وأدوات', slug: 'tools-equipment' },
-  { id: 'collectibles-antiques', nameAr: 'مقتنيات وتحف', slug: 'collectibles-antiques' },
-  { id: 'baby-kids', nameAr: 'مستلزمات أطفال', slug: 'baby-kids' },
-  { id: 'sports-fitness', nameAr: 'رياضة ولياقة', slug: 'sports-fitness' },
-  { id: 'other', nameAr: 'أخرى', slug: 'other' },
-]
 
 type HeaderProps = {
   categories?: HeaderCategory[]
@@ -49,7 +34,7 @@ function badge(value: number) {
 }
 
 export default function Header({
-  categories = FALLBACK_CATEGORIES,
+  categories = [],
   initialSearch = '',
   initialCategory = 'all',
   favoriteCount = 0,
@@ -60,7 +45,15 @@ export default function Header({
   const [category, setCategory] = useState(initialCategory || 'all')
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const items = categories.length === 12 ? categories : FALLBACK_CATEGORIES
+  useEffect(() => {
+    setQuery(initialSearch)
+  }, [initialSearch])
+
+  useEffect(() => {
+    setCategory(initialCategory || 'all')
+  }, [initialCategory])
+
+  const items = categories
 
   return (
     <header className="deba-site-header">
