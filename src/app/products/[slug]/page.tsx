@@ -18,6 +18,7 @@ import Header, { type HeaderCategory } from '@/components/Header'
 import ProductCard, { type ProductCardItem } from '@/components/ProductCard'
 import FavoriteButton from '@/components/FavoriteButton'
 import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGallery'
+import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components/ProductDetailTabs'
 import { createClient } from '@/utils/supabase/server'
 
 const BUCKET = 'deba-product-media'
@@ -62,6 +63,8 @@ type ProductRow = {
   district: string | null
   delivery_method: string
   metadata: ProductMetadata | null
+  details_schema_version: number
+  details_last_completed_at: string | null
   published_at: string | null
   created_at: string
   category: Category | null
@@ -81,7 +84,7 @@ type ProductRow = {
 }
 
 const SELECT =
-  'id,owner_id,title,slug,description,listing_type,status,moderation_status,condition_grade,condition_details,price,currency,quantity,city,governorate,district,delivery_method,metadata,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
+  'id,owner_id,title,slug,description,listing_type,status,moderation_status,condition_grade,condition_details,price,currency,quantity,city,governorate,district,delivery_method,metadata,details_schema_version,details_last_completed_at,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
 
 const CONDITION_LABELS: Record<string, string> = {
   new: 'جديد',
@@ -98,23 +101,6 @@ const DELIVERY_LABELS: Record<string, string> = {
   seller_delivery: 'توصيل عبر البائع',
   platform_delivery: 'توصيل عبر DEBA',
   both: 'استلام أو توصيل',
-}
-
-const METADATA_LABELS: Record<string, string> = {
-  model: 'الموديل',
-  storage_capacity: 'السعة التخزينية',
-  color: 'اللون',
-  battery_health: 'صحة البطارية',
-  usage_duration: 'مدة الاستخدام',
-  accessories: 'الملحقات',
-  invoice: 'الفاتورة',
-  box: 'الكرتونة',
-  repair_status: 'حالة الإصلاح',
-  face_id: 'Face ID',
-  inspection_location_note: 'المعاينة',
-  dimensions: 'الأبعاد',
-  material: 'الخامة',
-  brand: 'العلامة التجارية',
 }
 
 function normalizePrice(value: number | string | null) {
@@ -188,37 +174,6 @@ async function getUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
   }
 }
 
-function stringifyMetadataValue(value: unknown) {
-  if (value === null || value === undefined) return null
-  if (typeof value === 'boolean') return value ? 'نعم' : 'لا'
-  if (typeof value === 'number') {
-    return new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 2 }).format(value)
-  }
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => stringifyMetadataValue(item))
-      .filter(Boolean)
-      .join('، ')
-  }
-  if (typeof value === 'object') return null
-  const text = String(value).trim()
-  return text || null
-}
-
-function publicMetadata(metadata: ProductMetadata | null) {
-  if (!metadata) return []
-  return Object.entries(metadata)
-    .map(([key, value]) => ({
-      key,
-      label: METADATA_LABELS[key],
-      value: stringifyMetadataValue(value),
-    }))
-    .filter(
-      (item): item is { key: string; label: string; value: string } =>
-        Boolean(item.label && item.value),
-    )
-}
-
 function formatPublishedDate(value: string | null) {
   if (!value) return 'تاريخ النشر غير متاح'
   return new Intl.DateTimeFormat('ar-EG', {
@@ -249,8 +204,13 @@ async function getProduct(slug: string) {
 
   const product = data as unknown as ProductRow
 
-  const [sellerResponse, userId, categoriesResponse, relatedResponse] =
-    await Promise.all([
+  const [
+    sellerResponse,
+    userId,
+    categoriesResponse,
+    attributeDefinitionsResponse,
+    relatedResponse,
+  ] = await Promise.all([
       product.owner_id
         ? supabase
             .from('profiles')
@@ -266,6 +226,14 @@ async function getProduct(slug: string) {
         .select('id,name_ar,name_en,slug')
         .eq('is_active', true)
         .order('sort_order', { ascending: true }),
+      product.category?.id
+        ? supabase
+            .from('category_attribute_definitions')
+            .select('key,label_ar,label_en,data_type,unit,is_required,help_text_ar,sort_order')
+            .eq('category_id', product.category.id)
+            .eq('is_required', true)
+            .order('sort_order', { ascending: true })
+        : Promise.resolve({ data: [], error: null }),
       product.category?.id
         ? supabase
             .from('products')
@@ -318,6 +286,7 @@ async function getProduct(slug: string) {
     favoriteCount,
     negotiationCount: 0,
     categories: ((categoriesResponse.data || []) as Category[]).map(mapCategory),
+    definitions: ((attributeDefinitionsResponse.data || []) as unknown as ProductAttributeDefinition[]),
     related,
   }
 }
@@ -392,7 +361,6 @@ export default async function ProductDetailPage({
     product.condition_grade
       ? CONDITION_LABELS[product.condition_grade] || 'حالة موثقة'
       : 'حالة غير محددة'
-  const details = publicMetadata(product.metadata)
   const isOwner = Boolean(product.owner_id && data.userId === product.owner_id)
   const canBuy = price !== null && price > 0 && product.quantity > 0
   const purchaseHref = '/products/' + encodeURIComponent(product.slug) + '/checkout'
@@ -555,19 +523,6 @@ export default async function ProductDetailPage({
               </div>
             </section>
 
-            {details.length > 0 && (
-              <section className="deba-metadata-section">
-                <div className="deba-detail-section-title">تفاصيل المنتج</div>
-                <div className="deba-metadata-grid">
-                  {details.map((item) => (
-                    <div key={item.key}>
-                      <span>{item.label}</span>
-                      <strong>{item.value}</strong>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
 
             <section className="deba-seller-card">
               <div className="deba-seller-avatar">
@@ -609,6 +564,21 @@ export default async function ProductDetailPage({
             </div>
           </div>
         </div>
+
+        <ProductDetailTabs
+          metadata={product.metadata}
+          description={product.description}
+          conditionDetails={product.condition_details}
+          conditionLabel={condition}
+          categoryName={product.category?.name_ar || product.category?.name_en || 'غير محدد'}
+          location={location || 'يُحدد مع البائع'}
+          deliveryLabel={DELIVERY_LABELS[product.delivery_method] || product.delivery_method}
+          quantity={product.quantity}
+          publishedDate={formatPublishedDate(product.published_at || product.created_at)}
+          detailsSchemaVersion={product.details_schema_version}
+          detailsLastCompletedAt={product.details_last_completed_at}
+          definitions={data.definitions}
+        />
 
         <section className="deba-purchase-steps">
           <div>
