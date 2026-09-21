@@ -11,6 +11,15 @@ export const metadata: Metadata = {
 const BUCKET = 'deba-product-media'
 const LIMIT = 24
 
+type SearchParamValue = string | string[] | undefined
+
+type PageProps = {
+  searchParams: Promise<{
+    q?: SearchParamValue
+    category?: SearchParamValue
+  }>
+}
+
 type ProductRow = {
   id: string
   title: string
@@ -46,6 +55,22 @@ type ProductRow = {
 
 const PRODUCT_SELECT =
   'id,title,slug,description,listing_type,price,currency,is_negotiable,condition_grade,city,governorate,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
+
+function firstParam(value: SearchParamValue) {
+  return Array.isArray(value) ? value[0] : value
+}
+
+function normalizeSearchTerm(value: string | undefined) {
+  if (!value) return null
+
+  const clean = value
+    .replace(/[^a-zA-Z0-9\u0600-\u06FF\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 80)
+
+  return clean || null
+}
 
 function normalizePrice(value: number | string | null) {
   if (value === null) return null
@@ -92,7 +117,37 @@ function mapRow(
   }
 }
 
-async function fetchListings() {
+async function resolveCategoryId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  category: string | undefined,
+) {
+  if (!category || category === 'all') return null
+
+  const bySlug = await supabase
+    .from('categories')
+    .select('id')
+    .eq('slug', category)
+    .eq('is_active', true)
+    .maybeSingle()
+
+  if (bySlug.data?.id) {
+    return bySlug.data.id
+  }
+
+  const byName = await supabase
+    .from('categories')
+    .select('id')
+    .eq('name_ar', category)
+    .eq('is_active', true)
+    .maybeSingle()
+
+  return byName.data?.id || null
+}
+
+async function fetchListings(
+  q: string | undefined,
+  category: string | undefined,
+) {
   const empty = {
     products: [] as ProductGridItem[],
     donations: [] as ProductGridItem[],
@@ -100,9 +155,15 @@ async function fetchListings() {
 
   try {
     const supabase = await createClient()
+    const searchTerm = normalizeSearchTerm(q)
+    const categoryId = await resolveCategoryId(supabase, category)
 
-    const query = (listingType: 'sale' | 'donation') =>
-      supabase
+    if (category && category !== 'all' && !categoryId) {
+      return empty
+    }
+
+    const buildQuery = (listingType: 'sale' | 'donation') => {
+      let query = supabase
         .from('products')
         .select(PRODUCT_SELECT)
         .eq('listing_type', listingType)
@@ -112,9 +173,23 @@ async function fetchListings() {
         .order('created_at', { ascending: false })
         .limit(LIMIT)
 
+      if (categoryId) {
+        query = query.eq('category_id', categoryId)
+      }
+
+      if (searchTerm) {
+        const pattern = '%' + searchTerm + '%'
+        query = query.or(
+          'title.ilike.' + pattern + ',description.ilike.' + pattern,
+        )
+      }
+
+      return query
+    }
+
     const [sales, donations] = await Promise.all([
-      query('sale'),
-      query('donation'),
+      buildQuery('sale'),
+      buildQuery('donation'),
     ])
 
     if (sales.error || donations.error) {
@@ -140,8 +215,13 @@ async function fetchListings() {
   }
 }
 
-export default async function HomePage() {
-  const { products, donations } = await fetchListings()
+export default async function HomePage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const q = firstParam(params.q)
+  const category = firstParam(params.category)
+  const { products, donations } = await fetchListings(q, category)
+
+  const total = products.length + donations.length
 
   return (
     <>
@@ -180,7 +260,7 @@ export default async function HomePage() {
           </div>
 
           <div className="market-hero-offer">
-            <span>عرض الأسبوع</span>
+            <span>DEBA VALUE</span>
             <strong>حوّل الأشياء غير المستخدمة إلى قيمة.</strong>
             <p>أضف سلعتك في دقائق وابدأ استقبال العروض أو طلبات التبرع.</p>
             <a href="/login">أضف أول إعلان ←</a>
@@ -202,13 +282,30 @@ export default async function HomePage() {
             <div>
               <span>03</span>
               <strong>اكتشف بسهولة</strong>
-              <small>فئات واضحة وبحث أسرع</small>
+              <small>بحث وفئات واضحة في مكان واحد</small>
             </div>
             <div>
               <span>04</span>
-              <strong>EGP</strong>
-              <small>السوق مصمم للمستخدم المصري</small>
+              <strong>{total.toLocaleString('ar-EG')}</strong>
+              <small>نتيجة مطابقة للبحث الحالي</small>
             </div>
+          </div>
+
+          <div className="market-result-context">
+            <div>
+              <span>نتائج السوق</span>
+              <h2>
+                {q
+                  ? <>نتائج البحث عن «{q}»</>
+                  : category && category !== 'all'
+                    ? <>فئة «{category}»</>
+                    : 'أحدث السلع والتبرعات'}
+              </h2>
+            </div>
+
+            <span className="market-result-count">
+              {total.toLocaleString('ar-EG')} عنصر
+            </span>
           </div>
 
           <ProductGrid products={products} donations={donations} />
