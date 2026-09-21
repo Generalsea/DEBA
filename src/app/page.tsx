@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Sofa,
   Sparkles,
-  Star,
   Trophy,
   Wrench,
   Baby,
@@ -111,8 +110,8 @@ function cleanSearch(value: string | undefined) {
   if (!value) return null
 
   const result = value
-    .replace(/[^a-zA-Z0-9؀-ۿs-]/g, ' ')
-    .replace(/s+/g, ' ')
+    .replace(/[^a-zA-Z0-9\u0600-\u06FF\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 80)
 
@@ -440,7 +439,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           </div>
 
           {mode !== 'donation' && (
-            <div id="marketplace" className="deba-results-section">
+            <div className="deba-results-section">
               <div className="deba-mini-heading">
                 <div>
                   <span>MARKET</span>
