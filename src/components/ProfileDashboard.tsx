@@ -29,7 +29,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 
 export type ProfileOrder = {
@@ -153,6 +153,10 @@ const DELIVERY_LABELS: Record<string, string> = {
   platform_delivery: 'توصيل عبر DEBA',
   both: 'استلام أو توصيل',
 }
+
+const PROFILE_AVATAR_BUCKET = 'deba-profile-media'
+const AVATAR_MAX_INPUT_BYTES = 5 * 1024 * 1024
+const AVATAR_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
 const TAB_MAP = new Set<TabId>([
   'overview',
@@ -309,10 +313,12 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
   const [email] = useState(account.email || '')
   const [saving, setSaving] = useState(false)
   const [savingPassword, setSavingPassword] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const avatarInputRef = useRef<HTMLInputElement>(null)
   const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
@@ -356,11 +362,112 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
       const result = (await response.json()) as { error?: string }
       if (!response.ok) throw new Error(result.error || 'تعذر حفظ بيانات الحساب.')
 
+      window.dispatchEvent(
+        new CustomEvent('deba:profile-updated', {
+          detail: {
+            username: profile.username,
+            displayName: profile.displayName,
+            avatarUrl: profile.avatarUrl,
+          },
+        }),
+      )
       setStatusMessage('تم حفظ بيانات الحساب بنجاح.')
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'تعذر حفظ بيانات الحساب.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    setStatusMessage(null)
+    setErrorMessage(null)
+
+    if (!AVATAR_MIME_TYPES.has(file.type)) {
+      setErrorMessage('صورة الملف الشخصي يجب أن تكون JPG أو PNG أو WebP.')
+      return
+    }
+
+    if (file.size > AVATAR_MAX_INPUT_BYTES) {
+      setErrorMessage('حجم الصورة الأصلية كبير. اختر صورة لا تتجاوز 5 ميجابايت.')
+      return
+    }
+
+    setUploadingAvatar(true)
+
+    try {
+      const bitmap = await createImageBitmap(file)
+      const canvas = document.createElement('canvas')
+      const size = 256
+      canvas.width = size
+      canvas.height = size
+
+      const scale = Math.max(size / bitmap.width, size / bitmap.height)
+      const drawWidth = bitmap.width * scale
+      const drawHeight = bitmap.height * scale
+      const offsetX = (size - drawWidth) / 2
+      const offsetY = (size - drawHeight) / 2
+
+      const context = canvas.getContext('2d')
+      if (!context) throw new Error('تعذر تجهيز الصورة.')
+
+      context.drawImage(bitmap, offsetX, offsetY, drawWidth, drawHeight)
+      bitmap.close()
+
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (result) => (result ? resolve(result) : reject(new Error('تعذر ضغط الصورة.'))),
+          'image/webp',
+          0.82,
+        )
+      })
+
+      const preparedFile = new File([blob], 'avatar.webp', {
+        type: 'image/webp',
+        lastModified: Date.now(),
+      })
+      const storagePath = account.userId + '/avatar.webp'
+
+      const { error: uploadError } = await supabase.storage
+        .from(PROFILE_AVATAR_BUCKET)
+        .upload(storagePath, preparedFile, {
+          upsert: true,
+          contentType: 'image/webp',
+          cacheControl: '3600',
+        })
+
+      if (uploadError) throw uploadError
+
+      const response = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarUrl: storagePath }),
+      })
+      const result = (await response.json()) as { error?: string }
+      if (!response.ok) throw new Error(result.error || 'تعذر حفظ الصورة الشخصية.')
+
+      const publicUrl = supabase.storage.from(PROFILE_AVATAR_BUCKET).getPublicUrl(storagePath).data.publicUrl
+      const nextAvatarUrl = publicUrl + '?v=' + Date.now()
+
+      setProfile((current) => ({ ...current, avatarUrl: nextAvatarUrl }))
+      window.dispatchEvent(
+        new CustomEvent('deba:profile-updated', {
+          detail: {
+            username: profile.username,
+            displayName: profile.displayName,
+            avatarUrl: nextAvatarUrl,
+          },
+        }),
+      )
+      setStatusMessage('تم تحديث الصورة الشخصية بنجاح.')
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'تعذر رفع الصورة الشخصية.')
+    } finally {
+      setUploadingAvatar(false)
     }
   }
 
@@ -421,16 +528,35 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
         <div className="deba-profile-hero-glow deba-profile-hero-glow-two" />
         <div className="deba-profile-hero-inner">
           <div className="deba-profile-identity">
-            <div className="deba-profile-avatar">
-              {profile.avatarUrl ? (
-                <img src={profile.avatarUrl} alt={profile.displayName} />
-              ) : (
-                initial(profile.displayName)
-              )}
-              <span className="deba-profile-avatar-check" title={account.emailConfirmed ? 'البريد الإلكتروني موثق' : 'الحساب يحتاج تأكيد البريد'}>
-                {account.emailConfirmed ? <CheckCircle2 size={15} /> : <Bell size={15} />}
+            <button
+              type="button"
+              className="deba-profile-avatar-button"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              title="تغيير الصورة الشخصية"
+              aria-label="تغيير الصورة الشخصية"
+            >
+              <span className="deba-profile-avatar">
+                {profile.avatarUrl ? (
+                  <img src={profile.avatarUrl} alt={profile.displayName} />
+                ) : (
+                  initial(profile.displayName)
+                )}
+                <span className="deba-profile-avatar-check" title={account.emailConfirmed ? 'البريد الإلكتروني موثق' : 'الحساب يحتاج تأكيد البريد'}>
+                  {account.emailConfirmed ? <CheckCircle2 size={15} /> : <Bell size={15} />}
+                </span>
               </span>
-            </div>
+              <span className="deba-profile-avatar-edit" aria-hidden="true">
+                {uploadingAvatar ? <RefreshCw size={14} className="deba-spin" /> : <Pencil size={14} />}
+              </span>
+            </button>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(event) => void uploadAvatar(event)}
+              hidden
+            />
 
             <div className="deba-profile-identity-copy">
               <span className="deba-profile-kicker">
