@@ -93,41 +93,50 @@ function mapRow(
 }
 
 async function fetchListings() {
-  const supabase = await createClient()
-
-  const query = (listingType: 'sale' | 'donation') =>
-    supabase
-      .from('products')
-      .select(PRODUCT_SELECT)
-      .eq('listing_type', listingType)
-      .eq('status', 'published')
-      .eq('moderation_status', 'approved')
-      .order('published_at', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false })
-      .limit(LIMIT)
-
-  const [sales, donations] = await Promise.all([
-    query('sale'),
-    query('donation'),
-  ])
-
-  if (sales.error) {
-    throw new Error('Failed to fetch sales listings: ' + sales.error.message)
+  const empty = {
+    products: [] as ProductGridItem[],
+    donations: [] as ProductGridItem[],
   }
 
-  if (donations.error) {
-    throw new Error(
-      'Failed to fetch donation listings: ' + donations.error.message,
-    )
-  }
+  try {
+    const supabase = await createClient()
 
-  return {
-    products: (sales.data as unknown as ProductRow[]).map((row) =>
-      mapRow(supabase, row),
-    ),
-    donations: (donations.data as unknown as ProductRow[]).map((row) =>
-      mapRow(supabase, row),
-    ),
+    const query = (listingType: 'sale' | 'donation') =>
+      supabase
+        .from('products')
+        .select(PRODUCT_SELECT)
+        .eq('listing_type', listingType)
+        .eq('status', 'published')
+        .eq('moderation_status', 'approved')
+        .order('published_at', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
+        .limit(LIMIT)
+
+    const [sales, donations] = await Promise.all([
+      query('sale'),
+      query('donation'),
+    ])
+
+    if (sales.error || donations.error) {
+      console.error(
+        'DEBA listings query failed',
+        sales.error?.message,
+        donations.error?.message,
+      )
+      return empty
+    }
+
+    return {
+      products: (sales.data as unknown as ProductRow[]).map((row) =>
+        mapRow(supabase, row),
+      ),
+      donations: (donations.data as unknown as ProductRow[]).map((row) =>
+        mapRow(supabase, row),
+      ),
+    }
+  } catch (error) {
+    console.error('DEBA homepage data load failed', error)
+    return empty
   }
 }
 
