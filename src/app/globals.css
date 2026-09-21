@@ -5993,3 +5993,19 @@
   .deba-support-form-grid{grid-template-columns:1fr}
   .deba-support-thread{min-height:430px}
 }
+
+.deba-search-filters{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:16px;border:1px solid #E5E7EB;border-radius:18px;background:#fff;box-shadow:0 10px 26px rgba(31,41,55,.05)}
+.deba-search-filters-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:11px}
+.deba-search-filters-head>div{display:flex;flex-direction:column;gap:4px}
+.deba-search-filters-head span:first-child{color:var(--primary);font-size:.57rem;font-weight:900;letter-spacing:1.1px}
+.deba-search-filters-head h2{margin:0;color:var(--dark);font-size:.95rem}
+.deba-search-filters-head>span:last-child{color:var(--gray);font-size:.59rem}
+.deba-search-filters-form{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) auto auto;gap:7px}
+.deba-search-filters-form input,.deba-search-filters-form select{width:100%;min-height:40px;padding:0 10px;border:1px solid #E5E7EB;border-radius:10px;background:#FAFAFA;color:var(--dark);font:inherit;font-size:.63rem;outline:none}
+.deba-search-filters-form input:focus,.deba-search-filters-form select:focus{border-color:#F6B9A1;background:#fff;box-shadow:0 0 0 3px rgba(246,185,161,.12)}
+.deba-search-filters-form button{min-height:40px;padding:0 14px;border:0;border-radius:10px;background:var(--primary);color:#fff;font:inherit;font-size:.63rem;font-weight:900;cursor:pointer}
+.deba-search-filters-form button:hover{filter:brightness(.96)}
+.deba-search-filter-reset{min-height:40px;display:inline-flex;align-items:center;justify-content:center;padding:0 11px;border:1px solid #E5E7EB;border-radius:10px;color:var(--gray);font-size:.62rem;font-weight:800;text-decoration:none}
+.deba-search-filter-reset:hover{border-color:#F6B9A1;color:var(--primary);background:#FFF8F5}
+@media (max-width:920px){.deba-search-filters-form{grid-template-columns:repeat(2,minmax(0,1fr))}.deba-search-filters-form button,.deba-search-filter-reset{grid-column:span 1}}
+@media (max-width:560px){.deba-search-filters{width:min(100% - 20px,1180px)}.deba-search-filters-head{align-items:flex-start;flex-direction:column}.deba-search-filters-form{grid-template-columns:1fr}}
