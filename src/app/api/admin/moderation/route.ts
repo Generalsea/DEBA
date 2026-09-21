@@ -47,7 +47,7 @@ export async function GET() {
 
     const admin = createAdminClient()
 
-    const [productsResult, reviewsResult, reportsResult, disputesResult, ticketsResult] = await Promise.all([
+    const [productsResult, reviewsResult, reportsResult, disputesResult, ticketsResult, risksResult] = await Promise.all([
       admin
         .from('products')
         .select(
@@ -88,6 +88,13 @@ export async function GET() {
         .in('status', ['open', 'in_progress', 'waiting_user'])
         .order('updated_at', { ascending: true })
         .limit(100),
+      admin
+        .from('risk_assessments')
+        .select('id,order_id,score,level,status,reasons,model_version,reviewed_by,reviewed_at,review_note,created_at')
+        .eq('status', 'pending')
+        .order('score', { ascending: false })
+        .order('created_at', { ascending: true })
+        .limit(100),
     ])
 
     if (
@@ -95,7 +102,8 @@ export async function GET() {
       reviewsResult.error ||
       reportsResult.error ||
       disputesResult.error ||
-      ticketsResult.error
+      ticketsResult.error ||
+      risksResult.error
     ) {
       console.error('DEBA moderation queue lookup failed', {
         products: productsResult.error,
@@ -103,6 +111,7 @@ export async function GET() {
         reports: reportsResult.error,
         disputes: disputesResult.error,
         tickets: ticketsResult.error,
+        risks: risksResult.error,
       })
       return NextResponse.json({ error: 'تعذر تحميل قائمة المراجعة.' }, { status: 500 })
     }
@@ -187,6 +196,38 @@ export async function GET() {
       (ticketProfilesResult.data || []).map((profile) => [profile.id, profile]),
     )
 
+    const riskOrderIds = Array.from(
+      new Set((risksResult.data || []).map((risk) => risk.order_id).filter(Boolean)),
+    ) as string[]
+
+    const riskBuyerIds = Array.from(
+      new Set((disputesResult.data || []).map((dispute) => dispute.raised_by).filter(Boolean)),
+    ) as string[]
+
+    const [riskOrdersResult] = await Promise.all([
+      riskOrderIds.length
+        ? admin
+            .from('orders')
+            .select('id,reference_code,buyer_id,seller_id,status,payment_status,total,currency')
+            .in('id', riskOrderIds)
+        : Promise.resolve({
+            data: [] as Array<{
+              id: string
+              reference_code: string
+              buyer_id: string
+              seller_id: string
+              status: string
+              payment_status: string
+              total: number | string
+              currency: string
+            }>,
+          }),
+    ])
+
+    const riskOrderMap = new Map(
+      (riskOrdersResult.data || []).map((order) => [order.id, order]),
+    )
+
     return NextResponse.json({
       products: productsResult.data || [],
       reviews: (reviewsResult.data || []).map((review) => ({
@@ -210,6 +251,10 @@ export async function GET() {
       tickets: (ticketsResult.data || []).map((ticket) => ({
         ...ticket,
         user: ticketProfileMap.get(ticket.user_id) || null,
+      })),
+      risks: (risksResult.data || []).map((risk) => ({
+        ...risk,
+        order: riskOrderMap.get(risk.order_id) || null,
       })),
     })
   } catch (error) {
@@ -502,6 +547,43 @@ export async function POST(request: Request) {
         order_id: order.id,
       }
       entityType = 'dispute'
+    } else if (action === 'approve_risk' || action === 'block_risk') {
+      table = 'risk_assessment'
+
+      const { data: risk, error: riskError } = await admin
+        .from('risk_assessments')
+        .select('id,order_id,score,level,status,reasons,model_version,reviewed_by,reviewed_at,review_note')
+        .eq('id', id)
+        .maybeSingle()
+
+      if (riskError || !risk) {
+        return NextResponse.json({ error: 'مراجعة المخاطر غير موجودة.' }, { status: 404 })
+      }
+
+      if (risk.status !== 'pending') {
+        return NextResponse.json({ error: 'مراجعة المخاطر تم التعامل معها بالفعل.' }, { status: 409 })
+      }
+
+      const result = await admin.rpc('admin_review_risk', {
+        p_assessment_id: id,
+        p_status: action === 'approve_risk' ? 'approved' : 'blocked',
+        p_note: note || (action === 'approve_risk' ? 'Approved by admin.' : 'Blocked by admin.'),
+      })
+
+      if (result.error) {
+        console.error('DEBA risk admin review failed', result.error)
+        return NextResponse.json({ error: 'تعذر تحديث مراجعة المخاطر.' }, { status: 500 })
+      }
+
+      beforeData = risk
+      const { data: updatedRisk } = await admin
+        .from('risk_assessments')
+        .select('id,order_id,score,level,status,reasons,model_version,reviewed_by,reviewed_at,review_note')
+        .eq('id', id)
+        .single()
+
+      afterData = updatedRisk
+      entityType = 'risk_assessment'
     } else if (
       action === 'assign_ticket' ||
       action === 'resolve_ticket' ||
