@@ -4,10 +4,7 @@ import {
   BadgeCheck,
   Heart,
   MapPin,
-  MessageCircle,
   PackageCheck,
-  Repeat2,
-  Sparkles,
 } from 'lucide-react'
 import FavoriteButton from '@/components/FavoriteButton'
 
@@ -16,10 +13,9 @@ export type ProductCardItem = {
   slug: string
   title: string
   description: string | null
-  listingType: 'sale' | 'donation' | 'free'
+  listingType: 'sale'
   price: number | null
   currency: string
-  isNegotiable: boolean
   conditionGrade: string | null
   city: string | null
   governorate: string | null
@@ -45,8 +41,7 @@ const CONDITION_LABELS: Record<string, string> = {
 }
 
 function formatPrice(item: ProductCardItem) {
-  if (item.listingType !== 'sale') return 'مجاني'
-  if (item.price === null) return item.isNegotiable ? 'قابل للتفاوض' : 'السعر عند التواصل'
+  if (item.price === null) return 'السعر عند التواصل'
 
   return (
     new Intl.NumberFormat('ar-EG', {
@@ -57,23 +52,14 @@ function formatPrice(item: ProductCardItem) {
   )
 }
 
-function badge(item: ProductCardItem) {
-  if (item.listingType === 'donation') return { label: 'تبرع مجاني', tone: 'donation' }
-  if (item.listingType === 'free') return { label: 'متاح مجانًا', tone: 'donation' }
-  return {
-    label: (item.conditionGrade && CONDITION_LABELS[item.conditionGrade]) || 'حالة جيدة',
-    tone: 'sale',
-  }
-}
-
 function locationText(item: ProductCardItem) {
   return [item.city, item.governorate].filter(Boolean).join('، ')
 }
 
 export default function ProductCard({ item, priority = false }: ProductCardProps) {
-  const itemBadge = badge(item)
-  const isFree = item.listingType !== 'sale'
   const location = locationText(item)
+  const condition =
+    (item.conditionGrade && CONDITION_LABELS[item.conditionGrade]) || 'حالة جيدة'
 
   return (
     <article className="deba-product-card">
@@ -98,9 +84,9 @@ export default function ProductCard({ item, priority = false }: ProductCardProps
             </div>
           )}
 
-          <span className={'deba-product-badge ' + itemBadge.tone}>
-            {isFree ? <Sparkles size={12} /> : <BadgeCheck size={12} />}
-            {itemBadge.label}
+          <span className="deba-product-badge sale">
+            <BadgeCheck size={12} />
+            {condition}
           </span>
         </Link>
 
@@ -110,13 +96,6 @@ export default function ProductCard({ item, priority = false }: ProductCardProps
           label="إضافة إلى المفضلة"
           className="deba-product-favorite"
         />
-
-        {item.isNegotiable && !isFree && (
-          <span className="deba-negotiable-chip">
-            <Repeat2 size={12} />
-            قابل للتفاوض
-          </span>
-        )}
       </div>
 
       <div className="deba-product-body">
@@ -144,18 +123,18 @@ export default function ProductCard({ item, priority = false }: ProductCardProps
 
         <div className="deba-product-price">
           <div>
-            <span>{isFree ? 'قيمة DEBA' : 'السعر'}</span>
+            <span>السعر</span>
             <strong>{formatPrice(item)}</strong>
           </div>
-          {item.listingType === 'sale' && <Heart size={16} aria-hidden="true" />}
+          <Heart size={16} aria-hidden="true" />
         </div>
 
         <Link
-          href={'/products/' + item.slug + '?action=' + (isFree ? 'request' : 'offer')}
-          className={'deba-product-action ' + (isFree ? 'is-green' : '')}
+          href={'/products/' + item.slug}
+          className="deba-product-action"
         >
-          <MessageCircle size={16} />
-          {isFree ? 'اطلبها الآن' : 'قدّم عرضك'}
+          <PackageCheck size={16} />
+          اشترِ الآن
         </Link>
       </div>
     </article>
