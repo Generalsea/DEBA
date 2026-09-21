@@ -4,8 +4,8 @@ import HomeAuthActions from '@/components/HomeAuthActions'
 import { createClient } from '@/utils/supabase/server'
 
 export const metadata: Metadata = {
-  title: 'DEBA | Marketplace مصري - بيع، شراء، تبرع',
-  description: 'DEBA — منصة مصرية للبيع والشراء والتبرع بالسلع غير المستخدمة.',
+  title: 'DEBA | Marketplace المصري - بيع وشراء المنتجات',
+  description: 'DEBA — Marketplace مصري حديث لبيع وشراء المنتجات داخل تجربة موثوقة وشفافة.',
 }
 
 const BUCKET = 'deba-product-media'
@@ -27,7 +27,7 @@ type ProductRow = {
   title: string
   slug: string
   description: string | null
-  listing_type: 'sale' | 'donation' | 'free'
+  listing_type: 'sale'
   price: number | string | null
   currency: string
   condition_grade: string | null
@@ -53,18 +53,6 @@ type ProfileRow = {
   display_name: string | null
   username: string | null
   avatar_url: string | null
-}
-
-type CharityRow = {
-  id: string
-  name_ar: string
-  name_en: string | null
-  slug: string
-  description_ar: string | null
-  logo_url: string | null
-  website_url: string | null
-  city: string | null
-  governorate: string | null
 }
 
 const CONDITION_LABELS: Record<string, string> = {
@@ -122,8 +110,6 @@ function getImageUrl(storagePath: string | null) {
 
 function formatPrice(product: ProductRow) {
   const price = normalizePrice(product.price)
-
-  if (product.listing_type !== 'sale') return 'مجاني'
   if (price === null) return 'السعر عند التواصل'
 
   return (
@@ -159,7 +145,7 @@ async function loadHomeData(searchValue: string | undefined, categoryValue: stri
     .select(
       'id,owner_id,title,slug,description,listing_type,price,currency,condition_grade,city,governorate,moderation_status,published_at,created_at,category_id',
     )
-    .in('listing_type', ['sale', 'donation', 'free'])
+    .eq('listing_type', 'sale')
     .eq('status', 'published')
     .eq('moderation_status', 'approved')
     .order('published_at', { ascending: false, nullsFirst: false })
@@ -178,10 +164,7 @@ async function loadHomeData(searchValue: string | undefined, categoryValue: stri
     productsResponse,
     productCountResponse,
     membersCountResponse,
-    verifiedCharitiesCountResponse,
-    donationListingCountResponse,
-    featuredDonationsResponse,
-    charityResponse,
+    sellerCountResponse,
   ] = await Promise.all([
     supabase
       .from('categories')
@@ -193,6 +176,7 @@ async function loadHomeData(searchValue: string | undefined, categoryValue: stri
     supabase
       .from('products')
       .select('id', { count: 'exact', head: true })
+      .eq('listing_type', 'sale')
       .eq('status', 'published')
       .eq('moderation_status', 'approved'),
     supabase
@@ -200,64 +184,25 @@ async function loadHomeData(searchValue: string | undefined, categoryValue: stri
       .select('id', { count: 'exact', head: true })
       .eq('is_public', true),
     supabase
-      .from('charities')
+      .from('profiles')
       .select('id', { count: 'exact', head: true })
-      .eq('verification_status', 'verified')
-      .eq('is_active', true),
-    supabase
-      .from('products')
-      .select('id', { count: 'exact', head: true })
-      .in('listing_type', ['donation', 'free'])
-      .eq('status', 'published')
-      .eq('moderation_status', 'approved'),
-    supabase
-      .from('products')
-      .select(
-        'id,owner_id,title,slug,description,listing_type,price,currency,condition_grade,city,governorate,moderation_status,published_at,created_at,category_id',
-      )
-      .in('listing_type', ['donation', 'free'])
-      .eq('status', 'published')
-      .eq('moderation_status', 'approved')
-      .order('published_at', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false })
-      .limit(3),
-    supabase
-      .from('charities')
-      .select('id,name_ar,name_en,slug,description_ar,logo_url,website_url,city,governorate')
-      .eq('verification_status', 'verified')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(3),
+      .eq('is_public', true)
+      .eq('account_type', 'seller'),
   ])
 
   const categories = (categoryResponse.data || []) as CategoryRow[]
   const products = (productsResponse.data || []) as ProductRow[]
-  const featuredDonations = (featuredDonationsResponse.data || []) as ProductRow[]
-
-  const allProductIds = Array.from(
-    new Set([...products, ...featuredDonations].map((product) => product.id)),
-  )
   const ownerIds = Array.from(
-    new Set(
-      [...products, ...featuredDonations]
-        .map((product) => product.owner_id)
-        .filter((id): id is string => Boolean(id)),
-    ),
+    new Set(products.map((product) => product.owner_id).filter((id): id is string => Boolean(id))),
   )
-  const categoryIds = Array.from(
-    new Set(
-      [...products, ...featuredDonations]
-        .map((product) => product.category_id)
-        .filter((id): id is string => Boolean(id)),
-    ),
-  )
+  const productIds = products.map((product) => product.id)
 
-  const [imagesResponse, profilesResponse, categoryRowsResponse] = await Promise.all([
-    allProductIds.length
+  const [imagesResponse, profilesResponse] = await Promise.all([
+    productIds.length
       ? supabase
           .from('product_images')
           .select('id,product_id,storage_path,alt_text,sort_order,is_primary')
-          .in('product_id', allProductIds)
+          .in('product_id', productIds)
           .order('is_primary', { ascending: false })
           .order('sort_order', { ascending: true })
       : Promise.resolve({ data: [], error: null }),
@@ -267,42 +212,26 @@ async function loadHomeData(searchValue: string | undefined, categoryValue: stri
           .select('id,display_name,username,avatar_url')
           .in('id', ownerIds)
       : Promise.resolve({ data: [], error: null }),
-    categoryIds.length
-      ? supabase
-          .from('categories')
-          .select('id,name_ar,name_en,slug')
-          .in('id', categoryIds)
-      : Promise.resolve({ data: [], error: null }),
   ])
 
-  const images = (imagesResponse.data || []) as ImageRow[]
-  const profiles = (profilesResponse.data || []) as ProfileRow[]
-  const categoryRows = (categoryRowsResponse.data || []) as CategoryRow[]
-
   const imageByProduct = new Map<string, ImageRow>()
-  for (const image of images) {
-    if (!imageByProduct.has(image.product_id)) {
-      imageByProduct.set(image.product_id, image)
-    }
+  for (const image of (imagesResponse.data || []) as ImageRow[]) {
+    if (!imageByProduct.has(image.product_id)) imageByProduct.set(image.product_id, image)
   }
 
-  const profileById = new Map(profiles.map((profile) => [profile.id, profile]))
-  const categoryById = new Map(categoryRows.map((category) => [category.id, category]))
+  const profileById = new Map(
+    (profilesResponse.data || []).map((profile) => [profile.id, profile as ProfileRow]),
+  )
 
   return {
-    supabase,
     categories,
     products,
-    featuredDonations,
-    charities: (charityResponse.data || []) as CharityRow[],
     imageByProduct,
     profileById,
-    categoryById,
     stats: {
       products: productCountResponse.count || 0,
       members: membersCountResponse.count || 0,
-      charities: verifiedCharitiesCountResponse.count || 0,
-      donationListings: donationListingCountResponse.count || 0,
+      sellers: sellerCountResponse.count || 0,
     },
   }
 }
@@ -332,32 +261,13 @@ export default async function HomePage({
     },
   }))
 
-  const donationCategory = {
-    id: 'donations',
-    slug: '__donations__',
-    name_ar: 'تبرعات',
-    name_en: 'Donations',
-    sort_order: 10000,
-  }
-
-  const categoryFilterHref = (slug: string) =>
-    slug === '__donations__'
-      ? '/?type=donation#donations'
-      : '/?category=' + encodeURIComponent(slug) + '#featured'
-
-  const productRows = q || category
-    ? data.products
-    : data.products.filter((product) => product.listing_type === 'sale')
-
-  const donationRows = data.featuredDonations
-
   return (
     <>
       <header className="header">
         <div className="header-top">
           <div className="header-top-content">
             <span>🚚 الاستلام وخيارات التوصيل موضحة داخل كل إعلان</span>
-            <span>💬 التفاوض والطلبات من داخل حساب DEBA</span>
+            <span>💬 تجربة شراء وبيع موثوقة من داخل حساب DEBA</span>
           </div>
         </div>
 
@@ -398,22 +308,16 @@ export default async function HomePage({
               </Link>
             ))}
 
-            <Link
-              href="/?type=donation#donations"
-              className="nav-item"
-            >
-              تبرعات
-            </Link>
-
-            <Link href="/login" className="nav-item">البائعون</Link>
+            <Link href="#featured" className="nav-item">البائعون</Link>
           </div>
         </nav>
       </header>
 
       <section className="hero fade-in">
         <div className="hero-content">
-          <h1>Marketplace مصري للتجارة والتبرعات</h1>
-          <p>بيع، اشتري، أو تبرع بأغراضك غير المستخدمة في منصة DEBA واحدة موثوقة</p>
+          <span className="section-eyebrow">DEBA MARKETPLACE</span>
+          <h1>Marketplace مصري لبيع وشراء المنتجات</h1>
+          <p>اكتشف منتجاتك القادمة، بع ما تملك، واشترِ بثقة عبر تجربة DEBA الحديثة</p>
           <Link
             href={category || q ? '/#featured' : '#featured'}
             className="header-btn btn-primary"
@@ -425,19 +329,15 @@ export default async function HomePage({
           <div className="hero-stats">
             <div className="stat-item">
               <div className="stat-number">{data.stats.products.toLocaleString('ar-EG')}+</div>
-              <div className="stat-label">منتج متاح</div>
+              <div className="stat-label">منتج منشور</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-number">{data.stats.sellers.toLocaleString('ar-EG')}+</div>
+              <div className="stat-label">بائع على DEBA</div>
             </div>
             <div className="stat-item">
               <div className="stat-number">{data.stats.members.toLocaleString('ar-EG')}+</div>
-              <div className="stat-label">عضو عام</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">{data.stats.charities.toLocaleString('ar-EG')}+</div>
-              <div className="stat-label">جمعية موثقة</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">{data.stats.donationListings.toLocaleString('ar-EG')}+</div>
-              <div className="stat-label">إعلان تبرع متاح</div>
+              <div className="stat-label">عضو في المنصة</div>
             </div>
           </div>
         </div>
@@ -453,18 +353,13 @@ export default async function HomePage({
           {presentationCategories.map((item) => (
             <Link
               key={item.row.id}
-              href={categoryFilterHref(item.row.slug)}
+              href={'/?category=' + encodeURIComponent(item.row.slug) + '#featured'}
               className="category-card"
             >
               <div className="category-icon">{item.icon}</div>
               <div className="category-name">{item.label}</div>
             </Link>
           ))}
-
-          <Link href="/?type=donation#donations" className="category-card">
-            <div className="category-icon">🎁</div>
-            <div className="category-name">{donationCategory.name_ar}</div>
-          </Link>
         </div>
       </section>
 
@@ -474,15 +369,12 @@ export default async function HomePage({
           <Link href="/?type=sale#featured" className="section-link">عرض المزيد ←</Link>
         </div>
 
-        {productRows.length ? (
+        {data.products.length ? (
           <div className="products-grid">
-            {productRows.slice(0, PRODUCT_LIMIT).map((product) => {
+            {data.products.slice(0, PRODUCT_LIMIT).map((product) => {
               const image = data.imageByProduct.get(product.id)
               const seller = product.owner_id ? data.profileById.get(product.owner_id) : null
-              const sellerName =
-                seller?.display_name ||
-                seller?.username ||
-                'عضو DEBA'
+              const sellerName = seller?.display_name || seller?.username || 'عضو DEBA'
               const sellerInitial = (sellerName.trim().charAt(0) || 'D').toUpperCase()
               const isNew = product.condition_grade === 'new'
               const condition =
@@ -494,11 +386,7 @@ export default async function HomePage({
                   key={product.id}
                   href={'/products/' + encodeURIComponent(product.slug)}
                   className="product-card"
-                  style={{
-                    display: 'block',
-                    color: 'inherit',
-                    textDecoration: 'none',
-                  }}
+                  style={{ display: 'block', color: 'inherit', textDecoration: 'none' }}
                 >
                   <div className="product-image">
                     {getImageUrl(image?.storage_path || null) ? (
@@ -508,7 +396,6 @@ export default async function HomePage({
                         loading="lazy"
                       />
                     ) : null}
-
                     <span className={'product-badge ' + (isNew ? 'new' : 'verified')}>
                       {isNew ? 'جديد' : '✓ معتمد'}
                     </span>
@@ -516,18 +403,19 @@ export default async function HomePage({
 
                   <div className="product-info">
                     <h3 className="product-title">{product.title}</h3>
-
                     <div className="product-meta">
-                      <span className="product-condition">
-                        {condition}
-                      </span>
+                      <span className="product-condition">{condition}</span>
                       <span>📍 {locationText(product)}</span>
                     </div>
-
                     <div className="product-price">{formatPrice(product)}</div>
-
                     <div className="product-seller">
-                      <div className="seller-avatar">{sellerInitial}</div>
+                      <div className="seller-avatar">
+                        {seller?.avatar_url && /^https?:\/\//i.test(seller.avatar_url) ? (
+                          <img src={seller.avatar_url} alt="" />
+                        ) : (
+                          sellerInitial
+                        )}
+                      </div>
                       <span>{sellerName}</span>
                       <span className="trust-badge">✓ DEBA</span>
                     </div>
@@ -545,90 +433,54 @@ export default async function HomePage({
                 ? 'لم نجد سلعًا منشورة تطابق بحثك.'
                 : 'ستظهر المنتجات هنا تلقائيًا بعد النشر والمراجعة.'}
             </p>
-            <Link href="/login" className="header-btn btn-primary" style={{ marginTop: 16 }}>
+            <Link href="/sell" className="header-btn btn-primary" style={{ marginTop: 16 }}>
               أضف أول إعلان
             </Link>
           </div>
         )}
       </section>
 
-      <section className="donation-section" id="donations">
+      <section className="donation-section" id="community">
         <div className="donation-content">
           <div className="donation-info">
-            <h2>تبرع بأغراضك لمن يحتاجها</h2>
+            <span className="section-eyebrow" style={{ color: 'white' }}>DEBA COMMUNITY</span>
+            <h2>سوق واحد. قيمة أكبر.</h2>
             <p>
-              ساهم في إعادة توجيه قيمة الأغراض غير المستخدمة. التبرعات والسلع
-              المجانية المنشورة في DEBA تظهر للمستخدمين داخل نفس المنصة.
+              في DEBA تتحول المنتجات غير المستخدمة إلى فرص جديدة. اكتشف منتجات موثقة التفاصيل،
+              تواصل مع البائعين، وأدر مشترياتك وإعلاناتك من حساب واحد.
             </p>
 
             <Link
-              href="/login"
+              href="#featured"
               className="header-btn"
               style={{ background: 'white', color: 'var(--accent)', fontSize: '1.1rem', padding: '14px 32px' }}
             >
-              تبرع الآن
+              استكشف السوق
             </Link>
-
-            <div className="donation-stats">
-              <div className="donation-stat">
-                <div className="donation-stat-number">{data.stats.donationListings.toLocaleString('ar-EG')}</div>
-                <div className="donation-stat-label">إعلان تبرع متاح</div>
-              </div>
-              <div className="donation-stat">
-                <div className="donation-stat-number">{data.stats.charities.toLocaleString('ar-EG')}</div>
-                <div className="donation-stat-label">جمعية موثقة</div>
-              </div>
-              <div className="donation-stat">
-                <div className="donation-stat-number">{data.stats.members.toLocaleString('ar-EG')}</div>
-                <div className="donation-stat-label">عضو عام</div>
-              </div>
-            </div>
           </div>
 
           <div className="donation-visual">
-            {data.charities.length ? (
-              data.charities.map((charity, index) => {
-                const icon = ['🏥', '📚', '🎁'][index] || '🤝'
-                const description =
-                  charity.description_ar ||
-                  [charity.city, charity.governorate].filter(Boolean).join('، ') ||
-                  'جمعية موثقة ونشطة على DEBA'
-
-                const cardContent = (
-                  <>
-                    <div className="charity-logo">{icon}</div>
-                    <div className="charity-info">
-                      <h4>{charity.name_ar}</h4>
-                      <p>{description}</p>
-                    </div>
-                  </>
-                )
-
-                return charity.website_url ? (
-                  <a
-                    key={charity.id}
-                    href={charity.website_url}
-                    className="charity-card"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {cardContent}
-                  </a>
-                ) : (
-                  <div key={charity.id} className="charity-card">
-                    {cardContent}
-                  </div>
-                )
-              })
-            ) : (
-              <div className="charity-card">
-                <div className="charity-logo">🤝</div>
-                <div className="charity-info">
-                  <h4>لا توجد جمعيات موثقة بعد</h4>
-                  <p>ستظهر الجمعيات هنا تلقائيًا بعد التحقق منها داخل DEBA.</p>
-                </div>
+            <div className="charity-card">
+              <div className="charity-logo">🛍️</div>
+              <div className="charity-info">
+                <h4>اكتشف منتجات تستحقها</h4>
+                <p>تفاصيل واضحة، أسعار محددة، وتجربة شراء مصممة لتكون بسيطة واحترافية.</p>
               </div>
-            )}
+            </div>
+            <div className="charity-card">
+              <div className="charity-logo">🏷️</div>
+              <div className="charity-info">
+                <h4>حوّل ما لا تحتاجه إلى قيمة</h4>
+                <p>أضف إعلانك، قدّم بيانات دقيقة، ووصل إلى مجتمع DEBA المهتم بما تعرضه.</p>
+              </div>
+            </div>
+            <div className="charity-card">
+              <div className="charity-logo">🛡️</div>
+              <div className="charity-info">
+                <h4>ثقة تبدأ من التفاصيل</h4>
+                <p>معلومات المنتج والحالة والموقع والصور جزء أساسي من تجربة المنصة.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -645,9 +497,9 @@ export default async function HomePage({
             <p>المنتجات الظاهرة في السوق العام تظهر بعد النشر والمراجعة.</p>
           </div>
           <div className="trust-card">
-            <div className="trust-icon">💬</div>
-            <h3>تفاوض داخل المنصة</h3>
-            <p>تقديم العروض وطلبات السلع المجانية مرتبط بحساب DEBA.</p>
+            <div className="trust-icon">🧭</div>
+            <h3>تجربة موحدة</h3>
+            <p>تصفح، اشترِ، أو أضف إعلانك من تجربة واحدة مصممة للسوق المصري.</p>
           </div>
           <div className="trust-card">
             <div className="trust-icon">📦</div>
@@ -655,9 +507,9 @@ export default async function HomePage({
             <p>السعر والحالة والموقع والصور المعروضة تأتي من الإعلان نفسه.</p>
           </div>
           <div className="trust-card">
-            <div className="trust-icon">💚</div>
-            <h3>التبرعات جزء من السوق</h3>
-            <p>التبرعات والسلع المجانية لها مسار منفصل داخل نفس التجربة.</p>
+            <div className="trust-icon">📈</div>
+            <h3>قيمة مستدامة</h3>
+            <p>نساعد المنتجات على الوصول إلى أصحابها الجدد بدل بقائها بلا استخدام.</p>
           </div>
         </div>
       </section>
@@ -677,10 +529,10 @@ export default async function HomePage({
           <div className="footer-section">
             <h4>للبائعين</h4>
             <ul>
-              <li><Link href="/login">ابدأ البيع</Link></li>
-              <li><Link href="/login">حساب البائع</Link></li>
-              <li><Link href="/login">إعلاناتي</Link></li>
-              <li><Link href="/login">العروض</Link></li>
+              <li><Link href="/sell">ابدأ البيع</Link></li>
+              <li><Link href="/profile">حساب البائع</Link></li>
+              <li><Link href="/profile?tab=products">إعلاناتي</Link></li>
+              <li><Link href="/profile?tab=orders">طلبات العملاء</Link></li>
             </ul>
           </div>
 
@@ -689,28 +541,28 @@ export default async function HomePage({
             <ul>
               <li><Link href="#featured">تصفح المنتجات</Link></li>
               <li><Link href="/?type=sale#featured">السلع للبيع</Link></li>
-              <li><Link href="/?type=donation#donations">التبرعات</Link></li>
-              <li><Link href="/login">حسابي</Link></li>
+              <li><Link href="/profile?tab=favorites">المفضلة</Link></li>
+              <li><Link href="/profile?tab=orders">طلباتي</Link></li>
             </ul>
           </div>
 
           <div className="footer-section">
-            <h4>التبرعات</h4>
+            <h4>مجتمع DEBA</h4>
             <ul>
-              <li><Link href="/?type=donation#donations">تبرعات وسلع مجانية</Link></li>
-              <li><Link href="#donations">الجمعيات الموثقة</Link></li>
-              <li><Link href="/login">قدّم تبرعًا</Link></li>
-              <li><Link href="#trust">كيف تعمل DEBA</Link></li>
+              <li><Link href="#featured">اكتشف المنتجات</Link></li>
+              <li><Link href="#categories">تصفح الفئات</Link></li>
+              <li><Link href="/sell">أضف إعلانك</Link></li>
+              <li><Link href="#trust">لماذا DEBA</Link></li>
             </ul>
           </div>
 
           <div className="footer-section">
             <h4>الحساب</h4>
             <ul>
-              <li><Link href="/login">تسجيل الدخول</Link></li>
-              <li><Link href="/login">المفضلة</Link></li>
-              <li><Link href="/login">التفاوض والعروض</Link></li>
-              <li><Link href="/login">الطلبات</Link></li>
+              <li><Link href="/profile">حسابي</Link></li>
+              <li><Link href="/profile?tab=favorites">المفضلة</Link></li>
+              <li><Link href="/profile?tab=settings">إعدادات الحساب</Link></li>
+              <li><Link href="/profile?tab=orders">الطلبات</Link></li>
             </ul>
           </div>
 
@@ -720,7 +572,7 @@ export default async function HomePage({
               <li><Link href="/">Marketplace المصري</Link></li>
               <li><Link href="#categories">تصفح الفئات</Link></li>
               <li><Link href="#featured">منتجات مميزة</Link></li>
-              <li><Link href="#donations">Impact & Donations</Link></li>
+              <li><Link href="#community">DEBA Community</Link></li>
             </ul>
           </div>
         </div>
