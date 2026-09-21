@@ -26,6 +26,7 @@ import {
   UserRound,
   WalletCards,
   X,
+  type LucideIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
@@ -198,7 +199,7 @@ function StatCard({
   value,
   tone = '',
 }: {
-  icon: typeof Package
+  icon: LucideIcon
   label: string
   value: string | number
   tone?: string
@@ -221,7 +222,7 @@ function EmptyState({
   href,
   action,
 }: {
-  icon: typeof Package
+  icon: LucideIcon
   title: string
   body: string
   href?: string
