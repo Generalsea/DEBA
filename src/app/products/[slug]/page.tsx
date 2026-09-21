@@ -153,7 +153,6 @@ function mapCard(
     listingType: row.listing_type,
     price: normalizePrice(row.price),
     currency: row.currency || 'EGP',
-    isNegotiable: false,
     conditionGrade: row.condition_grade,
     city: row.city,
     governorate: row.governorate,
