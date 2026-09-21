@@ -200,10 +200,6 @@ export async function GET() {
       new Set((risksResult.data || []).map((risk) => risk.order_id).filter(Boolean)),
     ) as string[]
 
-    const riskBuyerIds = Array.from(
-      new Set((disputesResult.data || []).map((dispute) => dispute.raised_by).filter(Boolean)),
-    ) as string[]
-
     const [riskOrdersResult] = await Promise.all([
       riskOrderIds.length
         ? admin
