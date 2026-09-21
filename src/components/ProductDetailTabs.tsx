@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Truck,
   Wrench,
+  type LucideIcon,
 } from 'lucide-react'
 
 type JsonObject = Record<string, unknown>
@@ -144,7 +145,7 @@ function PolicyCard({
   body,
   tone = 'neutral',
 }: {
-  icon: typeof Truck
+  icon: LucideIcon
   title: string
   status?: string
   body?: string | null
@@ -181,6 +182,7 @@ export default function ProductDetailTabs({
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]['id']>('overview')
   const root = metadata || {}
   const specifications = asObject(root.specifications)
+  const identification = asObject(root.identification)
   const commerce = asObject(root.commerce)
   const returns = asObject(commerce.returns)
   const warranty = asObject(commerce.warranty)
@@ -192,6 +194,7 @@ export default function ProductDetailTabs({
     const excluded = new Set([
       'specifications',
       'commerce',
+      'identification',
       'faq',
       'questions',
       'fixture',
@@ -284,6 +287,20 @@ export default function ProductDetailTabs({
                   <CheckCircle2 size={17} />
                   <span>أي بيان لم يقدمه البائع لا يتم اختلاقه أو عرضه كحقيقة.</span>
                 </div>
+              </div>
+            </section>
+
+            <section className="deba-detail-panel-card deba-detail-panel-wide">
+              <SectionHeading
+                eyebrow="PRODUCT IDENTITY"
+                title="هوية المنتج ومصدره"
+                description="هذه البيانات تساعد على إزالة الالتباس بين المنتجات المتشابهة، مع عدم تحويل إدخال البائع إلى شهادة رسمية."
+              />
+              <div className="deba-detail-data-list deba-detail-two-column">
+                <DataRow label="بلد المنشأ / المصدر" value={identification.origin} />
+                <DataRow label="تاريخ الشراء الأصلي" value={identification.purchase_date} />
+                <DataRow label="باركود / GTIN" value={identification.barcode} />
+                <DataRow label="إصدار عقد البيانات" value={textValue(commerce.declaration && asObject(commerce.declaration).version)} />
               </div>
             </section>
           </div>
