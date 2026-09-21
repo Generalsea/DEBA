@@ -35,7 +35,11 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  await supabase.auth.getClaims()
+  try {
+    await supabase.auth.getClaims()
+  } catch {
+    // Auth/session lookup must never take public pages down.
+  }
 
   return supabaseResponse
 }
