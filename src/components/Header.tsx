@@ -74,8 +74,13 @@ export default function Header({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event) => {
-      void syncAuth()
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (!mounted) return
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+        setAuthState('authenticated')
+      } else if (event === 'SIGNED_OUT') {
+        setAuthState('anonymous')
+      }
     })
 
     return () => {
