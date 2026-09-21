@@ -74,7 +74,7 @@ export default function Header() {
 
           <Link href="/login" className="market-action market-action-with-count">
             <MessageSquareText size={19} />
-            <span>طلباتي</span>
+            <span>المفاوضات</span>
           </Link>
 
           <Link href="/login" className="market-sell">
