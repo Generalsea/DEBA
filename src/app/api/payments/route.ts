@@ -133,6 +133,30 @@ export async function POST(request: Request) {
       )
     }
 
+    const { data: risk } = await supabase
+      .from('risk_assessments')
+      .select('id,score,level,status,reasons,model_version')
+      .eq('order_id', order.id)
+      .maybeSingle()
+
+    if (risk?.status === 'blocked') {
+      return NextResponse.json(
+        { error: 'عملية الدفع موقوفة بعد مراجعة أمنية لهذا الطلب.' },
+        { status: 403 },
+      )
+    }
+
+    if (risk?.level === 'high' && risk.status === 'pending') {
+      return NextResponse.json(
+        {
+          error:
+            'هذا الطلب يحتاج مراجعة أمنية قبل بدء الدفع. يرجى الانتظار حتى اعتماد العملية.',
+          riskReviewRequired: true,
+        },
+        { status: 409 },
+      )
+    }
+
     if (order.status === 'cancelled' || order.status === 'refunded') {
       return NextResponse.json(
         { error: 'لا يمكن الدفع لهذا الطلب في حالته الحالية.' },
