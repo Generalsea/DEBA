@@ -440,9 +440,9 @@ export default async function HomePage({
         )}
       </section>
 
-      <section className="donation-section" id="community">
-        <div className="donation-content">
-          <div className="donation-info">
+      <section className="community-section" id="community">
+        <div className="community-content">
+          <div className="community-info">
             <span className="section-eyebrow" style={{ color: 'white' }}>DEBA COMMUNITY</span>
             <h2>سوق واحد. قيمة أكبر.</h2>
             <p>
@@ -459,24 +459,24 @@ export default async function HomePage({
             </Link>
           </div>
 
-          <div className="donation-visual">
-            <div className="charity-card">
-              <div className="charity-logo">🛍️</div>
-              <div className="charity-info">
+          <div className="community-visual">
+            <div className="community-card">
+              <div className="community-icon">🛍️</div>
+              <div className="community-card-info">
                 <h4>اكتشف منتجات تستحقها</h4>
                 <p>تفاصيل واضحة، أسعار محددة، وتجربة شراء مصممة لتكون بسيطة واحترافية.</p>
               </div>
             </div>
-            <div className="charity-card">
-              <div className="charity-logo">🏷️</div>
-              <div className="charity-info">
+            <div className="community-card">
+              <div className="community-icon">🏷️</div>
+              <div className="community-card-info">
                 <h4>حوّل ما لا تحتاجه إلى قيمة</h4>
                 <p>أضف إعلانك، قدّم بيانات دقيقة، ووصل إلى مجتمع DEBA المهتم بما تعرضه.</p>
               </div>
             </div>
-            <div className="charity-card">
-              <div className="charity-logo">🛡️</div>
-              <div className="charity-info">
+            <div className="community-card">
+              <div className="community-icon">🛡️</div>
+              <div className="community-card-info">
                 <h4>ثقة تبدأ من التفاصيل</h4>
                 <p>معلومات المنتج والحالة والموقع والصور جزء أساسي من تجربة المنصة.</p>
               </div>
