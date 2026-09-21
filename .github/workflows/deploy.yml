@@ -29,8 +29,6 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
-          package-manager-cache: false
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Run tests
@@ -60,8 +58,6 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
-          package-manager-cache: false
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Check Vercel credentials
@@ -114,8 +110,6 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
-          package-manager-cache: false
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Check Vercel credentials
