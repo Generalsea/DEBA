@@ -43,9 +43,20 @@ export type PaymentIntentResult = {
   raw: Record<string, unknown>
 }
 
+export type RefundPaymentInput = {
+  transactionId: string
+  amount: number
+}
+
+export type RefundPaymentResult = {
+  providerRefundId: string | null
+  raw: Record<string, unknown>
+}
+
 export interface PaymentProvider {
   readonly name: string
   createPaymentIntent(input: CreatePaymentIntentInput): Promise<PaymentIntentResult>
+  refundPayment(input: RefundPaymentInput): Promise<RefundPaymentResult>
   verifyTransactionWebhook(payload: unknown, receivedHmac: string): boolean
   mapWebhookStatus(payload: unknown, expectedAmount: number): PaymentStatus
 }
