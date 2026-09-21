@@ -7,6 +7,8 @@ import {
   Loader2,
   MessageSquare,
   PackageCheck,
+  ShieldAlert,
+  LifeBuoy,
   RefreshCw,
   Star,
   XCircle,
@@ -42,6 +44,42 @@ type Queue = {
     reporter: { display_name: string | null; username: string | null } | null
     reportedUser: { display_name: string | null; username: string | null } | null
     product: { title: string; slug: string } | null
+  }>
+  disputes: Array<{
+    id: string
+    order_id: string
+    category: string
+    subject: string
+    description: string
+    status: string
+    priority: string
+    resolution_note: string | null
+    order: {
+      id: string
+      reference_code: string
+      buyer_id: string
+      seller_id: string
+      payment_status: string
+      status: string
+      total: number | string
+      currency: string
+    } | null
+    raisedBy: { display_name: string | null; username: string | null } | null
+    created_at: string
+  }>
+  tickets: Array<{
+    id: string
+    user_id: string
+    order_id: string | null
+    category: string
+    subject: string
+    description: string
+    status: string
+    priority: string
+    assigned_to: string | null
+    user: { display_name: string | null; username: string | null } | null
+    created_at: string
+    updated_at: string
   }>
 }
 
@@ -84,7 +122,9 @@ function dateLabel(value: string) {
 
 export default function AdminModeration() {
   const [queue, setQueue] = useState<Queue | null>(null)
-  const [active, setActive] = useState<'products' | 'reviews' | 'reports'>('products')
+  const [active, setActive] = useState<
+    'products' | 'reviews' | 'reports' | 'disputes' | 'tickets'
+  >('products')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -133,6 +173,8 @@ export default function AdminModeration() {
       products: queue?.products.length || 0,
       reviews: queue?.reviews.length || 0,
       reports: queue?.reports.length || 0,
+      disputes: queue?.disputes.length || 0,
+      tickets: queue?.tickets.length || 0,
     }),
     [queue],
   )
@@ -156,6 +198,8 @@ export default function AdminModeration() {
           ['products', 'الإعلانات', PackageCheck],
           ['reviews', 'التقييمات', Star],
           ['reports', 'البلاغات', Flag],
+          ['disputes', 'النزاعات', ShieldAlert],
+          ['tickets', 'الدعم', LifeBuoy],
         ] as const).map(([value, label, Icon]) => (
           <button
             key={value}
@@ -257,6 +301,160 @@ export default function AdminModeration() {
               ))
             ) : (
               <div className="deba-admin-empty"><CheckCircle2 size={22} /> لا توجد تقييمات معلقة.</div>
+            )
+          ) : null}
+
+          {active === 'disputes' ? (
+            queue.disputes.length ? (
+              queue.disputes.map((dispute) => {
+                const fullyRefunded =
+                  dispute.order?.payment_status === 'refunded' &&
+                  dispute.order?.status === 'disputed'
+                return (
+                  <article key={dispute.id} className="deba-admin-card">
+                    <div className="deba-admin-card-main">
+                      <div className="deba-admin-card-icon"><ShieldAlert size={19} /></div>
+                      <div>
+                        <span>
+                          {dispute.priority} · {dispute.order?.reference_code || dispute.order_id}
+                        </span>
+                        <h2>{dispute.subject}</h2>
+                        <p>
+                          {dispute.description} · {dateLabel(dispute.created_at)}
+                        </p>
+                        <small>
+                          المشتري: {dispute.raisedBy?.display_name || dispute.raisedBy?.username || 'مستخدم DEBA'}
+                        </small>
+                      </div>
+                    </div>
+                    <div className="deba-admin-card-actions">
+                      {dispute.status === 'open' ? (
+                        <button
+                          type="button"
+                          className="primary"
+                          disabled={busy !== null}
+                          onClick={() => void act('review_dispute', dispute.id)}
+                        >
+                          {busy === dispute.id + ':review_dispute'
+                            ? <Loader2 size={15} className="deba-spin")
+                            : <MessageSquare size={15} />}
+                          بدء المراجعة
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="primary"
+                        disabled={busy !== null}
+                        onClick={() => void act('resolve_dispute_seller', dispute.id, 'تمت مراجعة الأدلة وإغلاق النزاع لصالح البائع.')}
+                      >
+                        {busy === dispute.id + ':resolve_dispute_seller'
+                          ? <Loader2 size={15} className="deba-spin" />
+                          : <CheckCircle2 size={15} />}
+                        حل لصالح البائع
+                      </button>
+                      <button
+                        type="button"
+                        className="danger"
+                        disabled={busy !== null || !fullyRefunded}
+                        title={!fullyRefunded ? 'يلزم إثبات الاسترداد الكامل أولًا.' : undefined}
+                        onClick={() => void act('resolve_dispute_buyer', dispute.id, 'تم إثبات الاسترداد الكامل وحل النزاع لصالح المشتري.')}
+                      >
+                        {busy === dispute.id + ':resolve_dispute_buyer'
+                          ? <Loader2 size={15} className="deba-spin" />
+                          : <ShieldAlert size={15} />}
+                        حل لصالح المشتري
+                      </button>
+                      {['resolved_buyer', 'resolved_seller'].includes(dispute.status) ? (
+                        <button
+                          type="button"
+                          className="danger"
+                          disabled={busy !== null}
+                          onClick={() => void act('close_dispute', dispute.id)}
+                        >
+                          {busy === dispute.id + ':close_dispute'
+                            ? <Loader2 size={15} className="deba-spin" />
+                            : <XCircle size={15} />}
+                          إغلاق
+                        </button>
+                      ) : null}
+                    </div>
+                  </article>
+                )
+              })
+            ) : (
+              <div className="deba-admin-empty"><CheckCircle2 size={22} /> لا توجد نزاعات مفتوحة.</div>
+            )
+          ) : null}
+
+          {active === 'tickets' ? (
+            queue.tickets.length ? (
+              queue.tickets.map((ticket) => (
+                <article key={ticket.id} className="deba-admin-card">
+                  <div className="deba-admin-card-main">
+                    <div className="deba-admin-card-icon"><LifeBuoy size={19} /></div>
+                    <div>
+                      <span>
+                        {ticket.priority} · {ticket.category}
+                      </span>
+                      <h2>{ticket.subject}</h2>
+                      <p>
+                        {ticket.description} · {dateLabel(ticket.created_at)}
+                      </p>
+                      <small>
+                        {ticket.user?.display_name || ticket.user?.username || 'مستخدم DEBA'} · {ticket.status}
+                      </small>
+                    </div>
+                  </div>
+                  <div className="deba-admin-card-actions">
+                    <button
+                      type="button"
+                      className="primary"
+                      disabled={busy !== null}
+                      onClick={() => void act('assign_ticket', ticket.id)}
+                    >
+                      {busy === ticket.id + ':assign_ticket'
+                        ? <Loader2 size={15} className="deba-spin" />
+                        : <LifeBuoy size={15} />}
+                      تعيين ومتابعة
+                    </button>
+                    <button
+                      type="button"
+                      className="primary"
+                      disabled={busy !== null}
+                      onClick={() => void act('reply_ticket', ticket.id, window.prompt('اكتب رد الدعم:') || '')}
+                    >
+                      {busy === ticket.id + ':reply_ticket'
+                        ? <Loader2 size={15} className="deba-spin" />
+                        : <MessageSquare size={15} />}
+                      رد
+                    </button>
+                    <button
+                      type="button"
+                      className="primary"
+                      disabled={busy !== null}
+                      onClick={() => void act('resolve_ticket', ticket.id)}
+                    >
+                      {busy === ticket.id + ':resolve_ticket'
+                        ? <Loader2 size={15} className="deba-spin" />
+                        : <CheckCircle2 size={15} />}
+                      حل
+                    </button>
+                    <button
+                      type="button"
+                      className="danger"
+                      disabled={busy !== null}
+                      onClick={() => void act('close_ticket', ticket.id)}
+                    >
+                      {busy === ticket.id + ':close_ticket'
+                        ? <Loader2 size={15} className="deba-spin" />
+                        : <XCircle size={15} />}
+                      إغلاق
+                    </button>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="deba-admin-empty"><CheckCircle2 size={22} /> لا توجد تذاكر مفتوحة.</div>
             )
           ) : null}
 
