@@ -6,10 +6,12 @@ import {
   useState,
   useTransition,
 } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 
 type AuthMode = 'login' | 'register'
+type FieldErrors = Record<string, string>
 
 function mapAuthError(message: string) {
   const normalized = message.toLowerCase()
@@ -19,7 +21,7 @@ function mapAuthError(message: string) {
   }
 
   if (normalized.includes('email not confirmed')) {
-    return 'يرجى تأكيد بريدك الإلكتروني أولاً.'
+    return 'يرجى تأكيد بريدك الإلكتروني أولًا.'
   }
 
   if (normalized.includes('user already registered')) {
@@ -37,21 +39,35 @@ function mapAuthError(message: string) {
   return 'تعذر إكمال العملية الآن. حاول مرة أخرى.'
 }
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+function isValidEgyptianPhone(value: string) {
+  return /^01\d{9}$/.test(value.replace(/\s/g, ''))
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const [mode, setMode] = useState<AuthMode>('login')
-  const [displayName, setDisplayName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const [message, setMessage] = useState<{
     type: 'error' | 'success'
     text: string
   } | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('error') === 'auth') {
+    const params = new URLSearchParams(window.location.search)
+
+    if (params.get('error') === 'auth') {
       setMessage({
         type: 'error',
         text: 'تعذر التحقق من جلسة المصادقة. أعد المحاولة.',
@@ -59,46 +75,67 @@ export default function LoginPage() {
     }
   }, [])
 
+  const switchMode = (nextMode: AuthMode) => {
+    setMode(nextMode)
+    setMessage(null)
+    setFieldErrors({})
+  }
+
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setMessage(null)
+    setFieldErrors({})
 
     const cleanEmail = email.trim().toLowerCase()
-    const cleanName = displayName.trim()
+    const cleanFirstName = firstName.trim()
+    const cleanLastName = lastName.trim()
+    const cleanPhone = phone.replace(/\s/g, '')
 
-    if (!cleanEmail) {
-      setMessage({ type: 'error', text: 'أدخل بريدك الإلكتروني.' })
-      return
+    const errors: FieldErrors = {}
+
+    if (!isValidEmail(cleanEmail)) {
+      errors.email = 'يرجى إدخال بريد إلكتروني صحيح.'
     }
 
     if (password.length < 8) {
-      setMessage({
-        type: 'error',
-        text: 'كلمة المرور يجب ألا تقل عن 8 أحرف.',
-      })
-      return
+      errors.password = 'كلمة المرور يجب ألا تقل عن 8 أحرف.'
     }
 
-    if (mode === 'register' && cleanName.length < 2) {
+    if (mode === 'register') {
+      if (cleanFirstName.length < 2) {
+        errors.firstName = 'أدخل الاسم الأول.'
+      }
+
+      if (cleanLastName.length < 2) {
+        errors.lastName = 'أدخل الاسم الأخير.'
+      }
+
+      if (!isValidEgyptianPhone(cleanPhone)) {
+        errors.phone = 'أدخل رقم هاتف مصري صحيح يبدأ بـ 01.'
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
       setMessage({
         type: 'error',
-        text: 'أدخل اسمًا ظاهرًا لا يقل عن حرفين.',
+        text: 'راجع البيانات المظللة ثم حاول مرة أخرى.',
       })
       return
     }
 
     startTransition(async () => {
       let supabase: ReturnType<typeof createClient>
+
       try {
         supabase = createClient()
       } catch (error) {
         setMessage({
           type: 'error',
           text:
-            error instanceof Error
-              ? error.message.includes('Missing NEXT_PUBLIC_SUPABASE_')
-                ? 'إعدادات Supabase غير مكتملة في Vercel.'
-                : error.message
+            error instanceof Error &&
+            error.message.includes('Missing NEXT_PUBLIC_SUPABASE_')
+              ? 'إعدادات Supabase غير مكتملة في Vercel.'
               : 'إعدادات المصادقة غير متاحة حاليًا.',
         })
         return
@@ -126,12 +163,17 @@ export default function LoginPage() {
         return
       }
 
+      const displayName = `${cleanFirstName} ${cleanLastName}`.trim()
+
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
         options: {
           data: {
-            display_name: cleanName,
+            display_name: displayName,
+            first_name: cleanFirstName,
+            last_name: cleanLastName,
+            phone: cleanPhone,
           },
           emailRedirectTo:
             window.location.origin + '/auth/callback?next=/',
@@ -162,18 +204,17 @@ export default function LoginPage() {
 
   const signInWithGoogle = () => {
     setMessage(null)
+    setFieldErrors({})
 
     startTransition(async () => {
       let supabase: ReturnType<typeof createClient>
+
       try {
         supabase = createClient()
-      } catch (error) {
+      } catch {
         setMessage({
           type: 'error',
-          text:
-            error instanceof Error
-              ? error.message
-              : 'إعدادات المصادقة غير متاحة حاليًا.',
+          text: 'إعدادات المصادقة غير متاحة حاليًا.',
         })
         return
       }
@@ -203,188 +244,379 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="auth-page">
-      <section className="auth-shell">
-        <aside className="auth-brand">
-          <div className="brand">
-            <span className="brand-mark">D</span>
-            <span>DEBA</span>
-          </div>
+    <main className="auth-page" dir="rtl">
+      <div className="bg-decoration" aria-hidden="true">
+        <div className="bg-circle bg-circle-1" />
+        <div className="bg-circle bg-circle-2" />
+        <div className="bg-circle bg-circle-3" />
+      </div>
 
-          <div>
-            <span className="kicker">سوق التبادل المصري</span>
-            <h1>كل شيء له قيمة عندما يصل إلى من يحتاجه.</h1>
-            <p>
+      <div className="auth-container">
+        <aside className="brand-side">
+          <div className="brand-header">
+            <div className="brand-logo">
+              <div className="brand-logo-icon">🛍️</div>
+              <div className="brand-logo-text">DEBA</div>
+            </div>
+
+            <h1 className="brand-title">سوق التبادل المصري</h1>
+            <p className="brand-subtitle">
+              كل شيء له قيمة عندما يصل إلى من يحتاجه.
+              <br />
               سوق مصمم للبيع والتبادل والتبرع، بتجربة هادئة، واضحة وموثوقة.
             </p>
           </div>
 
-          <div className="trust-grid">
-            <div>
-              <b>01</b>
-              <strong>ثقة</strong>
-              <span>تجربة حساب موثوقة</span>
+          <div className="brand-values">
+            <div className="value-card">
+              <div className="value-number">01</div>
+              <div className="value-content">
+                <h3>ثقة</h3>
+                <p>تجربة حساب موثوقة</p>
+              </div>
             </div>
-            <div>
-              <b>02</b>
-              <strong>قيمة</strong>
-              <span>استخدام أفضل لما تملك</span>
+
+            <div className="value-card">
+              <div className="value-number">02</div>
+              <div className="value-content">
+                <h3>قيمة</h3>
+                <p>استخدام أفضل لما تملك</p>
+              </div>
             </div>
-            <div>
-              <b>03</b>
-              <strong>أثر</strong>
-              <span>مساحة أكبر للتبرع</span>
+
+            <div className="value-card">
+              <div className="value-number">03</div>
+              <div className="value-content">
+                <h3>أثر</h3>
+                <p>مساحة أكبر للتبرع</p>
+              </div>
             </div>
+          </div>
+
+          <div className="brand-footer">
+            <div className="brand-footer-logo">DEBA</div>
+            <div className="brand-footer-text">صُنع في مصر 🇪🇬</div>
           </div>
         </aside>
 
-        <section className="auth-form-panel">
-          <div className="mobile-brand brand">
-            <span className="brand-mark">D</span>
-            <span>DEBA</span>
-          </div>
-
-          <div className="heading">
-            <span className="kicker">مرحبًا بك</span>
-            <h2>{mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}</h2>
-            <p>
-              {mode === 'login'
-                ? 'أكمل رحلتك داخل DEBA من حيث توقفت.'
-                : 'ابدأ حسابك وكن جزءًا من منظومة التبادل.'}
-            </p>
-          </div>
-
-          <div className="mode-switch" role="tablist">
-            <button
-              type="button"
-              className={mode === 'login' ? 'active' : ''}
-              onClick={() => {
-                setMode('login')
-                setMessage(null)
-              }}
-            >
-              الدخول
-            </button>
-            <button
-              type="button"
-              className={mode === 'register' ? 'active' : ''}
-              onClick={() => {
-                setMode('register')
-                setMessage(null)
-              }}
-            >
-              حساب جديد
-            </button>
-          </div>
-
-          <button
-            type="button"
-            className="google-button"
-            onClick={signInWithGoogle}
-            disabled={isPending}
-          >
-            <span className="google-icon">G</span>
-            المتابعة باستخدام Google
-          </button>
-
-          <div className="divider">
-            <span />
-            <small>أو</small>
-            <span />
-          </div>
-
-          <form onSubmit={submit} className="form">
-            {mode === 'register' && (
-              <label>
-                <span>الاسم الظاهر</span>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(event) => setDisplayName(event.target.value)}
-                  placeholder="مثال: طلعت موسى"
-                  autoComplete="name"
-                  maxLength={80}
-                  disabled={isPending}
-                />
-              </label>
-            )}
-
-            <label>
-              <span>البريد الإلكتروني</span>
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@example.com"
-                autoComplete="email"
-                inputMode="email"
-                maxLength={254}
-                disabled={isPending}
-              />
-            </label>
-
-            <label>
-              <span>كلمة المرور</span>
-              <div className="password">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="••••••••"
-                  autoComplete={
-                    mode === 'login' ? 'current-password' : 'new-password'
-                  }
-                  minLength={8}
-                  maxLength={128}
-                  disabled={isPending}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((value) => !value)}
-                >
-                  {showPassword ? 'إخفاء' : 'إظهار'}
-                </button>
+        <section className="form-side">
+          <div className="form-container">
+            <div className="mobile-brand">
+              <div className="brand-logo">
+                <div className="brand-logo-icon">🛍️</div>
+                <div className="brand-logo-text">DEBA</div>
               </div>
-            </label>
+            </div>
 
-            {mode === 'login' && (
-              <div className="aux">
-                <span>تأكد من بياناتك قبل المتابعة.</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode('register')
-                    setMessage(null)
-                  }}
-                >
-                  إنشاء حساب
-                </button>
-              </div>
-            )}
+            <div className="form-header">
+              <Link href="/" className="form-back">
+                <span>←</span>
+                <span>العودة للرئيسية</span>
+              </Link>
+
+              <h2 className="form-title">
+                {mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
+              </h2>
+              <p className="form-subtitle">
+                {mode === 'login'
+                  ? 'أكمل رحلتك داخل DEBA من حيث توقفت.'
+                  : 'ابدأ حسابك وكن جزءًا من منظومة التبادل.'}
+              </p>
+            </div>
+
+            <div className="auth-tabs" role="tablist" aria-label="نوع الحساب">
+              <button
+                type="button"
+                className={'auth-tab ' + (mode === 'login' ? 'active' : '')}
+                aria-selected={mode === 'login'}
+                role="tab"
+                onClick={() => switchMode('login')}
+              >
+                الدخول
+              </button>
+              <button
+                type="button"
+                className={'auth-tab ' + (mode === 'register' ? 'active' : '')}
+                aria-selected={mode === 'register'}
+                role="tab"
+                onClick={() => switchMode('register')}
+              >
+                حساب جديد
+              </button>
+            </div>
 
             {message && (
-              <div className={'message ' + message.type}>
+              <div
+                className={message.type === 'success' ? 'success-message' : 'error-message'}
+                role={message.type === 'error' ? 'alert' : 'status'}
+              >
+                <span aria-hidden="true">{message.type === 'success' ? '✓' : '⚠'}</span>
                 <span>{message.text}</span>
               </div>
             )}
 
-            <button type="submit" className="submit" disabled={isPending}>
-              <span>
-                {isPending
-                  ? 'جارٍ المعالجة…'
-                  : mode === 'login'
-                    ? 'دخول إلى DEBA'
-                    : 'إنشاء الحساب'}
-              </span>
-              <b>←</b>
-            </button>
-          </form>
+            <form className={mode === 'login' ? 'login-form' : 'login-form hidden'} onSubmit={submit}>
+              <button
+                type="button"
+                className="google-btn"
+                onClick={signInWithGoogle}
+                disabled={isPending}
+              >
+                <svg className="google-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                المتابعة باستخدام Google
+              </button>
 
-          <p className="legal">
-            بالمتابعة، أنت توافق على شروط الاستخدام وسياسات DEBA.
-          </p>
+              <div className="divider" aria-hidden="true">
+                أو
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="loginEmail">البريد الإلكتروني</label>
+                <div className="form-input-wrapper">
+                  <input
+                    id="loginEmail"
+                    type="email"
+                    className={'form-input ' + (fieldErrors.email ? 'error' : '')}
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    inputMode="email"
+                    maxLength={254}
+                    disabled={isPending}
+                    required
+                    aria-invalid={Boolean(fieldErrors.email)}
+                  />
+                </div>
+                {fieldErrors.email && <div className="field-error">{fieldErrors.email}</div>}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="loginPassword">كلمة المرور</label>
+                <div className="form-input-wrapper">
+                  <input
+                    id="loginPassword"
+                    type={showPassword ? 'text' : 'password'}
+                    className={'form-input ' + (fieldErrors.password ? 'error' : '')}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    minLength={8}
+                    maxLength={128}
+                    disabled={isPending}
+                    required
+                    aria-invalid={Boolean(fieldErrors.password)}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                  >
+                    {showPassword ? 'إخفاء' : 'إظهار'}
+                  </button>
+                </div>
+                {fieldErrors.password && <div className="field-error">{fieldErrors.password}</div>}
+              </div>
+
+              <div className="form-options">
+                <label className="remember-me">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(event) => setRememberMe(event.target.checked)}
+                    disabled={isPending}
+                  />
+                  <span>تذكرني</span>
+                </label>
+                <button
+                  type="button"
+                  className="forgot-link"
+                  onClick={() =>
+                    setMessage({
+                      type: 'error',
+                      text: 'استعادة كلمة المرور تحتاج إعداد رابط الاستعادة داخل Supabase.',
+                    })
+                  }
+                >
+                  نسيت كلمة المرور؟
+                </button>
+              </div>
+
+              <button type="submit" className="submit-btn" disabled={isPending}>
+                {isPending ? (
+                  <div className="btn-loader" aria-label="جارٍ المعالجة" />
+                ) : (
+                  <>
+                    <span>دخول إلى DEBA</span>
+                    <span className="arrow">←</span>
+                  </>
+                )}
+              </button>
+
+              <p className="terms-text">
+                بالمتابعة، أنت توافق على <a href="#">شروط الاستخدام</a> و<a href="#">سياسات DEBA</a>.
+              </p>
+            </form>
+
+            <form className={mode === 'register' ? 'register-form' : 'register-form hidden'} onSubmit={submit}>
+              <button
+                type="button"
+                className="google-btn"
+                onClick={signInWithGoogle}
+                disabled={isPending}
+              >
+                <svg className="google-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98 0-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                المتابعة باستخدام Google
+              </button>
+
+              <div className="divider" aria-hidden="true">
+                أو
+              </div>
+
+              <div className="name-row">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="firstName">الاسم الأول</label>
+                  <input
+                    id="firstName"
+                    type="text"
+                    className={'form-input ' + (fieldErrors.firstName ? 'error' : '')}
+                    value={firstName}
+                    onChange={(event) => setFirstName(event.target.value)}
+                    placeholder="محمد"
+                    autoComplete="given-name"
+                    maxLength={60}
+                    disabled={isPending}
+                    required
+                    aria-invalid={Boolean(fieldErrors.firstName)}
+                  />
+                  {fieldErrors.firstName && <div className="field-error">{fieldErrors.firstName}</div>}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="lastName">الاسم الأخير</label>
+                  <input
+                    id="lastName"
+                    type="text"
+                    className={'form-input ' + (fieldErrors.lastName ? 'error' : '')}
+                    value={lastName}
+                    onChange={(event) => setLastName(event.target.value)}
+                    placeholder="أحمد"
+                    autoComplete="family-name"
+                    maxLength={60}
+                    disabled={isPending}
+                    required
+                    aria-invalid={Boolean(fieldErrors.lastName)}
+                  />
+                  {fieldErrors.lastName && <div className="field-error">{fieldErrors.lastName}</div>}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="registerEmail">البريد الإلكتروني</label>
+                <input
+                  id="registerEmail"
+                  type="email"
+                  className={'form-input ' + (fieldErrors.email ? 'error' : '')}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  inputMode="email"
+                  maxLength={254}
+                  disabled={isPending}
+                  required
+                  aria-invalid={Boolean(fieldErrors.email)}
+                />
+                {fieldErrors.email && <div className="field-error">{fieldErrors.email}</div>}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="phone">رقم الهاتف</label>
+                <input
+                  id="phone"
+                  type="tel"
+                  className={'form-input ' + (fieldErrors.phone ? 'error' : '')}
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value.replace(/[^0-9]/g, '').slice(0, 11))}
+                  placeholder="01XXXXXXXXX"
+                  autoComplete="tel"
+                  inputMode="tel"
+                  maxLength={11}
+                  disabled={isPending}
+                  required
+                  aria-invalid={Boolean(fieldErrors.phone)}
+                />
+                {fieldErrors.phone && <div className="field-error">{fieldErrors.phone}</div>}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="registerPassword">كلمة المرور</label>
+                <div className="form-input-wrapper">
+                  <input
+                    id="registerPassword"
+                    type={showPassword ? 'text' : 'password'}
+                    className={'form-input ' + (fieldErrors.password ? 'error' : '')}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                    minLength={8}
+                    maxLength={128}
+                    disabled={isPending}
+                    required
+                    aria-invalid={Boolean(fieldErrors.password)}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                  >
+                    {showPassword ? 'إخفاء' : 'إظهار'}
+                  </button>
+                </div>
+                {fieldErrors.password && <div className="field-error">{fieldErrors.password}</div>}
+              </div>
+
+              <div className="form-options" style={{ justifyContent: 'flex-start' }}>
+                <label className="remember-me">
+                  <input type="checkbox" required disabled={isPending} />
+                  <span>
+                    أوافق على <a href="#" className="forgot-link">الشروط والأحكام</a>
+                  </span>
+                </label>
+              </div>
+
+              <button type="submit" className="submit-btn" disabled={isPending}>
+                {isPending ? (
+                  <div className="btn-loader" aria-label="جارٍ المعالجة" />
+                ) : (
+                  <>
+                    <span>إنشاء حساب</span>
+                    <span className="arrow">←</span>
+                  </>
+                )}
+              </button>
+
+              <p className="terms-text">
+                بالمتابعة، أنت توافق على <a href="#">شروط الاستخدام</a> و<a href="#">سياسات DEBA</a>.
+              </p>
+            </form>
+          </div>
         </section>
-      </section>
+      </div>
     </main>
   )
 }
