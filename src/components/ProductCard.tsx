@@ -16,7 +16,7 @@ export type ProductCardItem = {
   slug: string
   title: string
   description: string | null
-  listingType: 'sale' | 'donation' | 'free'
+  listingType: 'sale' | 'free'
   price: number | null
   currency: string
   isNegotiable: boolean
@@ -45,7 +45,7 @@ const CONDITION_LABELS: Record<string, string> = {
 }
 
 function formatPrice(item: ProductCardItem) {
-  if (item.listingType !== 'sale') return 'مجاني'
+  if (item.listingType === 'free') return 'مجاني'
   if (item.price === null) return item.isNegotiable ? 'قابل للتفاوض' : 'السعر عند التواصل'
 
   return (
@@ -58,8 +58,7 @@ function formatPrice(item: ProductCardItem) {
 }
 
 function badge(item: ProductCardItem) {
-  if (item.listingType === 'donation') return { label: 'تبرع مجاني', tone: 'donation' }
-  if (item.listingType === 'free') return { label: 'متاح مجانًا', tone: 'donation' }
+  if (item.listingType === 'free') return { label: 'متاح مجانًا', tone: 'free' }
   return {
     label: (item.conditionGrade && CONDITION_LABELS[item.conditionGrade]) || 'حالة جيدة',
     tone: 'sale',
@@ -72,7 +71,7 @@ function locationText(item: ProductCardItem) {
 
 export default function ProductCard({ item, priority = false }: ProductCardProps) {
   const itemBadge = badge(item)
-  const isFree = item.listingType !== 'sale'
+  const isFree = item.listingType === 'free'
   const location = locationText(item)
 
   return (
@@ -151,11 +150,15 @@ export default function ProductCard({ item, priority = false }: ProductCardProps
         </div>
 
         <Link
-          href={'/products/' + item.slug + '?action=' + (isFree ? 'request' : 'offer')}
+          href={
+            '/products/' +
+            item.slug +
+            (isFree ? '/checkout' : '/checkout')
+          }
           className={'deba-product-action ' + (isFree ? 'is-green' : '')}
         >
           <MessageCircle size={16} />
-          {isFree ? 'اطلبها الآن' : 'قدّم عرضك'}
+          {isFree ? 'اطلبها الآن' : 'إتمام الشراء'}
         </Link>
       </div>
     </article>
