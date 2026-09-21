@@ -169,11 +169,12 @@ export default function ProductListingForm({ categories, definitions }: Props) {
   function handleFiles(selected: FileList | null) {
     if (!selected) return
     const incoming = Array.from(selected)
-    const valid = incoming.filter((file) => file.type.startsWith('image/') && file.size <= 10 * 1024 * 1024)
+    const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp'])
+    const valid = incoming.filter((file) => allowedTypes.has(file.type) && file.size <= 10 * 1024 * 1024)
     const merged = [...files, ...valid].slice(0, 8)
     setFiles(merged)
     if (valid.length !== incoming.length) {
-      setNotice({ type: 'error', message: 'يسمح بصور فقط وبحد أقصى 10MB للصورة الواحدة.' })
+      setNotice({ type: 'error', message: 'يسمح بصور JPEG أو PNG أو WebP فقط، وبحد أقصى 10MB للصورة الواحدة.' })
     } else {
       setNotice(null)
     }
@@ -659,7 +660,7 @@ export default function ProductListingForm({ categories, definitions }: Props) {
           <input
             id="deba-product-images"
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             multiple
             onChange={(event) => handleFiles(event.target.files)}
           />
