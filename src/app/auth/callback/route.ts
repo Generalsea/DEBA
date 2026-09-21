@@ -33,5 +33,16 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/login?error=auth', origin))
   }
 
+  const requestedAccountType = requestUrl.searchParams.get('account_type')
+  if (requestedAccountType === 'buyer' || requestedAccountType === 'seller') {
+    await supabase
+      .from('profiles')
+      .update({
+        account_type: requestedAccountType,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', requestUrl.searchParams.get('user_id') || '')
+  }
+
   return NextResponse.redirect(new URL(nextPath, origin))
 }
