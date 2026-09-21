@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import ProductReviews from '@/components/ProductReviews'
 import {
   BadgeCheck,
   CheckCircle2,
@@ -28,6 +29,7 @@ export type ProductAttributeDefinition = {
 }
 
 type ProductDetailTabsProps = {
+  productId: string
   metadata: JsonObject | null
   description: string | null
   conditionDetails: string | null
@@ -166,6 +168,7 @@ function PolicyCard({
 }
 
 export default function ProductDetailTabs({
+  productId,
   metadata,
   description,
   conditionDetails,
@@ -475,8 +478,8 @@ export default function ProductDetailTabs({
               <div className="deba-detail-note">
                 <PackageCheck size={18} />
                 <p>
-                  النسخة الحالية من DEBA تسجل طلب الشراء بالسعر الثابت، لكن بوابة الدفع
-                  الإلكتروني الفعلية لم تُربط بعد؛ لذلك لا نعرض وسائل دفع غير مفعلة.
+                  يمكنك تسجيل طلب الشراء بالسعر الثابت ثم بدء الدفع الإلكتروني الآمن
+                  من صفحة الطلب عندما تكون بوابة الدفع مهيأة للحساب والبيئة الحالية.
                 </p>
               </div>
             </section>
@@ -524,16 +527,7 @@ export default function ProductDetailTabs({
           </div>
         )}
 
-        {activeTab === 'reviews' && (
-          <div className="deba-detail-empty-panel">
-            <BadgeCheck size={26} />
-            <h2>لا توجد تقييمات مسجلة بعد</h2>
-            <p>
-              لا تحتوي قاعدة بيانات DEBA الحالية على سجل تقييمات مكتمل لهذا المنتج، لذلك
-              لن نعرض أرقام نجوم أو مبيعات تجريبية.
-            </p>
-          </div>
-        )}
+        {activeTab === 'reviews' && <ProductReviews productId={productId} />}
 
         {activeTab === 'faq' && (
           <div className="deba-detail-faq-list">
