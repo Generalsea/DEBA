@@ -1,8 +1,9 @@
-import { ArrowRight, CheckCircle2, Clock3, CreditCard, Package, ShieldCheck, Truck } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Clock3, CreditCard, Package, RotateCcw as RotateCcwIcon, ShieldCheck, Truck } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import Header from '@/components/Header'
 import OrderActions from '@/components/OrderActions'
+import RefundActions from '@/components/RefundActions'
 import { createClient } from '@/utils/supabase/server'
 
 type CategoryRow = { id: string; name_ar: string; slug: string }
@@ -70,6 +71,12 @@ type ShipmentEventRow = {
   status: string | null
   description: string | null
   occurred_at: string
+}
+
+type RefundRow = {
+  id: string
+  amount: number | string
+  status: string
 }
 
 const ORDER_LABELS: Record<string, string> = {
@@ -158,6 +165,7 @@ export default async function OrderPage({
     { data: items },
     { data: history },
     { data: payments },
+    { data: refunds },
     { data: shipment },
   ] = await Promise.all([
     supabase
@@ -183,6 +191,11 @@ export default async function OrderPage({
       .eq('order_id', id)
       .order('created_at', { ascending: false })
       .limit(10),
+    supabase
+      .from('refunds')
+      .select('id,amount,status')
+      .eq('order_id', id)
+      .order('created_at', { ascending: false }),
     supabase
       .from('shipments')
       .select('id,provider,service_level,status,tracking_number,external_shipment_id,created_at')
@@ -363,6 +376,32 @@ export default async function OrderPage({
             )}
           </section>
         </div>
+
+        {isBuyer &&
+        ['completed','disputed'].includes(order.status) &&
+        ['paid','partially_refunded'].includes(order.payment_status) ? (
+          <section className="deba-order-panel">
+            <div className="deba-order-panel-head">
+              <div>
+                <span>REFUND</span>
+                <h2>الاسترداد</h2>
+              </div>
+              <RotateCcwIcon />
+            </div>
+            {(() => {
+              const refundRows = (refunds || []) as RefundRow[]
+              const refunded = refundRows
+                .filter((item) => ['processing','succeeded'].includes(item.status))
+                .reduce((sum, item) => sum + Number(item.amount || 0), 0)
+              const remaining = Math.max(0, Number(order.total || 0) - refunded)
+              return remaining > 0 ? (
+                <RefundActions orderId={order.id} amount={remaining} />
+              ) : (
+                <div className="deba-order-empty">تم استهلاك المبلغ المتاح للاسترداد.</div>
+              )
+            })()}
+          </section>
+        ) : null}
 
         <section className="deba-order-actions-panel">
           <div>
