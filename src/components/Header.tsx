@@ -3,6 +3,7 @@
 import {
   ChevronDown,
   Heart,
+  LoaderCircle,
   Menu,
   MessageSquareText,
   Plus,
@@ -12,7 +13,8 @@ import {
   X,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
 
 export type HeaderCategory = {
   id: string
@@ -44,6 +46,8 @@ export default function Header({
   const [query, setQuery] = useState(initialSearch)
   const [category, setCategory] = useState(initialCategory || 'all')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'anonymous'>('loading')
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     setQuery(initialSearch)
@@ -53,7 +57,39 @@ export default function Header({
     setCategory(initialCategory || 'all')
   }, [initialCategory])
 
-  const items = categories
+  useEffect(() => {
+    let mounted = true
+
+    const syncAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getClaims()
+        if (!mounted) return
+        setAuthState(data?.claims?.sub ? 'authenticated' : 'anonymous')
+      } catch {
+        if (mounted) setAuthState('anonymous')
+      }
+    }
+
+    void syncAuth()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event) => {
+      void syncAuth()
+    })
+
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [supabase])
+
+  const accountHref = authState === 'authenticated' ? '/profile' : '/login?next=%2Fprofile'
+  const favoritesHref =
+    authState === 'authenticated' ? '/profile?tab=favorites' : '/login?next=%2Fprofile%3Ftab%3Dfavorites'
+  const cartHref =
+    authState === 'authenticated' ? '/profile?tab=orders' : '/login?next=%2Fprofile%3Ftab%3Dorders'
+  const sellHref = authState === 'authenticated' ? '/sell' : '/login?next=%2Fsell'
 
   return (
     <header className="deba-site-header">
@@ -86,7 +122,7 @@ export default function Header({
                 aria-label="اختيار قسم البحث"
               >
                 <option value="all">كل الأقسام</option>
-                {items.map((item) => (
+                {categories.map((item) => (
                   <option key={item.id} value={item.slug}>
                     {item.nameAr}
                   </option>
@@ -102,7 +138,7 @@ export default function Header({
               type="search"
               inputMode="search"
               autoComplete="off"
-              placeholder="ابحث عن سلعة، تبرع، أو قسم..."
+              placeholder="ابحث عن سلعة، بائع، أو قسم..."
               aria-label="البحث في DEBA"
             />
 
@@ -123,36 +159,39 @@ export default function Header({
           </form>
 
           <nav className="deba-header-actions" aria-label="الحساب والتسوق">
-            <Link href="/login" className="deba-action">
-              <span className="deba-action-icon"><UserRound size={19} /></span>
-              <span className="deba-action-text"><small>مرحبًا</small><strong>حسابي</strong></span>
+            <Link href={accountHref} className="deba-action">
+              <span className="deba-action-icon">
+                {authState === 'loading' ? <LoaderCircle size={18} className="deba-spin" /> : <UserRound size={19} />}
+              </span>
+              <span className="deba-action-text">
+                <small>{authState === 'authenticated' ? 'مرحبًا بك' : 'مرحبًا'}</small>
+                <strong>حسابي</strong>
+              </span>
             </Link>
 
-            <Link href="/login" className="deba-action">
+            <Link href={favoritesHref} className="deba-action">
               <span className="deba-action-icon">
                 <Heart size={19} />
                 <em>{badge(favoriteCount)}</em>
               </span>
-              <span className="deba-action-text"><small>المختارة</small><strong>المفضلة</strong></span>
-            </Link>
-
-            <Link href="/login" className="deba-action">
-              <span className="deba-action-icon">
-                <MessageSquareText size={19} />
-                <em>{badge(negotiationCount)}</em>
+              <span className="deba-action-text">
+                <small>المختارة</small>
+                <strong>المفضلة</strong>
               </span>
-              <span className="deba-action-text"><small>عروضك</small><strong>التفاوض</strong></span>
             </Link>
 
-            <Link href="/login" className="deba-action">
-              <span className="deba-action-icon deba-cart-icon">
+            <Link href={cartHref} className="deba-action">
+              <span className="deba-action-icon">
                 <ShoppingCart size={19} />
                 <em>{badge(cartCount)}</em>
               </span>
-              <span className="deba-action-text"><small>طلباتك</small><strong>السلة</strong></span>
+              <span className="deba-action-text">
+                <small>طلباتك</small>
+                <strong>حساب الطلبات</strong>
+              </span>
             </Link>
 
-            <Link href="/login" className="deba-sell-button">
+            <Link href={sellHref} className="deba-sell-button">
               <Plus size={18} />
               <span>أضف إعلانك</span>
             </Link>
@@ -167,7 +206,7 @@ export default function Header({
             تصفح جميع الأقسام
           </Link>
 
-          {items.map((item) => (
+          {categories.map((item) => (
             <Link
               key={item.id}
               href={'/?category=' + encodeURIComponent(item.slug)}
@@ -176,10 +215,6 @@ export default function Header({
               {item.nameAr}
             </Link>
           ))}
-
-          <Link href="/?type=donation" className="deba-category-impact">
-            التبرعات المجانية
-          </Link>
         </div>
       </div>
     </header>
