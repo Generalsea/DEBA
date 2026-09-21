@@ -524,10 +524,6 @@
                 gap: 24px;
             }
 
-            .donation-content {
-                grid-template-columns: 1fr;
-            }
-
             .products-grid {
                 grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
                 gap: 12px;
