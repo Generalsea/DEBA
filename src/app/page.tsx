@@ -283,6 +283,11 @@ export default async function HomePage({
   searchParams: Promise<{
     q?: SearchParamValue
     category?: SearchParamValue
+    minPrice?: SearchParamValue
+    maxPrice?: SearchParamValue
+    condition?: SearchParamValue
+    governorate?: SearchParamValue
+    sort?: SearchParamValue
   }>
 }) {
   const params = await searchParams
