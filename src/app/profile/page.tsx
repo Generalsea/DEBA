@@ -55,6 +55,7 @@ type ProductRow = {
 
 type OrderRow = {
   id: string
+  reference_code: string
   buyer_id: string
   seller_id: string
   product_id: string | null
@@ -136,7 +137,7 @@ export default async function ProfilePage({
       .order('sort_order', { ascending: true }),
     supabase
       .from('orders')
-      .select('id,buyer_id,seller_id,product_id,status,payment_status,fulfillment_status,total,currency,delivery_method,created_at')
+      .select('id,reference_code,buyer_id,seller_id,product_id,status,payment_status,fulfillment_status,total,currency,delivery_method,created_at')
       .eq('buyer_id', userId)
       .order('created_at', { ascending: false })
       .limit(20),
@@ -255,6 +256,7 @@ export default async function ProfilePage({
     const product = order.product_id ? productLookup.get(order.product_id) : null
     return {
       id: order.id,
+      referenceCode: order.reference_code,
       productId: order.product_id,
       productTitle: product?.title || 'منتج محذوف أو غير متاح',
       productSlug: product?.slug || null,
