@@ -2,13 +2,14 @@
 
 import {
   CheckCircle2,
+  CreditCard,
   Loader2,
   MapPin,
   PackageCheck,
   ShieldCheck,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 type DeliveryMethod = 'pickup' | 'seller_delivery' | 'platform_delivery'
 
@@ -57,6 +58,10 @@ export default function CheckoutForm({
   )
   const [error, setError] = useState('')
   const [orderId, setOrderId] = useState('')
+  const [referenceCode, setReferenceCode] = useState('')
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'loading'>('idle')
+  const orderIdempotencyKeyRef = useRef<string | null>(null)
+  const paymentIdempotencyKeyRef = useRef<string | null>(null)
 
   const requiresAddress = deliveryMethod !== 'pickup'
 
@@ -75,10 +80,16 @@ export default function CheckoutForm({
     setError('')
 
     try {
+      const idempotencyKey =
+        orderIdempotencyKeyRef.current ||
+        (globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2))
+      orderIdempotencyKeyRef.current = idempotencyKey
+
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Idempotency-Key': idempotencyKey,
         },
         body: JSON.stringify({
           productId,
@@ -91,11 +102,13 @@ export default function CheckoutForm({
             governorate,
           },
           notes,
+          idempotencyKey,
         }),
       })
 
       const payload = (await response.json()) as {
         orderId?: string
+        referenceCode?: string
         error?: string
       }
 
@@ -104,6 +117,7 @@ export default function CheckoutForm({
       }
 
       setOrderId(payload.orderId)
+      setReferenceCode(payload.referenceCode || '')
       setStatus('success')
     } catch (submitError) {
       setStatus('error')
@@ -112,6 +126,47 @@ export default function CheckoutForm({
           ? submitError.message
           : 'تعذر إنشاء الطلب الآن.',
       )
+    }
+  }
+
+  async function startPayment() {
+    if (!orderId) return
+
+    setPaymentStatus('loading')
+    setError('')
+
+    try {
+      const idempotencyKey =
+        paymentIdempotencyKeyRef.current ||
+        (globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2))
+      paymentIdempotencyKeyRef.current = idempotencyKey
+
+      const response = await fetch('/api/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': idempotencyKey,
+        },
+        body: JSON.stringify({ orderId, idempotencyKey }),
+      })
+
+      const payload = (await response.json()) as {
+        checkoutUrl?: string
+        error?: string
+      }
+
+      if (!response.ok || !payload.checkoutUrl) {
+        throw new Error(payload.error || 'تعذر بدء الدفع الإلكتروني.')
+      }
+
+      window.location.assign(payload.checkoutUrl)
+    } catch (paymentError) {
+      setError(
+        paymentError instanceof Error
+          ? paymentError.message
+          : 'تعذر بدء الدفع الإلكتروني.',
+      )
+      setPaymentStatus('idle')
     }
   }
 
@@ -125,7 +180,7 @@ export default function CheckoutForm({
         <h2>تم تسجيل طلب الشراء</h2>
         <p>
           تم تسجيل طلب <strong>{productTitle}</strong> بالسعر الثابت داخل DEBA.
-          رقم الطلب: <strong>{orderId.slice(0, 8).toUpperCase()}</strong>
+          رقم الطلب: <strong>{referenceCode || orderId.slice(0, 8).toUpperCase()}</strong>
         </p>
         <div className="deba-checkout-status-grid">
           <div>
@@ -144,7 +199,7 @@ export default function CheckoutForm({
         <div className="deba-checkout-status-grid">
           <div>
             <span>الدفع</span>
-            <strong>غير مدفوع إلكترونيًا</strong>
+            <strong>لم يبدأ بعد</strong>
           </div>
           <div className="deba-checkout-status-grid-delivery">
             <span>الاستلام</span>
@@ -157,11 +212,37 @@ export default function CheckoutForm({
             </strong>
           </div>
         </div>
+        {error ? (
+          <div className="deba-checkout-error" role="alert">
+            <ShieldCheck size={18} />
+            <span>{error}</span>
+          </div>
+        ) : null}
+
+        <div className="deba-checkout-success-actions">
+          <button
+            type="button"
+            className="deba-checkout-primary"
+            disabled={paymentStatus === 'loading'}
+            onClick={() => void startPayment()}
+          >
+            {paymentStatus === 'loading' ? (
+              <Loader2 size={18} className="deba-spin" />
+            ) : (
+              <CreditCard size={18} />
+            )}
+            ادفع إلكترونيًا عبر Paymob
+          </button>
+          <Link href="/profile?tab=orders" className="deba-checkout-secondary">
+            فتح طلباتي
+          </Link>
+        </div>
+
         <div className="deba-checkout-success-actions">
           <Link href="/" className="deba-checkout-secondary">
             العودة للسوق
           </Link>
-          <Link href={'/products/' + productSlug} className="deba-checkout-primary">
+          <Link href={'/products/' + productSlug} className="deba-checkout-secondary">
             العودة للإعلان
           </Link>
         </div>
@@ -366,7 +447,7 @@ export default function CheckoutForm({
 
       <p className="deba-checkout-note">
         {isAuthenticated
-          ? 'هذه الخطوة تسجل طلب الشراء بالسعر الثابت داخل DEBA ولا تخصم مبلغًا إلكترونيًا في النسخة الحالية.'
+          ? 'بعد تسجيل الطلب يمكنك بدء الدفع الإلكتروني. حالة الدفع النهائية تعتمد على إشعار بوابة الدفع الموثق.'
           : 'ستحتاج إلى تسجيل الدخول حتى يتم تسجيل طلب الشراء في حسابك.'}
       </p>
     </form>
