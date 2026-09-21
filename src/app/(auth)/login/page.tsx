@@ -65,9 +65,18 @@ export default function LoginPage() {
   } | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [isPending, startTransition] = useTransition()
+  const [nextPath, setNextPath] = useState('/')
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
+    const requestedNext = params.get('next')
+    if (
+      requestedNext &&
+      requestedNext.startsWith('/') &&
+      !requestedNext.startsWith('//')
+    ) {
+      setNextPath(requestedNext)
+    }
 
     if (params.get('error') === 'auth') {
       setMessage({
@@ -158,7 +167,7 @@ export default function LoginPage() {
         }
 
         if (data.session) {
-          router.replace('/')
+          router.replace(nextPath)
           router.refresh()
         }
 
@@ -179,7 +188,9 @@ export default function LoginPage() {
             account_type: accountType,
           },
           emailRedirectTo:
-            window.location.origin + '/auth/callback?next=/',
+            window.location.origin +
+              '/auth/callback?next=' +
+              encodeURIComponent(nextPath),
         },
       })
 
@@ -192,7 +203,7 @@ export default function LoginPage() {
       }
 
       if (data.session) {
-        router.replace('/')
+        router.replace(nextPath)
         router.refresh()
         return
       }
