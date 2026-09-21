@@ -87,7 +87,7 @@ function formatNumber(value: number) {
   }).format(value)
 }
 
-function formatValue(value: unknown) {
+function formatValue(value: unknown): string | null {
   if (value === null || value === undefined) return null
   if (typeof value === 'boolean') return value ? 'نعم' : 'لا'
   if (typeof value === 'number') return formatNumber(value)
