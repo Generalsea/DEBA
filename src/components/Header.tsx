@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  Bell,
   ChevronDown,
   Heart,
   LoaderCircle,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
+import NotificationBell from '@/components/NotificationBell'
 import { createClient } from '@/utils/supabase/client'
 
 export type HeaderCategory = {
@@ -46,7 +48,6 @@ export default function Header({
   initialSearch = '',
   initialCategory = 'all',
   favoriteCount = 0,
-  negotiationCount = 0,
   cartCount = 0,
 }: HeaderProps) {
   const [query, setQuery] = useState(initialSearch)
@@ -251,6 +252,8 @@ export default function Header({
                 <strong>حساب الطلبات</strong>
               </span>
             </Link>
+
+            <NotificationBell enabled={authState === 'authenticated'} />
 
             <Link href={sellHref} className="deba-sell-button">
               <Plus size={18} />
