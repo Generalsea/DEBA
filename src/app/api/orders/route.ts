@@ -151,7 +151,31 @@ export async function POST(request: Request) {
       )
     }
 
-    return NextResponse.json(data)
+    const result = data as Record<string, unknown>
+    const orderId = typeof result.order_id === 'string' ? result.order_id : ''
+    const referenceCode =
+      typeof result.reference_code === 'string' ? result.reference_code : ''
+    
+    if (!orderId || !referenceCode) {
+      return NextResponse.json(
+        { error: 'تعذر قراءة رقم الطلب الجديد.' },
+        { status: 500 },
+      )
+    }
+
+    return NextResponse.json({
+      orderId,
+      referenceCode,
+      status: typeof result.status === 'string' ? result.status : 'pending',
+      quantity:
+        typeof result.quantity === 'number'
+          ? result.quantity
+          : Number(result.quantity || 0),
+      total: Number(result.total || 0),
+      currency:
+        typeof result.currency === 'string' ? result.currency : 'EGP',
+      existing: result.existing === true,
+    })
   } catch (error) {
     console.error('DEBA checkout route failed', error)
     return NextResponse.json(
