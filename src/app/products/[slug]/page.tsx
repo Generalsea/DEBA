@@ -117,10 +117,6 @@ const METADATA_LABELS: Record<string, string> = {
   brand: 'العلامة التجارية',
 }
 
-function firstParam(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value
-}
-
 function normalizePrice(value: number | string | null) {
   if (value === null) return null
   const numberValue = typeof value === 'number' ? value : Number(value)
@@ -361,7 +357,6 @@ export async function generateMetadata({
 
 export default async function ProductDetailPage({
   params,
-  searchParams,
 }: RouteParams) {
   const { slug } = await params
   const data = await getProduct(slug)
