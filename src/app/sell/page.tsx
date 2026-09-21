@@ -8,9 +8,14 @@ import ProductListingForm, {
 } from './ProductListingForm'
 import { createClient } from '@/utils/supabase/server'
 
-export default async function SellPage() {
+export default async function SellPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ submitted?: string }>
+}) {
   const supabase = await createClient()
   const { data: claimsData } = await supabase.auth.getClaims()
+  const { submitted } = (await searchParams) || {}
   const userId = claimsData?.claims?.sub
   if (typeof userId !== 'string') {
     redirect('/login')
@@ -81,6 +86,12 @@ export default async function SellPage() {
           <span>/</span>
           <strong>إضافة سلعة</strong>
         </div>
+        {submitted === '1' && (
+          <div className="deba-sell-notice is-success">
+            <ShieldCheck size={18} />
+            <span>تم إرسال الإعلان للمراجعة بنجاح. لن يظهر للزوار إلا بعد اعتماد المراجعة.</span>
+          </div>
+        )}
         <ProductListingForm
           categories={mappedCategories}
           definitions={(definitions || []) as SellAttributeDefinition[]}
