@@ -76,14 +76,14 @@ const CONDITION_LABELS: Record<string, string> = {
   for_parts: 'للقطع / الإصلاح',
 }
 
-const CATEGORY_PRESENTATION: { slug: string; icon: string }[] = [
-  { slug: 'electronics', icon: '📱' },
-  { slug: 'furniture-home', icon: '🛋️' },
-  { slug: 'home-appliances', icon: '🔌' },
-  { slug: 'fashion', icon: '👕' },
-  { slug: 'books-education', icon: '📚' },
-  { slug: 'tools-equipment', icon: '🔧' },
-  { slug: 'collectibles-antiques', icon: '🎨' },
+const CATEGORY_PRESENTATION: { slug: string; icon: string; label: string }[] = [
+  { slug: 'electronics', icon: '📱', label: 'إلكترونيات' },
+  { slug: 'furniture-home', icon: '🛋️', label: 'أثاث' },
+  { slug: 'home-appliances', icon: '🔌', label: 'أجهزة منزلية' },
+  { slug: 'fashion', icon: '👕', label: 'ملابس' },
+  { slug: 'books-education', icon: '📚', label: 'كتب' },
+  { slug: 'tools-equipment', icon: '🔧', label: 'أدوات' },
+  { slug: 'collectibles-antiques', icon: '🎨', label: 'تحف' },
 ]
 
 function firstParam(value: SearchParamValue) {
@@ -325,7 +325,7 @@ export default async function HomePage({
       ...presentation,
       row: categoryMap.get(presentation.slug),
     }))
-    .filter((item): item is { slug: string; icon: string; row: CategoryRow } => Boolean(item.row))
+    .filter((item): item is { slug: string; icon: string; label: string; row: CategoryRow } => Boolean(item.row))
 
   const donationCategory = {
     id: 'donations',
@@ -392,7 +392,7 @@ export default async function HomePage({
                 href={'/?category=' + encodeURIComponent(item.row.slug) + '#featured'}
                 className={'nav-item' + (category === item.row.slug ? ' active' : '')}
               >
-                {item.row.name_ar}
+                {item.label}
               </Link>
             ))}
 
@@ -455,7 +455,7 @@ export default async function HomePage({
               className="category-card"
             >
               <div className="category-icon">{item.icon}</div>
-              <div className="category-name">{item.row.name_ar}</div>
+              <div className="category-name">{item.label}</div>
             </Link>
           ))}
 
