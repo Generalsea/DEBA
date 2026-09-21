@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
-  CalendarDays,
   CheckCircle2,
   MapPin,
   Package,
