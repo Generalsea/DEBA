@@ -34,6 +34,7 @@ import { createClient } from '@/utils/supabase/client'
 
 export type ProfileOrder = {
   id: string
+  referenceCode: string
   productId: string | null
   productTitle: string
   productSlug: string | null
@@ -277,7 +278,7 @@ function OrderCard({
           <div>
             <strong>{order.productTitle}</strong>
             <small>
-              طلب #{order.id.slice(0, 8).toUpperCase()} · {formatDate(order.createdAt)}
+              {order.referenceCode{'}'} · {formatDate(order.createdAt){'}'}
             </small>
           </div>
           <span className="deba-profile-order-total">
@@ -297,6 +298,10 @@ function OrderCard({
               <ChevronLeft size={15} />
             </Link>
           ) : null}
+          <Link href={'/orders/' + encodeURIComponent(order.id)}>
+            إدارة الطلب
+            <ChevronLeft size={15} />
+          </Link>
           <span className="deba-profile-order-perspective">
             {perspective === 'seller' ? 'طلب وارد' : 'طلب شراء'}
           </span>
