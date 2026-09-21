@@ -88,7 +88,7 @@ export default function LoginPage() {
     }
 
     startTransition(async () => {
-      let supabase
+      let supabase: ReturnType<typeof createClient>
       try {
         supabase = createClient()
       } catch (error) {
@@ -164,7 +164,7 @@ export default function LoginPage() {
     setMessage(null)
 
     startTransition(async () => {
-      let supabase
+      let supabase: ReturnType<typeof createClient>
       try {
         supabase = createClient()
       } catch (error) {
