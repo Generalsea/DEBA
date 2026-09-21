@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'DEBA | Marketplace مصري - بيع وشراء',
-  description: 'DEBA — منصة مصرية للبيع والشراء وتبادل السلع داخل مصر.',
+  title: 'سوق | Marketplace مصري - بيع، شراء، تبرع',
+  description: 'سوق — منصة مصرية للبيع والشراء والتبرع بالسلع غير المستخدمة.',
 }
 
 export default function RootLayout({
