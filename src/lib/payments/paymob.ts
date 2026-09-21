@@ -223,6 +223,49 @@ export class PaymobProvider implements PaymentProvider {
     }
   }
 
+  async refundPayment(input: { transactionId: string; amount: number }) {
+    if (!this.isConfigured()) {
+      throw new Error('PAYMOB_NOT_CONFIGURED')
+    }
+
+    const amountCents = Math.round(input.amount * 100)
+    if (!Number.isInteger(amountCents) || amountCents <= 0) {
+      throw new Error('PAYMOB_INVALID_AMOUNT')
+    }
+
+    const response = await fetch(
+      this.baseUrl + '/api/acceptance/void_refund/refund',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Token ' + this.secretKey,
+        },
+        body: JSON.stringify({
+          transaction_id: Number(input.transactionId),
+          amount_cents: amountCents,
+        }),
+        cache: 'no-store',
+      },
+    )
+
+    const payload = (await response.json()) as Record<string, unknown>
+
+    if (!response.ok) {
+      console.error('Paymob refund API failed', {
+        status: response.status,
+        payload,
+      })
+      throw new Error('PAYMOB_REFUND_FAILED')
+    }
+
+    return {
+      providerRefundId:
+        payload.id !== undefined && payload.id !== null ? String(payload.id) : null,
+      raw: payload,
+    }
+  }
+
   verifyTransactionWebhook(payload: unknown, receivedHmac: string) {
     const body = payload as PaymobWebhookBody
     return Boolean(body.obj && verifyHmac(body.obj, receivedHmac, this.hmacSecret))
