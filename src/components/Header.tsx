@@ -29,8 +29,10 @@ const FALLBACK_CATEGORIES: HeaderCategory[] = [
   { id: 'toys-hobbies', nameAr: 'ألعاب وهوايات', slug: 'toys-hobbies' },
   { id: 'vehicles-parts', nameAr: 'مركبات وقطع غيار', slug: 'vehicles-parts' },
   { id: 'tools-equipment', nameAr: 'معدات وأدوات', slug: 'tools-equipment' },
+  { id: 'collectibles-antiques', nameAr: 'مقتنيات وتحف', slug: 'collectibles-antiques' },
   { id: 'baby-kids', nameAr: 'مستلزمات أطفال', slug: 'baby-kids' },
   { id: 'sports-fitness', nameAr: 'رياضة ولياقة', slug: 'sports-fitness' },
+  { id: 'other', nameAr: 'أخرى', slug: 'other' },
 ]
 
 type HeaderProps = {
@@ -42,10 +44,8 @@ type HeaderProps = {
   cartCount?: number
 }
 
-function countLabel(value: number) {
-  if (value <= 0) return null
-  if (value > 99) return '99+'
-  return new Intl.NumberFormat('ar-EG').format(value)
+function badge(value: number) {
+  return value > 99 ? '99+' : new Intl.NumberFormat('ar-EG').format(Math.max(0, value))
 }
 
 export default function Header({
@@ -58,45 +58,42 @@ export default function Header({
 }: HeaderProps) {
   const [query, setQuery] = useState(initialSearch)
   const [category, setCategory] = useState(initialCategory || 'all')
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
-  const visibleCategories = categories.length ? categories : FALLBACK_CATEGORIES
-  const favoriteBadge = countLabel(favoriteCount)
-  const negotiationBadge = countLabel(negotiationCount)
-  const cartBadge = countLabel(cartCount)
+  const items = categories.length === 12 ? categories : FALLBACK_CATEGORIES
 
   return (
-    <header className="deba-header">
-      <div className="deba-header-top">
+    <header className="deba-site-header">
+      <div className="deba-header-main">
         <div className="deba-header-inner">
           <button
             type="button"
-            className="deba-mobile-menu"
-            aria-label="فتح قائمة DEBA"
-            aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen((value) => !value)}
+            className="deba-mobile-trigger"
+            aria-label={menuOpen ? 'إغلاق قائمة الأقسام' : 'فتح قائمة الأقسام'}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
           >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
 
           <Link href="/" className="deba-brand" aria-label="DEBA - الرئيسية">
             <span className="deba-brand-mark">D</span>
-            <span className="deba-brand-text">
+            <span className="deba-brand-copy">
               <strong>DEBA</strong>
-              <small>سوق القيمة والتبادل</small>
+              <small>سوق التبادل المصري</small>
             </span>
           </Link>
 
-          <form className="deba-search" action="/" method="get" role="search">
+          <form action="/" method="get" className="deba-search" role="search">
             <div className="deba-search-category">
               <select
                 name="category"
                 value={category}
                 onChange={(event) => setCategory(event.target.value)}
-                aria-label="اختيار فئة البحث"
+                aria-label="اختيار قسم البحث"
               >
                 <option value="all">كل الأقسام</option>
-                {visibleCategories.map((item) => (
+                {items.map((item) => (
                   <option key={item.id} value={item.slug}>
                     {item.nameAr}
                   </option>
@@ -113,7 +110,7 @@ export default function Header({
               inputMode="search"
               autoComplete="off"
               placeholder="ابحث عن سلعة، تبرع، أو قسم..."
-              aria-label="ابحث في DEBA"
+              aria-label="البحث في DEBA"
             />
 
             {query && (
@@ -127,72 +124,57 @@ export default function Header({
               </button>
             )}
 
-            <button type="submit" className="deba-search-submit" aria-label="تنفيذ البحث">
-              <Search size={21} strokeWidth={2.25} />
+            <button type="submit" className="deba-search-submit" aria-label="بحث">
+              <Search size={21} strokeWidth={2.2} />
             </button>
           </form>
 
-          <nav className="deba-header-actions" aria-label="روابط الحساب">
-            <Link href="/login" className="deba-header-action">
-              <span className="deba-icon-wrap">
-                <UserRound size={19} />
-              </span>
-              <span className="deba-action-copy">
-                <small>مرحبًا</small>
-                <strong>حسابي</strong>
-              </span>
+          <nav className="deba-header-actions" aria-label="الحساب والتسوق">
+            <Link href="/login" className="deba-action">
+              <span className="deba-action-icon"><UserRound size={19} /></span>
+              <span className="deba-action-text"><small>مرحبًا</small><strong>حسابي</strong></span>
             </Link>
 
-            <Link href="/login" className="deba-header-action deba-header-action-badge">
-              <span className="deba-icon-wrap">
+            <Link href="/login" className="deba-action">
+              <span className="deba-action-icon">
                 <Heart size={19} />
-                {favoriteBadge && <em>{favoriteBadge}</em>}
+                <em>{badge(favoriteCount)}</em>
               </span>
-              <span className="deba-action-copy">
-                <small>المختارة</small>
-                <strong>المفضلة</strong>
-              </span>
+              <span className="deba-action-text"><small>المختارة</small><strong>المفضلة</strong></span>
             </Link>
 
-            <Link href="/login" className="deba-header-action deba-header-action-badge">
-              <span className="deba-icon-wrap">
+            <Link href="/login" className="deba-action">
+              <span className="deba-action-icon">
                 <MessageSquareText size={19} />
-                {negotiationBadge && <em>{negotiationBadge}</em>}
+                <em>{badge(negotiationCount)}</em>
               </span>
-              <span className="deba-action-copy">
-                <small>عروضك</small>
-                <strong>المفاوضات</strong>
-              </span>
+              <span className="deba-action-text"><small>عروضك</small><strong>التفاوض</strong></span>
             </Link>
 
-            <Link href="/login" className="deba-header-action deba-header-cart">
-              <span className="deba-icon-wrap">
-                <ShoppingCart size={20} />
-                {cartBadge && <em>{cartBadge}</em>}
+            <Link href="/login" className="deba-action">
+              <span className="deba-action-icon deba-cart-icon">
+                <ShoppingCart size={19} />
+                <em>{badge(cartCount)}</em>
               </span>
-              <span className="deba-action-copy">
-                <small>الإجمالي</small>
-                <strong>السلة</strong>
-              </span>
+              <span className="deba-action-text"><small>طلباتك</small><strong>السلة</strong></span>
             </Link>
 
             <Link href="/login" className="deba-sell-button">
               <Plus size={18} />
-              <span>أضف سلعة</span>
-              <b>تبرع الآن</b>
+              <span>أضف إعلانك</span>
             </Link>
           </nav>
         </div>
       </div>
 
-      <div className={'deba-category-row' + (mobileOpen ? ' is-open' : '')}>
+      <div className={'deba-category-bar' + (menuOpen ? ' is-open' : '')}>
         <div className="deba-category-inner">
           <Link href="/" className="deba-category-all">
-            <Menu size={17} />
-            <span>تصفح جميع الأقسام</span>
+            <Menu size={16} />
+            تصفح جميع الأقسام
           </Link>
 
-          {visibleCategories.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.id}
               href={'/?category=' + encodeURIComponent(item.slug)}
@@ -203,11 +185,7 @@ export default function Header({
           ))}
 
           <Link href="/?type=donation" className="deba-category-impact">
-            تبرعات مجانية
-          </Link>
-
-          <Link href="/?type=sale" className="deba-category-last">
-            أحدث العروض
+            التبرعات المجانية
           </Link>
         </div>
       </div>
