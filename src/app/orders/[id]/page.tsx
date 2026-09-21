@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation'
 import Header from '@/components/Header'
 import OrderActions from '@/components/OrderActions'
 import RefundActions from '@/components/RefundActions'
+import DisputeActions from '@/components/DisputeActions'
 import { createClient } from '@/utils/supabase/server'
 
 type CategoryRow = { id: string; name_ar: string; slug: string }
@@ -401,6 +402,14 @@ export default async function OrderPage({
               )
             })()}
           </section>
+        ) : null}
+
+        {!['cancelled','refunded'].includes(order.status) ? (
+          <DisputeActions
+            orderId={order.id}
+            isBuyer={isBuyer}
+            isSeller={isSeller}
+          />
         ) : null}
 
         <section className="deba-order-actions-panel">
