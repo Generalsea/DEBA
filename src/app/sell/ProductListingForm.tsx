@@ -105,6 +105,9 @@ export default function ProductListingForm({ categories, definitions }: Props) {
   const [governorate, setGovernorate] = useState('')
   const [city, setCity] = useState('')
   const [district, setDistrict] = useState('')
+  const [origin, setOrigin] = useState('')
+  const [purchaseDate, setPurchaseDate] = useState('')
+  const [barcode, setBarcode] = useState('')
   const [deliveryMethod, setDeliveryMethod] = useState('pickup')
   const [specifications, setSpecifications] = useState<Record<string, string>>({})
   const [usageDuration, setUsageDuration] = useState('')
@@ -202,6 +205,9 @@ export default function ProductListingForm({ categories, definitions }: Props) {
     if (!governorate.trim() || !city.trim() || !district.trim()) {
       return setNotice({ type: 'error', message: 'المحافظة والمدينة والحي مطلوبة.' })
     }
+    if (!requiredText(origin, 2)) {
+      return setNotice({ type: 'error', message: 'حدد بلد المنشأ أو اكتب بوضوح أن المنشأ غير معروف.' })
+    }
     if (files.length < 3) {
       return setNotice({ type: 'error', message: 'يجب رفع 3 صور حقيقية على الأقل، مع صورة رئيسية.' })
     }
@@ -246,6 +252,11 @@ export default function ProductListingForm({ categories, definitions }: Props) {
         invoice: invoice.trim() || null,
         box: box.trim() || null,
         seller_notes: sellerNotes.trim() || null,
+        identification: {
+          origin: origin.trim(),
+          purchase_date: purchaseDate || null,
+          barcode: barcode.trim() || null,
+        },
         commerce: {
           seller_declaration:
             'أقر بأن المعلومات المكتوبة في هذا الإعلان تصف السلعة كما هي لدى البائع، وأتحمل مسؤولية دقتها وعدم إخفاء العيوب الجوهرية المعروفة لي.',
@@ -269,6 +280,11 @@ export default function ProductListingForm({ categories, definitions }: Props) {
           inspection: {
             available: inspectionAvailable === 'true',
             details: inspectionDetails.trim(),
+          },
+          declaration: {
+            accepted: true,
+            version: '1.0',
+            accepted_at: new Date().toISOString(),
           },
         },
       }
@@ -362,7 +378,7 @@ export default function ProductListingForm({ categories, definitions }: Props) {
       }
 
       setNotice({ type: 'success', message: 'تم إنشاء الإعلان وإرساله للمراجعة بنجاح.' })
-      router.push('/products/' + encodeURIComponent(product.slug))
+      router.push('/sell?submitted=1')
       router.refresh()
     } catch (error) {
       setNotice({
@@ -543,6 +559,19 @@ export default function ProductListingForm({ categories, definitions }: Props) {
             <input value={district} onChange={(event) => setDistrict(event.target.value)} placeholder="المعادي الجديدة" />
           </label>
           <label>
+            <span>بلد المنشأ / المصدر *</span>
+            <input value={origin} onChange={(event) => setOrigin(event.target.value)} placeholder="مثال: مصر / الصين / غير معروف" />
+            <small>اكتب الحقيقة المتاحة لديك؛ لا تستخدم ادعاء منشأ غير موثق.</small>
+          </label>
+          <label>
+            <span>تاريخ الشراء الأصلي (إن وجد)</span>
+            <input type="date" value={purchaseDate} onChange={(event) => setPurchaseDate(event.target.value)} />
+          </label>
+          <label>
+            <span>باركود / GTIN (إن وجد)</span>
+            <input value={barcode} onChange={(event) => setBarcode(event.target.value)} placeholder="للمنتجات التي تحمل باركودًا تجاريًا" />
+          </label>
+                    <label>
             <span>طريقة الاستلام *</span>
             <select value={deliveryMethod} onChange={(event) => setDeliveryMethod(event.target.value)}>
               {DELIVERY.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
