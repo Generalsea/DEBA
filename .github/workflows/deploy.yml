@@ -11,12 +11,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: deba-\${{ github.workflow }}-\${{ github.ref }}
+  group: deba-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  NEXT_PUBLIC_SUPABASE_URL: \${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: \${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
 
 jobs:
   quality:
@@ -46,11 +46,11 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     env:
-      VERCEL_TOKEN: \${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: \${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: \${{ secrets.VERCEL_PROJECT_ID }}
-      NEXT_PUBLIC_SUPABASE_URL: \${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: \${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -91,7 +91,7 @@ jobs:
           {
             echo "## DEBA Preview"
             echo
-            echo "\${{ steps.deploy.outputs.url }}"
+            echo "${{ steps.deploy.outputs.url }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
   deploy-production:
@@ -100,11 +100,11 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
-      VERCEL_TOKEN: \${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: \${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: \${{ secrets.VERCEL_PROJECT_ID }}
-      NEXT_PUBLIC_SUPABASE_URL: \${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: \${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -143,5 +143,5 @@ jobs:
           {
             echo "## DEBA Production"
             echo
-            echo "\${{ steps.deploy.outputs.url }}"
+            echo "${{ steps.deploy.outputs.url }}"
           } >> "$GITHUB_STEP_SUMMARY"
