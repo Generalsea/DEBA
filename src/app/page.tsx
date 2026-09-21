@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Header from '@/components/Header'
 import ProductGrid, { type ProductGridItem } from '@/components/ProductGrid'
 import { createClient } from '@/utils/supabase/server'
 
@@ -43,12 +44,11 @@ type ProductRow = {
     | null
 }
 
-const PRODUCT_SELECT = 'id,title,slug,description,listing_type,price,currency,is_negotiable,condition_grade,city,governorate,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
+const PRODUCT_SELECT =
+  'id,title,slug,description,listing_type,price,currency,is_negotiable,condition_grade,city,governorate,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
 
 function normalizePrice(value: number | string | null) {
-  if (value === null) {
-    return null
-  }
+  if (value === null) return null
 
   const numberValue = typeof value === 'number' ? value : Number(value)
   return Number.isFinite(numberValue) ? numberValue : null
@@ -58,13 +58,8 @@ function getImageUrl(
   supabase: Awaited<ReturnType<typeof createClient>>,
   storagePath: string | null,
 ) {
-  if (!storagePath) {
-    return null
-  }
-
-  if (/^https?:\/\//i.test(storagePath)) {
-    return storagePath
-  }
+  if (!storagePath) return null
+  if (/^https?:\/\//i.test(storagePath)) return storagePath
 
   return supabase.storage.from(BUCKET).getPublicUrl(storagePath).data.publicUrl
 }
@@ -107,13 +102,8 @@ async function fetchListings() {
       .eq('listing_type', listingType)
       .eq('status', 'published')
       .eq('moderation_status', 'approved')
-      .order('published_at', {
-        ascending: false,
-        nullsFirst: false,
-      })
-      .order('created_at', {
-        ascending: false,
-      })
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
       .limit(LIMIT)
 
   const [sales, donations] = await Promise.all([
@@ -145,47 +135,46 @@ export default async function HomePage() {
   const { products, donations } = await fetchListings()
 
   return (
-    <main>
-      <section className="hero">
-        <div className="hero-inner">
-          <div className="hero-brand">
-            <span className="hero-mark">D</span>
-            <span>DEBA</span>
+    <>
+      <Header />
+
+      <main>
+        <section className="hero">
+          <div className="hero-inner">
+            <span className="hero-kicker">DEBA / MARKETPLACE</span>
+
+            <h1>
+              قيمة ما لا تحتاجه
+              <br />
+              تبدأ مع من يحتاجها.
+            </h1>
+
+            <p>
+              سوق واحد للبيع والتبادل والتبرع، مع إعلانات منشورة ومعتمدة من قاعدة
+              DEBA مباشرة.
+            </p>
+          </div>
+        </section>
+
+        <section className="home-content">
+          <div className="stats">
+            <article>
+              <strong>{products.length.toLocaleString('ar-EG')}</strong>
+              <span>منتجات للبيع</span>
+            </article>
+            <article>
+              <strong>{donations.length.toLocaleString('ar-EG')}</strong>
+              <span>فرص تبرع</span>
+            </article>
+            <article>
+              <strong>EGP</strong>
+              <span>العملة الأساسية</span>
+            </article>
           </div>
 
-          <span className="hero-kicker">DEBA / MARKETPLACE</span>
-
-          <h1>
-            قيمة ما لا تحتاجه
-            <br />
-            تبدأ مع من يحتاجها.
-          </h1>
-
-          <p>
-            سوق واحد للبيع والتبادل والتبرع، مع إعلانات منشورة ومعتمدة من قاعدة
-            DEBA مباشرة.
-          </p>
-        </div>
-      </section>
-
-      <section className="home-content">
-        <div className="stats">
-          <article>
-            <strong>{products.length.toLocaleString('ar-EG')}</strong>
-            <span>منتجات للبيع</span>
-          </article>
-          <article>
-            <strong>{donations.length.toLocaleString('ar-EG')}</strong>
-            <span>فرص تبرع</span>
-          </article>
-          <article>
-            <strong>EGP</strong>
-            <span>العملة الأساسية</span>
-          </article>
-        </div>
-
-        <ProductGrid products={products} donations={donations} />
-      </section>
-    </main>
+          <ProductGrid products={products} donations={donations} />
+        </section>
+      </main>
+    </>
   )
 }
