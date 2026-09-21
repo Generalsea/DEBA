@@ -6,6 +6,12 @@ import Header, { type HeaderCategory } from '@/components/Header'
 import CheckoutForm from '@/components/CheckoutForm'
 import { createClient } from '@/utils/supabase/server'
 
+type CategoryRow = {
+  id: string
+  name_ar: string
+  slug: string
+}
+
 type Product = {
   id: string
   owner_id: string | null
@@ -97,9 +103,9 @@ export default async function CheckoutPage({
   const price = normalizePrice(row.price)
   const isAuthenticated = Boolean(claimsData?.claims?.sub)
 
-  const mappedCategories = ((categories || []) as HeaderCategory[]).map((item) => ({
+  const mappedCategories = ((categories || []) as CategoryRow[]).map((item) => ({
     id: item.id,
-    nameAr: (item as unknown as { name_ar: string }).name_ar,
+    nameAr: item.name_ar,
     slug: item.slug,
   }))
 
