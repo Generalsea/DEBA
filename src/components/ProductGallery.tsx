@@ -18,6 +18,7 @@ type ProductGalleryProps = {
 export default function ProductGallery({ images, productTitle }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [isZoomed, setIsZoomed] = useState(false)
 
   const activeImage = images[activeIndex] || null
 
@@ -42,6 +43,7 @@ export default function ProductGallery({ images, productTitle }: ProductGalleryP
   function changeIndex(delta: number) {
     if (!images.length) return
     setActiveIndex((current) => (current + delta + images.length) % images.length)
+    setIsZoomed(false)
   }
 
   return (
@@ -53,6 +55,8 @@ export default function ProductGallery({ images, productTitle }: ProductGalleryP
             alt={activeImage.alt}
             fill
             priority
+            onClick={() => setIsZoomed((value) => !value)}
+            className={'deba-gallery-main-image' + (isZoomed ? ' is-zoomed' : '')}
             sizes="(max-width: 900px) 100vw, 58vw"
           />
         ) : (
@@ -83,6 +87,17 @@ export default function ProductGallery({ images, productTitle }: ProductGalleryP
           </>
         )}
 
+        {activeImage && (
+          <button
+            type="button"
+            className="deba-gallery-zoom"
+            onClick={() => setIsZoomed((value) => !value)}
+            aria-label={isZoomed ? 'تصغير الصورة' : 'تكبير الصورة'}
+          >
+            {isZoomed ? 'تصغير' : 'تكبير'}
+          </button>
+        )}
+
         <button type="button" className="deba-gallery-share" onClick={shareProduct}>
           {copied ? <Check size={16} /> : <Share2 size={16} />}
           <span>{copied ? 'تم نسخ الرابط' : 'مشاركة'}</span>
@@ -96,7 +111,10 @@ export default function ProductGallery({ images, productTitle }: ProductGalleryP
               key={image.id}
               type="button"
               className={'deba-gallery-thumb' + (index === activeIndex ? ' is-active' : '')}
-              onClick={() => setActiveIndex(index)}
+              onClick={() => {
+                setActiveIndex(index)
+                setIsZoomed(false)
+              }}
               aria-label={'عرض صورة ' + (index + 1)}
               aria-pressed={index === activeIndex}
             >
