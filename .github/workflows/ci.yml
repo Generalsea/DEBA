@@ -74,6 +74,13 @@ jobs:
           cat /tmp/deba-next.log
           exit 1
 
+      - name: Server query diagnostics
+        shell: bash
+        run: |
+          curl --fail-with-body --get \
+            --data-urlencode "slug=أداة-منزلية-متعددة-الاستخدام-تجربة-deba" \
+            http://127.0.0.1:3100/api/debug/product
+
       - name: Product detail runtime smoke
         env:
           DEBA_PRODUCT_SMOKE_SLUG: أداة-منزلية-متعددة-الاستخدام-تجربة-deba
