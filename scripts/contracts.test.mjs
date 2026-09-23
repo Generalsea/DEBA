@@ -86,7 +86,7 @@ test('admin campaign management keeps write access server-side and supports sche
   assert.match(route, /createAdminClient\(\)/)
   assert.match(route, /request\.formData\(\)/)
   assert.match(route, /MAX_VIDEO_BYTES = 50 \* 1024 \* 1024/)
-  assert.match(route, /allowed_mime_types/)
+  assert.match(migration, /allowed_mime_types/)
   assert.match(route, /validateTargetUrl/)
   assert.match(page, /<AdminCampaigns \/>/)
   assert.match(migration, /deba-header-ads/)
