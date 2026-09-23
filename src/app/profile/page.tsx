@@ -324,23 +324,23 @@ export default async function ProfilePage({
     imageUrl: (() => { const path = imageLookup.get(product.id)?.storage_path; return path ? supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl : null })(),
   }))
 
-  const serializedFavorites: ProfileFavorite[] = favorites
-    .map((favorite) => {
-      const product = productLookup.get(favorite.product_id)
-      if (!product) return null
-      return {
-        productId: product.id,
-        title: product.title,
-        slug: product.slug,
-        price: normalizeMoney(product.price),
-        currency: product.currency || 'EGP',
-        conditionGrade: product.condition_grade,
-        status: product.status,
-        createdAt: favorite.created_at,
-        imageUrl: (() => { const path = imageLookup.get(product.id)?.storage_path; return path ? supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl : null })(),
-      }
+  const serializedFavorites: ProfileFavorite[] = []
+  for (const favorite of favorites) {
+    const product = productLookup.get(favorite.product_id)
+    if (!product) continue
+    const imagePath = imageLookup.get(product.id)?.storage_path || null
+    serializedFavorites.push({
+      productId: product.id,
+      title: product.title,
+      slug: product.slug,
+      price: normalizeMoney(product.price),
+      currency: product.currency || 'EGP',
+      conditionGrade: product.condition_grade,
+      status: product.status,
+      createdAt: favorite.created_at,
+      imageUrl: imagePath ? supabase.storage.from(BUCKET).getPublicUrl(imagePath).data.publicUrl : null,
     })
-    .filter((item): item is ProfileFavorite => item !== null)
+  }
 
   let avatarUrl = profile.avatar_url
   if (avatarUrl && !/^https?:\/\//i.test(avatarUrl)) {
