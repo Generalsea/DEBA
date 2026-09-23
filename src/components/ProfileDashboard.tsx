@@ -110,6 +110,16 @@ export type ProfileAccountData = {
   sellerOrders: ProfileOrder[]
   sellerProducts: ProfileProduct[]
   favorites: ProfileFavorite[]
+  unreadMessages?: number
+  notifications?: Array<{
+    id: string
+    type: string
+    title: string
+    body: string
+    href: string | null
+    readAt: string | null
+    createdAt: string
+  }>
 }
 
 type TabId =
