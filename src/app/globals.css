@@ -11527,3 +11527,26 @@ html[data-theme="dark"] .deba-classified-shell {
 .deba-location-picker label > span { display:flex; align-items:center; gap:6px; margin-bottom:7px; font-size:13px; font-weight:700; color:inherit; }
 .deba-location-picker select,.deba-location-picker input { width:100%; min-height:44px; padding:10px 12px; border:1px solid var(--deba-border,#E9ECEF); border-radius:10px; background:var(--deba-card,#fff); color:inherit; }
 @media (max-width: 800px) { .deba-location-picker { grid-template-columns:1fr; } }
+
+
+/* DEBA logo integration across the shell */
+.deba-logo-lockup { display:inline-flex; align-items:center; gap:9px; color:#FF6B35; text-decoration:none; }
+.deba-logo-mark-svg { width:38px; height:38px; flex:0 0 auto; display:block; }
+.deba-logo-wordmark { font-family:Cairo, sans-serif; font-size:27px; line-height:1; font-weight:900; letter-spacing:.055em; }
+.deba-classified-logo-section { display:flex; align-items:center; gap:12px; min-width:240px; }
+.deba-classified-logo-section > a { display:inline-flex; text-decoration:none; flex:0 0 auto; }
+.deba-classified-logo-section .deba-logo-mark-svg { width:40px; height:40px; }
+.deba-classified-logo-section .deba-logo-wordmark { font-size:28px; color:#1A2B3C; }
+.deba-classified-logo-tagline { color:#868E96; font-size:11px; line-height:1.45; max-width:132px; }
+.deba-header-logo { display:inline-flex; align-items:center; text-decoration:none; flex:0 0 auto; }
+.deba-header-logo .deba-logo-wordmark { color:#1A2B3C; }
+.deba-header-logo .deba-logo-mark-svg { width:34px; height:34px; }
+@media (max-width: 1100px) {
+  .deba-classified-logo-tagline { display:none; }
+  .deba-classified-logo-section { min-width:auto; }
+}
+@media (max-width: 700px) {
+  .deba-classified-logo-section .deba-logo-wordmark { font-size:23px; }
+  .deba-classified-logo-section .deba-logo-mark-svg { width:34px; height:34px; }
+  .deba-header-logo .deba-logo-wordmark { font-size:23px; }
+}
