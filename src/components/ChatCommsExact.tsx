@@ -130,6 +130,7 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         setRoom?: (room: Room) => void
         renderMessages?: (messages: Message[], currentUserId: string | null) => void
         onOpenChat?: (roomId: string) => void | Promise<void>
+        onProductOpen?: () => void | Promise<void>
         onSend?: () => void | Promise<void>
         onQuick?: (text: string) => void | Promise<void>
         onRefresh?: () => void | Promise<void>
