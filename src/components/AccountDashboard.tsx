@@ -2,7 +2,6 @@
 
 import {
   Bell,
-  Check,
   CheckCircle2,
   ChevronDown,
   ExternalLink,
@@ -21,12 +20,10 @@ import {
   ShieldCheck,
   Tag,
   UserRound,
-  Users,
-  X,
   Sun,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import EgyptLocationPicker from '@/components/EgyptLocationPicker'
 import DebaLogo from '@/components/DebaLogo'
