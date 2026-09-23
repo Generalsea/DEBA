@@ -362,7 +362,7 @@ export default async function ProductDetailPage({
       ? CONDITION_LABELS[product.condition_grade] || 'حالة موثقة'
       : 'حالة غير محددة'
   const isOwner = Boolean(product.owner_id && data.userId === product.owner_id)
-  const canBuy = price !== null && price > 0 && product.quantity > 0
+  const canBuy = Boolean(product.owner_id) && price !== null && price > 0 && product.quantity > 0
   const purchaseHref = '/products/' + encodeURIComponent(product.slug) + '/checkout'
   const cartProduct = price !== null ? {
     id: product.id,
