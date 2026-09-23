@@ -1,0 +1,3 @@
+import Link from 'next/link'
+import { ShoppingCart, Store } from 'lucide-react'
+export function EmptyCart() { return <section className="deba-cart-empty" aria-live="polite"><div className="deba-cart-empty-icon"><ShoppingCart size={30} /></div><span>DEBA CART</span><h1>سلتك فارغة</h1><p>لم تضف أي منتجات إلى سلة التسوق بعد. ابدأ التسوق واكتشف منتجات DEBA.</p><div className="deba-cart-empty-actions"><Link href="/#featured" className="deba-cart-primary-action">ابدأ التسوق</Link><Link href="/sell" className="deba-cart-secondary-action"><Store size={16} />أضف إعلانك</Link></div></section> }
