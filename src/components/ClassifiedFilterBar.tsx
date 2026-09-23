@@ -3,11 +3,13 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { ChevronDown, MapPin } from 'lucide-react'
+import { EGYPT_LOCATIONS, getCitiesForGovernorate } from '@/data/egypt-locations'
 
 type ClassifiedFilterBarProps = {
   q?: string
   category?: string
   governorate?: string
+  city?: string
   condition?: string
   minPrice?: number | null
   maxPrice?: number | null
@@ -23,12 +25,13 @@ function rangeValue(minPrice?: number | null, maxPrice?: number | null) {
 
 function navigate(
   router: ReturnType<typeof useRouter>,
-  state: { q?: string; category?: string; governorate?: string; condition?: string; minPrice?: number | null; maxPrice?: number | null },
+  state: { q?: string; category?: string; governorate?: string; city?: string; condition?: string; minPrice?: number | null; maxPrice?: number | null },
 ) {
   const params = new URLSearchParams()
   if (state.q?.trim()) params.set('q', state.q.trim())
   if (state.category && state.category !== 'all') params.set('category', state.category)
   if (state.governorate) params.set('governorate', state.governorate)
+  if (state.city) params.set('city', state.city)
   if (state.condition) params.set('condition', state.condition)
   if (state.minPrice != null) params.set('minPrice', String(state.minPrice))
   if (state.maxPrice != null) params.set('maxPrice', String(state.maxPrice))
@@ -39,21 +42,39 @@ export default function ClassifiedFilterBar({
   q,
   category,
   governorate,
+  city,
   condition,
   minPrice,
   maxPrice,
 }: ClassifiedFilterBarProps) {
   const router = useRouter()
   const [location, setLocation] = useState(governorate || '')
+  const [selectedCity, setSelectedCity] = useState(city || '')
+  const cities = getCitiesForGovernorate(location)
   const [activeCondition, setActiveCondition] = useState(condition || '')
   const [range, setRange] = useState(rangeValue(minPrice, maxPrice))
 
   const applyLocation = (next: string) => {
     setLocation(next)
+    setSelectedCity('')
     navigate(router, {
       q,
       category,
       governorate: next,
+      city: undefined,
+      condition: activeCondition,
+      minPrice,
+      maxPrice,
+    })
+  }
+
+  const applyCity = (next: string) => {
+    setSelectedCity(next)
+    navigate(router, {
+      q,
+      category,
+      governorate: location,
+      city: next,
       condition: activeCondition,
       minPrice,
       maxPrice,
@@ -66,6 +87,7 @@ export default function ClassifiedFilterBar({
       q,
       category,
       governorate: location,
+      city: selectedCity,
       condition: next,
       minPrice,
       maxPrice,
@@ -89,6 +111,7 @@ export default function ClassifiedFilterBar({
       q,
       category,
       governorate: location,
+      city: selectedCity,
       condition: activeCondition,
       ...values,
     })
@@ -107,15 +130,22 @@ export default function ClassifiedFilterBar({
             aria-label="تصفية حسب الموقع"
           >
             <option value="">جميع المواقع</option>
-            <option value="القاهرة">القاهرة</option>
-            <option value="الإسكندرية">الإسكندرية</option>
-            <option value="الجيزة">الجيزة</option>
-            <option value="الدقهلية">الدقهلية</option>
-            <option value="البحر الأحمر">البحر الأحمر</option>
-            <option value="المنوفية">المنوفية</option>
-            <option value="الغربية">الغربية</option>
-            <option value="الشرقية">الشرقية</option>
-            <option value="القليوبية">القليوبية</option>
+            {EGYPT_LOCATIONS.map((item) => (
+              <option key={item.name_ar} value={item.name_ar}>{item.name_ar}</option>
+            ))}
+          </select>
+          <ChevronDown size={14} aria-hidden="true" />
+        </div>
+        <div className="deba-classified-select-wrap">
+          <select
+            className="deba-classified-filter-select"
+            value={selectedCity}
+            onChange={(event) => applyCity(event.target.value)}
+            aria-label="تصفية حسب المدينة"
+            disabled={!location}
+          >
+            <option value="">{location ? 'جميع المدن' : 'اختر المحافظة أولًا'}</option>
+            {cities.map((item) => <option key={item} value={item}>{item}</option>)}
           </select>
           <ChevronDown size={14} aria-hidden="true" />
         </div>
