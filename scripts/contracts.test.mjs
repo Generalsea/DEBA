@@ -75,3 +75,21 @@ test('header advertising rail is data-driven, 9:16, and isolated from persistenc
   assert.match(page, /from\('header_ad_promotions'\)/)
   assert.match(page, /isSafeMediaUrl/)
 })
+test('admin campaign management keeps write access server-side and supports scheduled media', async () => {
+  const route = await read('src/app/api/admin/campaigns/route.ts')
+  const page = await read('src/app/admin/page.tsx')
+  const migration = await read(
+    'supabase/migrations/20260923142600_enable_header_ad_storage.sql',
+  )
+
+  assert.match(route, /\.eq\(['"]role['"], ['"]admin['"]\)/)
+  assert.match(route, /createAdminClient\(\)/)
+  assert.match(route, /request\.formData\(\)/)
+  assert.match(route, /MAX_VIDEO_BYTES = 50 \* 1024 \* 1024/)
+  assert.match(route, /allowed_mime_types/)
+  assert.match(route, /validateTargetUrl/)
+  assert.match(page, /<AdminCampaigns \/>/)
+  assert.match(migration, /deba-header-ads/)
+  assert.match(migration, /media_storage_path/)
+  assert.match(migration, /poster_storage_path/)
+})
