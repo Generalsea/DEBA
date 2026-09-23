@@ -442,118 +442,62 @@ function Hero({
   products: ProductRow[]
   data: Awaited<ReturnType<typeof loadHomeData>>
 }) {
+  const latest = products.slice(0, 8)
+
   return (
-    <section className="fm-hero">
+    <section className="deba-market-pulse" aria-label="أحدث المعروض للبيع">
       <div className="fm-container">
-        <div className="fm-hero-card">
-          <div className="fm-hero-copy">
-            <span className="fm-eyebrow">DEBA MARKETPLACE</span>
-            <h1>
-              اكتشف ما يناسبك
-              <span> في DEBA</span>
-            </h1>
-            <p>
-              سوق مصري واحد للشراء والبيع والتبادل والتبرع، مع تفاصيل واضحة للمنتج
-              ومسار متصل من التصفح إلى الطلب.
-            </p>
-
-            <div className="fm-hero-actions">
-              <Link href="#latest" className="fm-btn fm-btn-primary">
-                <Search size={18} aria-hidden="true" />
-                تصفح المنتجات
-              </Link>
-              <Link href="/sell" className="fm-btn fm-btn-secondary">
-                <Tag size={18} aria-hidden="true" />
-                أضف إعلانك
-              </Link>
-            </div>
-
-            <div className="fm-hero-proof" aria-label="مزايا DEBA">
-              <span>
-                <ShieldCheck size={16} aria-hidden="true" />
-                منتجات منشورة فعليًا
-              </span>
-              <span>
-                <Truck size={16} aria-hidden="true" />
-                خيارات الاستلام حسب الإعلان
-              </span>
-              <span>
-                <HeartHandshake size={16} aria-hidden="true" />
-                بيع وشراء وتبادل وتبرع
-              </span>
-            </div>
-
-            {data.stats.products > 0 || data.stats.sellers > 0 || data.stats.members > 0 ? (
-              <div className="fm-hero-metrics" aria-label="إحصاءات DEBA الحالية">
-                {data.stats.products > 0 ? (
-                  <div>
-                    <strong>{data.stats.products.toLocaleString('ar-EG')}</strong>
-                    <span>منتجات منشورة</span>
-                  </div>
-                ) : null}
-                {data.stats.sellers > 0 ? (
-                  <div>
-                    <strong>{data.stats.sellers.toLocaleString('ar-EG')}</strong>
-                    <span>بائعون معلنون</span>
-                  </div>
-                ) : null}
-                {data.stats.members > 0 ? (
-                  <div>
-                    <strong>{data.stats.members.toLocaleString('ar-EG')}</strong>
-                    <span>أعضاء عامون</span>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
+        <div className="deba-market-pulse-head">
+          <div>
+            <span className="deba-market-pulse-kicker">السوق الآن</span>
+            <h1>أحدث المعروض للبيع</h1>
+            <p>وصل الآن إلى السوق — بطاقات خفيفة، صور واضحة، وسعر ظاهر من أول نظرة.</p>
           </div>
+          <Link href="/?sort=newest" className="deba-market-pulse-link">
+            عرض كل الجديد <ArrowLeft size={16} aria-hidden="true" />
+          </Link>
+        </div>
 
-          <div className="fm-hero-visual" aria-label="منتجات من السوق الحالي">
-            {products.slice(0, 3).map((product, index) => {
+        {latest.length ? (
+          <div className="deba-market-pulse-track">
+            {latest.map((product) => {
               const image = data.imageByProduct.get(product.id)
               const imageUrl = getImageUrl(image?.storage_path || null)
-
               return (
                 <Link
                   key={product.id}
                   href={'/products/' + encodeURIComponent(product.slug)}
-                  className={'fm-hero-product fm-hero-product-' + (index + 1)}
-                  aria-label={'عرض ' + product.title}
+                  className="deba-market-pulse-card"
                 >
-                  <div className="fm-hero-product-media">
+                  <div className="deba-market-pulse-media">
                     {imageUrl ? (
                       <Image
                         src={imageUrl}
                         alt={image?.alt_text?.trim() || product.title}
                         fill
-                        sizes="(max-width: 800px) 42vw, 280px"
-                        priority={index === 0}
+                        sizes="(max-width: 700px) 42vw, 190px"
                       />
                     ) : (
-                      <div className="fm-image-fallback">
-                        <ShoppingBag size={34} aria-hidden="true" />
-                      </div>
+                      <div className="deba-market-card-placeholder"><PackageCheck size={28} aria-hidden="true" /><span>DEBA</span></div>
                     )}
+                    <span className="deba-market-pulse-new">جديد</span>
                   </div>
-                  <div className="fm-hero-product-info">
+                  <div className="deba-market-pulse-copy">
+                    <span>{product.category_id ? 'معروض للبيع' : 'سلعة منشورة'}</span>
                     <strong>{product.title}</strong>
-                    <span>{formatPrice(product.price, product.currency)}</span>
+                    <b>{formatPrice(product.price, product.currency)}</b>
                   </div>
                 </Link>
               )
             })}
-
-            {!products.length ? (
-              <div className="fm-hero-empty">
-                <ShoppingBag size={44} aria-hidden="true" />
-                <strong>ابدأ أول حركة في السوق</strong>
-                <span>ستظهر المنتجات هنا تلقائيًا عند نشرها واعتمادها.</span>
-                <Link href="/sell" className="fm-btn fm-btn-primary">
-                  أضف أول إعلان
-                </Link>
-              </div>
-            ) : null}
           </div>
-        </div>
+        ) : (
+          <div className="deba-market-pulse-empty">
+            <PackageCheck size={24} aria-hidden="true" />
+            <span>لا توجد سلع منشورة حديثًا الآن.</span>
+            <Link href="/sell">كن أول من ينشر</Link>
+          </div>
+        )}
       </div>
     </section>
   )
@@ -909,16 +853,6 @@ export default async function HomePage({
           <>
             <Hero products={data.products.slice(0, 3)} data={data} />
             <CategoryGrid categories={presentationCategories} />
-
-            <div id="latest">
-              <ProductRail
-                title="أحدث المنتجات"
-                subtitle="منتجات منشورة حديثًا من كتالوج DEBA الحالي."
-                products={data.products.slice(0, 10)}
-                data={data}
-                href="/?sort=newest"
-              />
-            </div>
 
             {departmentSections.map((section) => (
               <ProductRail
