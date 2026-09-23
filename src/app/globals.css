@@ -9610,3 +9610,1547 @@ html[data-theme="dark"] .brand-side {
 .deba-store-hero > div > div > h1 { margin: 0; }
 .deba-store-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .deba-store-inventory { margin-top: 22px; }
+
+
+/* =========================================================
+   DEBA CLASSIFIEDS — DESIGN SOURCE OF TRUTH
+   Based on the supplied Arabic classifieds concept.
+   Scoped to the classified shell so existing commerce surfaces remain intact.
+   ========================================================= */
+
+.deba-classified-shell {
+  --primary: #FF6B35;
+  --primary-dark: #E55A2B;
+  --primary-light: #FF8C5A;
+  --secondary: #1A2B3C;
+  --accent: #2C5F8A;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F8F9FA;
+  --bg-tertiary: #F1F3F5;
+  --bg-card: #FFFFFF;
+  --text-primary: #1A1A1A;
+  --text-secondary: #495057;
+  --text-tertiary: #868E96;
+  --text-muted: #ADB5BD;
+  --border: #E9ECEF;
+  --border-light: #F1F3F5;
+  --success: #28A745;
+  --warning: #FFC107;
+  --danger: #DC3545;
+  --info: #17A2B8;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,.12);
+  --shadow-xl: 0 8px 32px rgba(0,0,0,.16);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "Cairo", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+html[data-theme="dark"] .deba-classified-shell {
+  --bg-primary: #0F1419;
+  --bg-secondary: #1A1F2E;
+  --bg-tertiary: #252B3B;
+  --bg-card: #1E2433;
+  --text-primary: #F8F9FA;
+  --text-secondary: #CED4DA;
+  --text-tertiary: #868E96;
+  --text-muted: #495057;
+  --border: #2C3440;
+  --border-light: #1E2433;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.2);
+  --shadow-md: 0 2px 8px rgba(0,0,0,.3);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,.4);
+  --shadow-xl: 0 8px 32px rgba(0,0,0,.5);
+}
+
+.deba-classified-container {
+  max-width: 1400px;
+  width: min(1400px, calc(100% - 48px));
+  margin-inline: auto;
+}
+
+/* Header */
+.deba-classified-site-header {
+  position: relative;
+  z-index: 100;
+  background: var(--bg-primary);
+}
+
+.deba-classified-utility-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: var(--spacing-sm) 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.deba-classified-utility-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+}
+
+.deba-classified-utility-location,
+.deba-classified-utility-links {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.deba-classified-utility-location svg {
+  color: var(--primary);
+  flex: 0 0 auto;
+}
+
+.deba-classified-utility-location strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.deba-classified-utility-links {
+  gap: var(--spacing-lg);
+}
+
+.deba-classified-utility-links a {
+  color: var(--text-secondary);
+  transition: color var(--transition-fast, 150ms ease);
+}
+
+.deba-classified-utility-links a:hover {
+  color: var(--primary);
+}
+
+.deba-classified-main-header {
+  position: sticky;
+  top: 0;
+  z-index: 105;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+  padding: var(--spacing-md) 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.deba-classified-header-content {
+  display: grid;
+  grid-template-columns: auto minmax(320px, 1fr) auto;
+  gap: var(--spacing-xl);
+  align-items: center;
+}
+
+.deba-classified-logo-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 190px;
+}
+
+.deba-classified-logo {
+  color: var(--primary);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.deba-classified-logo-tagline {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.deba-classified-search-section {
+  max-width: 700px;
+  width: 100%;
+  justify-self: center;
+}
+
+.deba-classified-search-container {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.deba-classified-search-container:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255,107,53,.10);
+}
+
+.deba-classified-search-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  padding: var(--spacing-md);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 15px;
+}
+
+.deba-classified-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.deba-classified-search-category {
+  min-width: 130px;
+  border: 0;
+  border-inline-start: 1px solid var(--border);
+  outline: 0;
+  padding: 0 var(--spacing-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.deba-classified-search-button {
+  width: 58px;
+  flex: 0 0 58px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: var(--primary);
+  color: #fff;
+  transition: background 150ms ease;
+}
+
+.deba-classified-search-button:hover {
+  background: var(--primary-dark);
+}
+
+.deba-classified-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  white-space: nowrap;
+}
+
+.deba-classified-action-btn {
+  min-width: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 12px;
+  transition: color 150ms ease, background 150ms ease;
+}
+
+.deba-classified-action-btn:hover {
+  color: var(--primary);
+  background: var(--bg-secondary);
+}
+
+.deba-classified-action-icon-with-badge {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.deba-classified-action-icon-with-badge em {
+  position: absolute;
+  top: -7px;
+  inset-inline-end: -10px;
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+  text-align: center;
+}
+
+.deba-classified-publish-btn {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 var(--spacing-md);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.deba-classified-publish-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.deba-classified-theme-toggle {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.deba-classified-theme-toggle:hover {
+  background: var(--bg-tertiary);
+  color: var(--primary);
+}
+
+.deba-classified-category-nav {
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+  padding: var(--spacing-md) 0;
+}
+
+.deba-classified-category-list {
+  display: flex;
+  gap: var(--spacing-lg);
+  list-style: none;
+  overflow-x: auto;
+  padding: 0;
+  margin: 0;
+  scrollbar-width: none;
+}
+
+.deba-classified-category-list::-webkit-scrollbar {
+  display: none;
+}
+
+.deba-classified-category-link {
+  display: inline-flex;
+  white-space: nowrap;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.deba-classified-category-link:hover {
+  background: var(--bg-secondary);
+  color: var(--primary);
+}
+
+.deba-classified-category-link.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Hero */
+.deba-classified-hero {
+  padding: var(--spacing-xl) 0 0;
+}
+
+.deba-classified-hero-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-2xl);
+  align-items: center;
+  min-height: 420px;
+  padding: var(--spacing-3xl);
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.deba-classified-hero-text h1 {
+  margin: 0 0 var(--spacing-md);
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.deba-classified-hero-text p {
+  margin: 0 0 var(--spacing-xl);
+  color: var(--text-secondary);
+  font-size: 18px;
+}
+
+.deba-classified-hero-cta {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.deba-classified-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 46px;
+  padding: 0 var(--spacing-xl);
+  border: 0;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 150ms ease;
+}
+
+.deba-classified-btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.deba-classified-btn-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.deba-classified-btn-secondary {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  color: var(--text-primary);
+}
+
+.deba-classified-btn-secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.deba-classified-hero-stats {
+  display: flex;
+  gap: var(--spacing-xl);
+  flex-wrap: wrap;
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border);
+}
+
+.deba-classified-hero-stats div {
+  display: grid;
+  gap: 1px;
+}
+
+.deba-classified-hero-stats strong {
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.deba-classified-hero-stats span {
+  color: var(--text-tertiary);
+  font-size: 10.5px;
+}
+
+.deba-classified-hero-visual {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(100px, 120px);
+  gap: var(--spacing-md);
+}
+
+.deba-classified-hero-listing {
+  position: relative;
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-md);
+  transition: transform 150ms ease;
+}
+
+.deba-classified-hero-listing:hover {
+  transform: translateY(-4px);
+}
+
+.deba-classified-hero-listing img {
+  object-fit: cover;
+}
+
+.deba-classified-hero-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.deba-classified-hero-listing-1 {
+  grid-column: 1;
+  grid-row: span 2;
+}
+
+.deba-classified-hero-listing-2,
+.deba-classified-hero-listing-3 {
+  grid-column: 2;
+}
+
+.deba-classified-hero-listing-4,
+.deba-classified-hero-listing-5,
+.deba-classified-hero-listing-6 {
+  grid-column: 3;
+}
+
+/* Filters */
+.deba-classified-filter-section {
+  padding: var(--spacing-xl) 0 0;
+}
+
+.deba-classified-results-top {
+  padding: var(--spacing-xl) 0 0;
+}
+
+.deba-classified-filters-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.deba-classified-filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.deba-classified-filter-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.deba-classified-select-wrap {
+  position: relative;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-inline: 10px 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.deba-classified-select-wrap > svg:first-child {
+  color: var(--primary);
+}
+
+.deba-classified-select-wrap > svg:last-child {
+  position: absolute;
+  inset-inline-end: 8px;
+  pointer-events: none;
+}
+
+.deba-classified-filter-select {
+  min-width: 124px;
+  border: 0;
+  outline: 0;
+  appearance: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.deba-classified-filter-chip {
+  min-height: 38px;
+  padding: 0 var(--spacing-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.deba-classified-filter-chip:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.deba-classified-filter-chip.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* Sections */
+.deba-classified-category-discovery,
+.deba-classified-listing-rail,
+.deba-classified-trust,
+.deba-classified-community {
+  padding: var(--spacing-2xl) 0;
+}
+
+.deba-classified-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.deba-classified-section-header h2,
+.deba-classified-community h2,
+.deba-classified-seller-cta h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.deba-classified-section-header-with-link {
+  align-items: center;
+}
+
+.deba-classified-section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.deba-classified-section-link:hover {
+  text-decoration: underline;
+}
+
+.deba-classified-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.deba-classified-category-card {
+  display: block;
+  padding: var(--spacing-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  text-align: center;
+  transition: all 150ms ease;
+}
+
+.deba-classified-category-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.deba-classified-category-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto var(--spacing-md);
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  font-size: 28px;
+}
+
+.deba-classified-category-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.deba-classified-listing-scroll {
+  display: flex;
+  gap: var(--spacing-md);
+  overflow-x: auto;
+  padding-bottom: var(--spacing-md);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.deba-classified-listing-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.deba-classified-listing-scroll::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 3px;
+}
+
+.deba-classified-listing-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.deba-classified-listing-scroll-item {
+  flex: 0 0 280px;
+}
+
+/* Listing card */
+.deba-classified-listing-card {
+  width: 280px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: all 150ms ease;
+}
+
+.deba-classified-listing-scroll-item .deba-classified-listing-card {
+  width: 100%;
+}
+
+.deba-classified-listing-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+.deba-classified-listing-image {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.deba-classified-listing-image > a {
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+
+.deba-classified-listing-image img {
+  object-fit: cover;
+  transition: transform 250ms ease;
+}
+
+.deba-classified-listing-card:hover .deba-classified-listing-image img {
+  transform: scale(1.05);
+}
+
+.deba-classified-listing-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.deba-classified-listing-favorite {
+  position: absolute !important;
+  top: var(--spacing-sm);
+  left: var(--spacing-sm);
+  z-index: 3;
+  width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background: var(--bg-card) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.deba-classified-listing-badge {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  z-index: 2;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.deba-classified-listing-badge.condition-new {
+  background: var(--success);
+}
+
+.deba-classified-listing-badge.condition-used {
+  background: var(--info);
+}
+
+.deba-classified-listing-info {
+  padding: var(--spacing-md);
+}
+
+.deba-classified-listing-title {
+  display: -webkit-box;
+  height: 42px;
+  margin-bottom: var(--spacing-sm);
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.deba-classified-listing-title:hover {
+  color: var(--primary);
+}
+
+.deba-classified-listing-price {
+  margin-bottom: var(--spacing-sm);
+  color: var(--primary);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.deba-classified-listing-price .currency {
+  margin-inline-start: 4px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.deba-classified-listing-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.deba-classified-listing-location {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.deba-classified-listing-location svg {
+  color: var(--primary);
+  flex: 0 0 auto;
+}
+
+.deba-classified-listing-seller {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border);
+}
+
+.deba-classified-seller-avatar {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.deba-classified-seller-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.deba-classified-seller-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.deba-classified-seller-name {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deba-classified-seller-rating {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.deba-classified-listing-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.deba-classified-btn-contact,
+.deba-classified-btn-offer {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 150ms ease;
+}
+
+.deba-classified-btn-contact {
+  flex: 1;
+  padding: 0 var(--spacing-sm);
+  background: var(--primary);
+  color: #fff;
+}
+
+.deba-classified-btn-contact:hover {
+  background: var(--primary-dark);
+}
+
+.deba-classified-btn-offer {
+  padding: 0 var(--spacing-md);
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.deba-classified-btn-offer:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Results */
+.deba-classified-search-results {
+  padding: var(--spacing-xl) 0 var(--spacing-2xl);
+}
+
+.deba-classified-search-heading {
+  margin: var(--spacing-xl) 0;
+}
+
+.deba-classified-search-heading > span {
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.deba-classified-search-heading h1 {
+  margin: 5px 0;
+  font-size: 32px;
+  line-height: 1.25;
+}
+
+.deba-classified-search-heading p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.deba-classified-results-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+}
+
+.deba-classified-results-grid .deba-classified-listing-card {
+  width: auto;
+}
+
+.deba-classified-empty-state {
+  grid-column: 1 / -1;
+  padding: var(--spacing-3xl);
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+.deba-classified-empty-state h2 {
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+  color: var(--text-secondary);
+}
+
+/* Trust */
+.deba-classified-trust {
+  margin-top: var(--spacing-2xl);
+  background: var(--bg-secondary);
+}
+
+.deba-classified-trust-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-xl);
+  margin-top: var(--spacing-xl);
+}
+
+.deba-classified-trust-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.deba-classified-trust-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--primary);
+}
+
+.deba-classified-trust-item h3 {
+  margin: 0 0 var(--spacing-xs);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.deba-classified-trust-item p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Seller CTA */
+.deba-classified-seller-cta {
+  margin: var(--spacing-2xl) 0;
+  padding: var(--spacing-3xl) 0;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+  color: #fff;
+}
+
+.deba-classified-seller-cta > .deba-classified-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xl);
+}
+
+.deba-classified-seller-cta h2 {
+  color: #fff;
+  font-size: 32px;
+  margin-bottom: var(--spacing-md);
+}
+
+.deba-classified-seller-cta p {
+  margin: 0;
+  opacity: .9;
+  font-size: 18px;
+}
+
+.deba-classified-seller-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.deba-classified-seller-actions .deba-classified-btn-secondary {
+  background: transparent;
+  border-color: #fff;
+  color: #fff;
+}
+
+/* Community */
+.deba-classified-community {
+  text-align: center;
+}
+
+.deba-classified-community-badges {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-xl);
+  flex-wrap: wrap;
+  margin-top: var(--spacing-xl);
+}
+
+.deba-classified-community-badges span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.deba-classified-community-badges svg {
+  color: var(--primary);
+}
+
+/* Footer */
+.deba-classified-footer {
+  margin-top: var(--spacing-2xl);
+  padding: var(--spacing-3xl) 0 var(--spacing-xl);
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.deba-classified-footer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.deba-classified-footer-grid > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.deba-classified-footer-grid h3 {
+  margin: 0 0 var(--spacing-xs);
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.deba-classified-footer-grid p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.deba-classified-footer-grid a {
+  color: var(--text-secondary);
+  font-size: 14px;
+  transition: color 150ms ease;
+}
+
+.deba-classified-footer-grid a:hover {
+  color: var(--primary);
+}
+
+.deba-classified-footer-publish {
+  color: var(--primary) !important;
+  font-weight: 700;
+}
+
+.deba-classified-footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.deba-classified-footer-bottom p,
+.deba-classified-footer-bottom span {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+.deba-classified-footer-bottom > div {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+/* Mobile */
+.deba-classified-mobile-nav {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .deba-classified-header-content {
+    grid-template-columns: auto 1fr;
+  }
+
+  .deba-classified-logo-section {
+    min-width: 150px;
+  }
+
+  .deba-classified-header-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .deba-classified-search-section {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .deba-classified-hero-content {
+    grid-template-columns: 1fr;
+    padding: var(--spacing-2xl);
+  }
+
+  .deba-classified-hero-visual {
+    order: -1;
+  }
+
+  .deba-classified-results-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .deba-classified-seller-cta > .deba-classified-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .deba-classified-shell {
+    padding-bottom: 74px;
+  }
+
+  .deba-classified-utility-header {
+    display: none;
+  }
+
+  .deba-classified-container {
+    width: min(100% - 32px, 1400px);
+  }
+
+  .deba-classified-main-header {
+    padding: var(--spacing-sm) 0;
+  }
+
+  .deba-classified-header-content {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--spacing-sm);
+  }
+
+  .deba-classified-logo-section {
+    min-width: auto;
+    justify-content: center;
+  }
+
+  .deba-classified-logo {
+    font-size: 24px;
+  }
+
+  .deba-classified-logo-tagline {
+    display: none;
+  }
+
+  .deba-classified-search-section {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    max-width: none;
+  }
+
+  .deba-classified-search-category {
+    display: none;
+  }
+
+  .deba-classified-search-input {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .deba-classified-search-button {
+    width: 48px;
+    flex-basis: 48px;
+  }
+
+  .deba-classified-header-actions {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    justify-content: space-between;
+    gap: 2px;
+  }
+
+  .deba-classified-action-btn {
+    min-width: 0;
+    flex: 1 1 auto;
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .deba-classified-action-btn:nth-child(2) {
+    order: 2;
+  }
+
+  .deba-classified-action-btn:nth-child(3) {
+    order: 3;
+  }
+
+  .deba-classified-publish-btn {
+    order: 4;
+    min-height: 38px;
+    padding-inline: 10px;
+    font-size: 12px;
+  }
+
+  .deba-classified-theme-toggle {
+    order: 5;
+    width: 38px;
+    height: 38px;
+  }
+
+  .deba-classified-category-nav {
+    padding: var(--spacing-sm) 0;
+  }
+
+  .deba-classified-category-list {
+    gap: var(--spacing-sm);
+  }
+
+  .deba-classified-category-link {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 13px;
+  }
+
+  .deba-classified-hero {
+    padding-top: var(--spacing-md);
+  }
+
+  .deba-classified-hero-content {
+    min-height: 0;
+    padding: var(--spacing-xl) var(--spacing-lg);
+  }
+
+  .deba-classified-hero-text h1 {
+    font-size: 32px;
+  }
+
+  .deba-classified-hero-text p {
+    font-size: 16px;
+  }
+
+  .deba-classified-hero-cta {
+    flex-direction: column;
+  }
+
+  .deba-classified-btn {
+    width: 100%;
+  }
+
+  .deba-classified-hero-stats {
+    gap: var(--spacing-md);
+  }
+
+  .deba-classified-hero-visual {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
+  }
+
+  .deba-classified-filter-section,
+  .deba-classified-results-top {
+    padding-top: var(--spacing-md);
+  }
+
+  .deba-classified-filters-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .deba-classified-filter-group {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .deba-classified-select-wrap {
+    flex: 1;
+  }
+
+  .deba-classified-filter-select {
+    width: 100%;
+  }
+
+  .deba-classified-filter-chip {
+    flex: 1;
+  }
+
+  .deba-classified-listing-scroll-item {
+    flex-basis: 265px;
+  }
+
+  .deba-classified-listing-card {
+    width: 100%;
+  }
+
+  .deba-classified-results-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .deba-classified-listing-image {
+    height: 195px;
+  }
+
+  .deba-classified-listing-info {
+    padding: 12px;
+  }
+
+  .deba-classified-listing-title {
+    font-size: 14px;
+  }
+
+  .deba-classified-listing-price {
+    font-size: 20px;
+  }
+
+  .deba-classified-listing-actions {
+    flex-direction: column;
+  }
+
+  .deba-classified-btn-contact,
+  .deba-classified-btn-offer {
+    width: 100%;
+  }
+
+  .deba-classified-seller-cta {
+    margin-inline: 0;
+    border-radius: 0;
+  }
+
+  .deba-classified-seller-cta h2 {
+    font-size: 24px;
+  }
+
+  .deba-classified-seller-cta p {
+    font-size: 16px;
+  }
+
+  .deba-classified-seller-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .deba-classified-community-badges {
+    gap: var(--spacing-sm);
+  }
+
+  .deba-classified-community-badges span {
+    flex: 1 1 140px;
+    justify-content: center;
+  }
+
+  .deba-classified-footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .deba-classified-mobile-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 180;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    min-height: 70px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .deba-classified-mobile-nav-item {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .deba-classified-mobile-nav-item > span {
+    display: grid;
+    place-items: center;
+    min-height: 24px;
+  }
+
+  .deba-classified-mobile-nav-item.active,
+  .deba-classified-mobile-nav-item.is-primary {
+    color: var(--primary);
+  }
+
+  .deba-classified-mobile-nav-item.is-primary > span {
+    width: 42px;
+    height: 42px;
+    margin-top: -20px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .deba-classified-container {
+    width: min(100% - 24px, 1400px);
+  }
+
+  .deba-classified-hero-text h1 {
+    font-size: 25px;
+  }
+
+  .deba-classified-section-header h2,
+  .deba-classified-community h2 {
+    font-size: 20px;
+  }
+
+  .deba-classified-results-grid {
+    gap: var(--spacing-sm);
+  }
+
+  .deba-classified-listing-image {
+    height: 165px;
+  }
+
+  .deba-classified-listing-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .deba-classified-footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  .deba-classified-footer-grid h3 {
+    font-size: 14px;
+  }
+
+  .deba-classified-footer-grid a {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deba-classified-shell *,
+  .deba-classified-shell *::before,
+  .deba-classified-shell *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
