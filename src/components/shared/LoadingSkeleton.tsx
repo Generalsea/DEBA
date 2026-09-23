@@ -1,0 +1,3 @@
+export function LoadingSkeleton({ type }: { type: 'cart' | 'checkout' }) {
+  return <div className={'deba-cart-skeleton ' + type} aria-hidden="true"><div className="deba-skeleton-hero" /><div className="deba-skeleton-grid">{Array.from({ length: type === 'cart' ? 5 : 4 }, (_, index) => <div key={index} className="deba-skeleton-card"><div className="deba-skeleton-media" /><div className="deba-skeleton-lines"><span /><span /><span /></div></div>)}</div></div>
+}

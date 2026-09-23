@@ -15,6 +15,31 @@ function validPhone(value: string | null) {
   return /^01\d{9}$/.test(value.replace(/\s/g, ''))
 }
 
+export async function GET() {
+  try {
+    const supabase = await createClient()
+    const { data: claimsData } = await supabase.auth.getClaims()
+    const userId = claimsData?.claims?.sub
+    if (typeof userId !== 'string') return NextResponse.json({ error: 'يجب تسجيل الدخول.' }, { status: 401 })
+
+    const [profileResult, privateResult] = await Promise.all([
+      supabase.from('profiles').select('display_name,city,governorate').eq('id', userId).maybeSingle(),
+      supabase.from('profile_private').select('phone,address_line1,address_line2,district,postal_code').eq('user_id', userId).maybeSingle(),
+    ])
+    if (profileResult.error) { console.error('DEBA profile GET failed', profileResult.error); return NextResponse.json({ error: 'تعذر تحميل بيانات الحساب.' }, { status: 500 }) }
+    if (!profileResult.data) return NextResponse.json({ error: 'ملف الحساب غير موجود.' }, { status: 404 })
+    return NextResponse.json({
+      profile: { displayName: profileResult.data.display_name, city: profileResult.data.city, governorate: profileResult.data.governorate },
+      privateProfile: privateResult.data ? {
+        phone: privateResult.data.phone, addressLine1: privateResult.data.address_line1, addressLine2: privateResult.data.address_line2,
+        district: privateResult.data.district, postalCode: privateResult.data.postal_code,
+      } : null,
+    })
+  } catch (error) {
+    console.error('DEBA profile GET route failed', error)
+    return NextResponse.json({ error: 'تعذر تحميل بيانات الحساب الآن.' }, { status: 500 })
+  }
+}
 export async function PATCH(request: Request) {
   try {
     const origin = request.headers.get('origin')

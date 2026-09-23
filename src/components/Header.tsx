@@ -17,6 +17,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import NotificationBell from '@/components/NotificationBell'
 import { createClient } from '@/utils/supabase/client'
+import { useCartStore } from '@/lib/cart-store'
 
 export type HeaderCategory = {
   id: string
@@ -56,6 +57,7 @@ export default function Header({
   const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'anonymous'>('loading')
   const [identity, setIdentity] = useState<HeaderIdentity | null>(null)
   const supabase = useMemo(() => createClient(), [])
+  const cart = useCartStore()
 
   useEffect(() => {
     setQuery(initialSearch)
@@ -139,8 +141,7 @@ export default function Header({
   const accountHref = authState === 'authenticated' ? '/profile' : '/login?next=%2Fprofile'
   const favoritesHref =
     authState === 'authenticated' ? '/profile?tab=favorites' : '/login?next=%2Fprofile%3Ftab%3Dfavorites'
-  const cartHref =
-    authState === 'authenticated' ? '/profile?tab=orders' : '/login?next=%2Fprofile%3Ftab%3Dorders'
+  const cartHref = '/cart'
   const sellHref = authState === 'authenticated' ? '/sell' : '/login?next=%2Fsell'
 
   return (
@@ -245,11 +246,11 @@ export default function Header({
             <Link href={cartHref} className="deba-action">
               <span className="deba-action-icon">
                 <ShoppingCart size={19} />
-                <em>{badge(cartCount)}</em>
+                <em>{badge(cart.hydrated ? cart.items.reduce((sum, item) => sum + item.quantity, 0) : cartCount)}</em>
               </span>
               <span className="deba-action-text">
-                <small>طلباتك</small>
-                <strong>حساب الطلبات</strong>
+                <small>مشترياتك</small>
+                <strong>السلة</strong>
               </span>
             </Link>
 
