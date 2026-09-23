@@ -3,7 +3,6 @@
 import {
   Bell,
   CheckCircle2,
-  ChevronDown,
   ExternalLink,
   Eye,
   Heart,
@@ -24,7 +23,7 @@ import {
   Sun,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import EgyptLocationPicker from '@/components/EgyptLocationPicker'
 import DebaLogo from '@/components/DebaLogo'
@@ -315,7 +314,6 @@ export default function AccountDashboard({ account, initialSection }: Props) {
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
   const [status, setStatus] = useState('')
-  const themeToggleRef = useRef<HTMLButtonElement | null>(null)
 
   const notifications = account.notifications || []
   const unreadNotifications = notifications.filter((item) => !item.readAt).length
@@ -468,7 +466,7 @@ export default function AccountDashboard({ account, initialSection }: Props) {
                 <Bell size={20} />
                 {unreadNotifications > 0 ? <span className="notification-dot" /> : null}
               </button>
-              <button ref={themeToggleRef} type="button" className="theme-toggle" title="تبديل الوضع" onClick={toggleTheme}>
+              <button type="button" className="theme-toggle" title="تبديل الوضع" onClick={toggleTheme}>
                 {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
               </button>
             </div>
