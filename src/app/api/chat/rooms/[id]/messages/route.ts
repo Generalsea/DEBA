@@ -66,14 +66,20 @@ export async function POST(request: Request, context: Context) {
       return NextResponse.json({ error: 'نوع الرسالة غير مدعوم.' }, { status: 400 })
     }
 
-    const { data, error } = await supabase
+    const riskFlags = [
+      /(?:01|\+?20)\d[\d\s-]{8,}/.test(message) ? 'phone' : null,
+      /[\w.+-]+@[\w-]+\.[\w.-]+/.test(message) ? 'email' : null,
+      /https?:\/\//i.test(message) ? 'url' : null,
+    ].filter(Boolean)
+
+    const { data: data, error } = await supabase
       .from('messages')
       .insert({
         room_id: roomId,
         sender_id: userData.user.id,
         message_type: messageType,
         body: message,
-        metadata: {},
+        metadata: { risk_flags: riskFlags },
       })
       .select('id,room_id,sender_id,message_type,body,metadata,created_at')
       .single()
@@ -88,7 +94,31 @@ export async function POST(request: Request, context: Context) {
       .update({ updated_at: new Date().toISOString() })
       .eq('id', roomId)
 
-    return NextResponse.json({ message: data }, { status: 201 })
+    try {
+      const forwardedFor = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || ''
+      const clientIp = forwardedFor.split(',')[0]?.trim() || null
+      const { data: privateProfile } = await supabase
+        .from('profile_private')
+        .select('phone')
+        .eq('user_id', userData.user.id)
+        .maybeSingle()
+      await supabase.from('chat_security_events').insert({
+        room_id: roomId,
+        message_id: data?.id || null,
+        user_id: userData.user.id,
+        ip_address: clientIp,
+        mac_address: null,
+        email_snapshot: userData.user.email || null,
+        phone_snapshot: privateProfile?.phone || null,
+        user_agent: request.headers.get('user-agent'),
+        accept_language: request.headers.get('accept-language'),
+        metadata: { risk_flags: riskFlags },
+      })
+    } catch (auditError) {
+      console.error('DEBA chat security audit failed', auditError)
+    }
+
+    return NextResponse.json({ message: data, riskFlags }, { status: 201 })
   } catch (error) {
     console.error('DEBA messages POST failed', error)
     return NextResponse.json({ error: 'تعذر إرسال الرسالة.' }, { status: 500 })
