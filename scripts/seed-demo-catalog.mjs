@@ -302,7 +302,7 @@ async function loadDefinitions() {
   return data
 }
 
-async function ensureProduct(seed, category, definitions)
+async function ensureProduct(seed, category, definitions) {
   const slug = slugify(seed.title)
   const cityText = seed.city
   const description =
