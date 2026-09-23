@@ -9591,3 +9591,22 @@ html[data-theme="dark"] .brand-side {
     display: grid;
   }
 }
+
+.deba-store-avatar {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--deba-border);
+  border-radius: 16px;
+  background: var(--deba-brand-soft);
+  color: var(--deba-brand);
+  font-size: 21px;
+  font-weight: 900;
+}
+.deba-store-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.deba-store-hero > div > div > h1 { margin: 0; }
+.deba-store-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.deba-store-inventory { margin-top: 22px; }
