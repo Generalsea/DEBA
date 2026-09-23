@@ -658,6 +658,159 @@
   ];
   let currentTab = 'all';
 
+  window.DEBAComms = window.DEBAComms || {};
+  window.DEBAComms.setChats = function(nextChats) {
+    chats.splice(0, chats.length, ...nextChats);
+    chats.forEach((chat, index) => {
+      chat.active = Boolean(chat.active) || (index === 0 && !chats.some(c => c.active));
+    });
+    renderChatList();
+  };
+
+  window.DEBAComms.setRoom = function(room) {
+    if (!room) return;
+    const product = room.product || {};
+    const person = room.counterparty || {};
+    const title = product.title || 'شليور لاسلكي 18V';
+    const numericPrice = Number(product.price);
+    const price = Number.isFinite(numericPrice)
+      ? new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(numericPrice)
+      : '180';
+    const currency = product.currency && product.currency !== 'EGP' ? product.currency : 'جنيه';
+    const displayPrice = price + ' ' + currency;
+    const location = product.city || product.governorate || 'القاهرة، القاهرة';
+
+    document.querySelectorAll('.listing-title').forEach(node => node.textContent = title);
+    document.querySelectorAll('.listing-price').forEach(node => node.textContent = '— ' + displayPrice);
+
+    const productTitle = document.querySelector('.product-title');
+    if (productTitle) productTitle.textContent = title;
+
+    const productPrice = document.querySelector('.product-price');
+    if (productPrice) productPrice.innerHTML = price + ' <span class="currency">' + currency + '</span>';
+
+    const meta = document.querySelector('.product-meta');
+    if (meta) {
+      meta.innerHTML =
+        '<span>' + (product.categoryName || 'أدوات ومعدات') + '</span>' +
+        '<span class="dot"></span>' +
+        '<span>' + location + '</span>' +
+        '<span class="dot"></span>' +
+        '<span>' + (product.conditionGrade || 'مستعمل · حالة ممتازة') + '</span>';
+    }
+
+    document.querySelectorAll('.product-thumb img').forEach(image => {
+      if (product.imageUrl) image.src = product.imageUrl;
+    });
+
+    const sellerName = person.display_name || person.username || 'songtone1';
+    const sellerNameNode = document.querySelector('.seller-name');
+    if (sellerNameNode) {
+      const verified = sellerNameNode.querySelector('svg');
+      sellerNameNode.textContent = sellerName;
+      if (verified) sellerNameNode.appendChild(verified);
+    }
+
+    const sellerAvatar = document.querySelector('.seller-avatar-sm');
+    if (sellerAvatar) {
+      sellerAvatar.style.background = 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)';
+      if (person.avatar_url) {
+        let image = sellerAvatar.querySelector('img');
+        if (!image) {
+          image = document.createElement('img');
+          sellerAvatar.prepend(image);
+        }
+        image.src = person.avatar_url;
+        image.alt = '';
+      }
+    }
+
+    const locationNode = document.querySelector('.location-badge span');
+    if (locationNode) locationNode.textContent = 'التسوق في مصر · ' + location;
+  };
+
+  window.DEBAComms.renderMessages = function(items, currentUserId) {
+    const area = document.getElementById('messagesArea');
+    if (!area) return;
+
+    area.innerHTML = '';
+    const divider = document.createElement('div');
+    divider.className = 'date-divider';
+    const label = document.createElement('div');
+    label.className = 'date-divider-label';
+    label.textContent = items.length
+      ? 'اليوم · ' + new Intl.DateTimeFormat('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(items[0].created_at))
+      : 'اليوم';
+    divider.appendChild(label);
+    area.appendChild(divider);
+
+    if (!items.length) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'padding:32px 16px;text-align:center;color:var(--text-tertiary);';
+      empty.innerHTML = '<div style="font-size:32px;margin-bottom:8px;">💬</div><div style="font-size:13px;font-weight:600;margin-bottom:4px;">لا توجد رسائل بعد</div><div style="font-size:11.5px;">اكتب أول رسالة لبدء التفاوض داخل DEBA.</div>';
+      area.appendChild(empty);
+      return;
+    }
+
+    items.forEach(message => {
+      const mine = Boolean(currentUserId && message.sender_id === currentUserId);
+      const row = document.createElement('div');
+      row.className = 'message ' + (mine ? 'sent' : 'received');
+      row.dataset.messageId = message.id;
+
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.textContent = mine ? 'S' : 'أ';
+
+      const content = document.createElement('div');
+      content.className = 'message-content';
+
+      if (message.message_type === 'offer' && message.metadata && typeof message.metadata === 'object') {
+        const offer = document.createElement('div');
+        offer.className = 'offer-card';
+        const amount = message.metadata.amount || message.metadata.price || '—';
+        const note = message.metadata.note || message.body || 'عرض سعر مرتبط بالمحادثة';
+        offer.innerHTML =
+          '<div class="offer-header"><span>عرض سعر</span></div>' +
+          '<div class="offer-amount">' + String(amount) + ' جنيه</div>' +
+          '<div class="offer-note"></div>';
+        const noteNode = offer.querySelector('.offer-note');
+        if (noteNode) noteNode.textContent = String(note);
+        content.appendChild(offer);
+      } else {
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        bubble.textContent = message.body || '';
+        content.appendChild(bubble);
+      }
+
+      const meta = document.createElement('div');
+      meta.className = 'message-meta';
+      const time = document.createElement('span');
+      time.textContent = new Intl.DateTimeFormat('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(message.created_at));
+      meta.appendChild(time);
+
+      if (mine) {
+        const receipt = document.createElement('span');
+        receipt.className = 'read-receipt';
+        receipt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline><polyline points="16 6 7 17 2 12" transform="translate(4, 0)"></polyline></svg>';
+        meta.appendChild(receipt);
+      }
+
+      content.appendChild(meta);
+      row.appendChild(avatar);
+      row.appendChild(content);
+      area.appendChild(row);
+    });
+
+    const typing = document.createElement('div');
+    typing.className = 'message received';
+    typing.id = 'typingMsg';
+    typing.innerHTML = '<div class="message-avatar">أ</div><div class="message-content"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
+    area.appendChild(typing);
+    area.scrollTop = area.scrollHeight;
+  };
+
   function renderChatList() {
     const list = document.getElementById('chatList');
     const search = document.getElementById('searchInput').value.toLowerCase();
@@ -673,7 +826,7 @@
     }
 
     list.innerHTML = filtered.map(c => `
-      <div class="chat-item ${c.active ? 'active' : ''} ${c.unread > 0 ? 'unread' : ''}" onclick="openChat(${c.id})">
+      <div class="chat-item ${c.active ? 'active' : ''} ${c.unread > 0 ? 'unread' : ''}" onclick="openChat(${JSON.stringify(c.id)})">
         <div class="chat-item-avatar ${c.online ? 'online' : ''}" style="background: ${c.gradient}">${c.avatar}</div>
         <div class="chat-item-info">
           <div class="chat-item-top"><div class="chat-item-name">${c.name} ${c.verified ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="#3B82F6"><path d="M12 2L14.09 4.26L17 3.27L17.74 6.26L20.73 7L19.74 9.91L22 12L19.74 14.09L20.73 17.74L17.74 17L17 20.73L14.09 19.74L12 22L9.91 19.74L7 20.73L6.26 17.74L3.27 17L4.26 14.09L2 12L4.26 9.91L3.27 7L6.26 6.26L7 3.27L9.91 4.26L12 2Z"/><path d="M10 12L11.5 13.5L14 10" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</div><div class="chat-item-time">${c.lastTime}</div></div>
@@ -685,7 +838,10 @@
   }
 
   function openChat(id) {
-    const chat = chats.find(c => c.id === id);
+    if (typeof window.DEBAComms.onOpenChat === 'function') {
+      return window.DEBAComms.onOpenChat(String(id));
+    }
+    const chat = chats.find(c => String(c.id) === String(id));
     if (!chat) return;
     chats.forEach(c => c.active = false);
     chat.active = true;
@@ -720,6 +876,9 @@
   });
 
   function handleSend() {
+    if (typeof window.DEBAComms.onSend === 'function') {
+      return window.DEBAComms.onSend();
+    }
     const text = input.value.trim();
     if (!text) return;
     const area = document.getElementById('messagesArea');
@@ -750,6 +909,9 @@
   }
 
   function sendQuick(text) {
+    if (typeof window.DEBAComms.onQuick === 'function') {
+      return window.DEBAComms.onQuick(text);
+    }
     input.value = text;
     input.focus();
     handleSend();
@@ -784,6 +946,9 @@
   }
 
   function refreshChats() {
+    if (typeof window.DEBAComms.onRefresh === 'function') {
+      return window.DEBAComms.onRefresh();
+    }
     showToast('🔄 تم تحديث المحادثات');
     renderChatList();
   }
