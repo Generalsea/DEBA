@@ -851,7 +851,7 @@ export default async function HomePage({
           />
         ) : (
           <>
-            <Hero products={data.products.slice(0, 3)} data={data} />
+            <Hero products={data.products} data={data} />
             <CategoryGrid categories={presentationCategories} />
 
             {departmentSections.map((section) => (
@@ -902,6 +902,7 @@ export default async function HomePage({
               <h3>الحساب والمساعدة</h3>
               <Link href="/profile">حسابي</Link>
               <Link href="/profile?tab=favorites">المفضلة</Link>
+              <Link href="/chat">المحادثات</Link>
               <Link href="/support">مركز المساعدة</Link>
             </div>
           </div>
