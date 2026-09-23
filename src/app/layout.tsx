@@ -15,6 +15,20 @@ export const metadata: Metadata = {
   },
 }
 
+const themeBootstrap = `
+try {
+  const saved = localStorage.getItem('deba-theme')
+  const theme =
+    saved === 'light' || saved === 'dark'
+      ? saved
+      : window.matchMedia('(prefers-color-scheme: light)').matches
+        ? 'light'
+        : 'dark'
+  document.documentElement.dataset.theme = theme
+  document.documentElement.style.colorScheme = theme
+} catch {}
+`
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -39,9 +53,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
           rel="stylesheet"
         />
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
