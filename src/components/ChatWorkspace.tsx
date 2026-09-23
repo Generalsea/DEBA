@@ -96,15 +96,6 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
         }
 
         if (active) setCurrentUserId(id)
-        let data = await loadRooms()
-        if (!active) return
-
-        const url = new URL(window.location.href)
-        const preferred = url.searchParams.get('room')
-        if (preferred && data.some((room) => room.id === preferred)) {
-          await openRoom(preferred)
-          return
-        }
 
         if (initialProduct) {
           const response = await fetch('/api/chat/rooms', {
@@ -116,10 +107,19 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
           if (!response.ok || !payload.room?.room_id) {
             throw new Error(payload.error || 'تعذر فتح المحادثة.')
           }
-          data = await loadRooms()
           if (!active) return
           await openRoom(payload.room.room_id)
-          void data
+          void loadRooms()
+          return
+        }
+
+        const data = await loadRooms()
+        if (!active) return
+
+        const url = new URL(window.location.href)
+        const preferred = url.searchParams.get('room')
+        if (preferred && data.some((room) => room.id === preferred)) {
+          await openRoom(preferred)
           return
         }
 
@@ -307,9 +307,26 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
           <div className="deba-chat-welcome">
             <div className="deba-chat-welcome-mark"><MessageCircle size={31} /></div>
             <span>DEBA COMMUNICATIONS</span>
-            <h2>التواصل جزء من الصفقة</h2>
-            <p>غرفة محادثة مرتبطة بالسلعة، مع سياق المنتج، تحديثات سريعة، وسجل أمان لمساعدة المنصة في اكتشاف السلوك المشبوه.</p>
-            <Link href="/" className="deba-profile-primary-action">استكشف السلع <ArrowLeft size={16} /></Link>
+            <h2>{error ? 'تعذر فتح غرفة المحادثة' : 'التواصل جزء من الصفقة'}</h2>
+            <p>
+              {error
+                ? 'لم نتمكن من تجهيز غرفة المحادثة لهذا الإعلان. تفاصيل الخطأ أدناه، ويمكنك إعادة المحاولة مباشرة.'
+                : 'غرفة محادثة مرتبطة بالسلعة، مع سياق المنتج، تحديثات سريعة، وسجل أمان لمساعدة المنصة في اكتشاف السلوك المشبوه.'}
+            </p>
+            {error ? (
+              <>
+                <div className="deba-chat-error" role="alert">{error}</div>
+                <button
+                  type="button"
+                  className="deba-profile-primary-action"
+                  onClick={() => window.location.reload()}
+                >
+                  إعادة المحاولة
+                </button>
+              </>
+            ) : (
+              <Link href="/" className="deba-profile-primary-action">استكشف السلع <ArrowLeft size={16} /></Link>
+            )}
           </div>
         )}
       </main>
