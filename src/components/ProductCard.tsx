@@ -199,11 +199,13 @@ export default function ProductCard({ item, priority = false }: ProductCardProps
           <div className="deba-product-seller">
             <div className="deba-product-seller-avatar">
               {item.sellerAvatar ? (
-                <Image
+                <img
                   src={item.sellerAvatar}
                   alt=""
                   width={28}
                   height={28}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
                 />
               ) : (
                 (sellerName.charAt(0) || 'D').toUpperCase()
