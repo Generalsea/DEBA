@@ -22,7 +22,17 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('DEBA chat room creation failed', error)
-      return NextResponse.json({ error: 'تعذر فتح المحادثة.' }, { status: 400 })
+      const message = error.message || ''
+      if (message.includes('Cannot open chat with yourself')) {
+        return NextResponse.json({ error: 'لا يمكنك بدء محادثة مع نفسك.' }, { status: 400 })
+      }
+      if (message.includes('Product is not available')) {
+        return NextResponse.json({ error: 'هذا الإعلان لم يعد متاحًا للمحادثة.' }, { status: 404 })
+      }
+      if (message.includes('Authenticated buyer is required')) {
+        return NextResponse.json({ error: 'يجب تسجيل الدخول لبدء المحادثة.' }, { status: 401 })
+      }
+      return NextResponse.json({ error: 'تعذر فتح المحادثة الآن.' }, { status: 400 })
     }
 
     return NextResponse.json({ room: data })
