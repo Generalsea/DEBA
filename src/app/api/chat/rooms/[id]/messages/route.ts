@@ -72,7 +72,7 @@ export async function POST(request: Request, context: Context) {
       /https?:\/\//i.test(message) ? 'url' : null,
     ].filter(Boolean)
 
-    const { data: data, error } = await supabase
+    const { data, error } = await supabase
       .from('messages')
       .insert({
         room_id: roomId,
