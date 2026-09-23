@@ -16,20 +16,6 @@ export const metadata: Metadata = {
   },
 }
 
-const themeBootstrap = `
-try {
-  const saved = localStorage.getItem('deba-theme')
-  const theme =
-    saved === 'light' || saved === 'dark'
-      ? saved
-      : window.matchMedia('(prefers-color-scheme: light)').matches
-        ? 'light'
-        : 'dark'
-  document.documentElement.dataset.theme = theme
-  document.documentElement.style.colorScheme = theme
-} catch {}
-`
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -66,8 +52,8 @@ export default function RootLayout({
         {children}
         <Script
           id="deba-theme-bootstrap"
+          src="/deba-theme-bootstrap.js"
           strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: themeBootstrap }}
         />
       </body>
     </html>
