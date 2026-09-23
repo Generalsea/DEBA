@@ -31,8 +31,30 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Verify runtime
+        run: |
+          node --version
+          npm --version
+
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            echo "package-lock.json is not committed yet; using npm install temporarily."
+            npm install --no-audit --no-fund
+          fi
+
+      - name: Check lockfile stability
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then
+            git diff --exit-code -- package-lock.json || {
+              echo "package-lock.json changed during CI. Commit the generated lockfile with the project."
+              exit 1
+            }
+          fi
 
       - name: Type-check
         run: npm run typecheck
