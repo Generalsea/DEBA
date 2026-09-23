@@ -11268,6 +11268,9 @@ html[data-theme="dark"] .deba-classified-shell {
 .deba-account-dashboard .sidebar-logo > a { display: inline-flex; text-decoration: none; }
 .deba-account-dashboard .sidebar-logo .badge { font-size: 10px; background: var(--primary-bg); color: var(--primary); padding: 2px 8px; border-radius: var(--radius-full); font-weight: 600; }
 .deba-account-dashboard .deba-logo-lockup { display: inline-flex; align-items: center; gap: 8px; color: var(--primary); }
+.deba-logo-image { display:block; width:128px; height:auto; max-width:100%; object-fit:contain; }
+.deba-logo-lockup.is-compact .deba-logo-image { width:112px; }
+
 .deba-account-dashboard .deba-logo-mark-svg { width: 31px; height: 31px; flex: 0 0 auto; }
 .deba-account-dashboard .deba-logo-wordmark { font-size: 24px; letter-spacing: .04em; font-weight: 900; line-height: 1; }
 .deba-account-dashboard .deba-logo-lockup.is-compact .deba-logo-wordmark { font-size: 21px; }
