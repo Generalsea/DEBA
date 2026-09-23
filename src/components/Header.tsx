@@ -2,6 +2,7 @@
 
 import {
   ChevronDown,
+  ClipboardList,
   Heart,
   LoaderCircle,
   MapPin,
@@ -252,6 +253,16 @@ export default function Header({
                       : 'مرحبًا'}
                   </small>
                   <strong>حسابي</strong>
+                </span>
+              </Link>
+
+              <Link href="/profile?tab=orders" className="deba-action">
+                <span className="deba-action-icon">
+                  <ClipboardList size={19} />
+                </span>
+                <span className="deba-action-text">
+                  <small>متابعتك</small>
+                  <strong>الطلبات</strong>
                 </span>
               </Link>
 
