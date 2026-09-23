@@ -71,13 +71,27 @@ export async function GET(request: Request) {
 
     const productMap = new Map((products || []).map((product) => [product.id, product]))
     const participantMap = new Map((participants || []).map((row) => [row.room_id, row]))
+    const { data: roomPeople } = await supabase
+      .from('chat_participants')
+      .select('room_id,user_id')
+      .in('room_id', roomIds)
+    const peopleIds = Array.from(new Set((roomPeople || []).map((row) => row.user_id)))
+    const { data: profiles } = peopleIds.length
+      ? await supabase.from('profiles').select('id,display_name,username,avatar_url,account_type').in('id', peopleIds)
+      : { data: [] as Array<{ id: string; display_name: string; username: string | null; avatar_url: string | null; account_type: 'buyer' | 'seller' }> }
+    const profileMap = new Map((profiles || []).map((profile) => [profile.id, profile]))
+    const userId = userData.user.id
 
     return NextResponse.json({
-      rooms: (rooms || []).map((room) => ({
-        ...room,
-        product: room.product_id ? productMap.get(room.product_id) || null : null,
-        participant: participantMap.get(room.id) || null,
-      })),
+      rooms: (rooms || []).map((room) => {
+        const counterpartId = (roomPeople || []).find((person) => person.room_id === room.id && person.user_id !== userId)?.user_id
+        return {
+          ...room,
+          product: room.product_id ? productMap.get(room.product_id) || null : null,
+          participant: participantMap.get(room.id) || null,
+          counterparty: counterpartId ? profileMap.get(counterpartId) || null : null,
+        }
+      }),
     })
   } catch (error) {
     console.error('DEBA chat room list route failed', error)
