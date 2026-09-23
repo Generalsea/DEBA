@@ -1,20 +1,24 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import type { LucideIcon } from 'lucide-react'
 import {
+  ArrowLeft,
+  BadgeCheck,
   BookOpen,
+  Camera,
+  HeartHandshake,
   Layers3,
+  PackageCheck,
   Palette,
   Plug,
-  Shirt,
+  Search,
+  ShieldCheck,
+  ShoppingBag,
   Smartphone,
   Sofa,
-  Wrench,
-  ShieldCheck,
-  Compass,
-  PackageCheck,
+  Sparkles,
   Tag,
-  TrendingUp,
+  Truck,
+  Wrench,
 } from 'lucide-react'
 import Header from '@/components/Header'
 import ProductCard, { type ProductCardItem } from '@/components/ProductCard'
@@ -22,8 +26,8 @@ import type { HeaderPromo } from '@/components/HeaderReelsRail'
 import { createClient } from '@/utils/supabase/server'
 
 export const metadata: Metadata = {
-  title: 'DEBA | Marketplace المصري - بيع وشراء المنتجات',
-  description: 'DEBA — Marketplace مصري حديث لبيع وشراء المنتجات داخل تجربة موثوقة وشفافة.',
+  title: 'DEBA | Marketplace مصري حديث لبيع وشراء المنتجات',
+  description: 'اكتشف المنتجات المنشورة فعليًا على DEBA، وقارن التفاصيل والسعر والحالة، أو أضف ما لا تحتاجه للبيع.',
 }
 
 const BUCKET = 'deba-product-media'
@@ -95,14 +99,14 @@ const CONDITION_LABELS: Record<string, string> = {
   for_parts: 'للقطع / الإصلاح',
 }
 
-const CATEGORY_PRESENTATION: { slug: string; icon: LucideIcon; label: string }[] = [
+const CATEGORY_PRESENTATION: { slug: string; icon: typeof Smartphone; label: string }[] = [
   { slug: 'electronics', icon: Smartphone, label: 'إلكترونيات' },
   { slug: 'furniture-home', icon: Sofa, label: 'أثاث' },
   { slug: 'home-appliances', icon: Plug, label: 'أجهزة منزلية' },
-  { slug: 'fashion', icon: Shirt, label: 'ملابس' },
-  { slug: 'books-education', icon: BookOpen, label: 'كتب' },
-  { slug: 'tools-equipment', icon: Wrench, label: 'أدوات' },
-  { slug: 'collectibles-antiques', icon: Palette, label: 'تحف' },
+  { slug: 'fashion', icon: Tag, label: 'أزياء' },
+  { slug: 'books-education', icon: BookOpen, label: 'كتب وتعليم' },
+  { slug: 'tools-equipment', icon: Wrench, label: 'أدوات ومعدات' },
+  { slug: 'collectibles-antiques', icon: Palette, label: 'تحف ومقتنيات' },
   { slug: 'other', icon: Layers3, label: 'أخرى' },
 ]
 
@@ -137,6 +141,7 @@ function normalizePrice(value: number | string | null) {
 function getImageUrl(storagePath: string | null) {
   if (!storagePath) return null
   if (/^https?:\/\//i.test(storagePath)) return storagePath
+
   return (
     'https://gkwpjtbrecoesxyoybto.supabase.co/storage/v1/object/public/' +
     BUCKET +
@@ -150,7 +155,7 @@ function isSafeMediaUrl(value: string) {
 }
 
 function isSafeTargetUrl(value: string) {
-  return isSafeMediaUrl(value) || value.startsWith('#')
+  return isSafeMediaUrl(value)
 }
 
 async function loadHomeData(filters: SearchFilters) {
@@ -182,22 +187,10 @@ async function loadHomeData(filters: SearchFilters) {
     .limit(PRODUCT_LIMIT)
 
   if (categoryId) productQuery = productQuery.eq('category_id', categoryId)
-
-  if (filters.minPrice !== undefined) {
-    productQuery = productQuery.gte('price', filters.minPrice)
-  }
-
-  if (filters.maxPrice !== undefined) {
-    productQuery = productQuery.lte('price', filters.maxPrice)
-  }
-
-  if (filters.condition) {
-    productQuery = productQuery.eq('condition_grade', filters.condition)
-  }
-
-  if (filters.governorate) {
-    productQuery = productQuery.ilike('governorate', filters.governorate)
-  }
+  if (filters.minPrice !== undefined) productQuery = productQuery.gte('price', filters.minPrice)
+  if (filters.maxPrice !== undefined) productQuery = productQuery.lte('price', filters.maxPrice)
+  if (filters.condition) productQuery = productQuery.eq('condition_grade', filters.condition)
+  if (filters.governorate) productQuery = productQuery.ilike('governorate', filters.governorate)
 
   if (filters.sort === 'price_low') {
     productQuery = productQuery.order('price', { ascending: true, nullsFirst: false })
@@ -289,6 +282,7 @@ async function loadHomeData(filters: SearchFilters) {
     if (row.media_type !== 'image' && row.media_type !== 'video') return []
     if (!row.media_url || !row.target_url || !row.title) return []
     if (!isSafeMediaUrl(row.media_url) || !isSafeTargetUrl(row.target_url)) return []
+
     return [{
       id: row.id,
       title: row.title,
@@ -314,6 +308,46 @@ async function loadHomeData(filters: SearchFilters) {
       sellers: sellerCountResponse.count || 0,
     },
   }
+}
+
+function ProductShowcase({
+  product,
+  imageUrl,
+  imageAlt,
+}: {
+  product: ProductRow
+  imageUrl: string | null
+  imageAlt: string
+}) {
+  return (
+    <Link
+      href={'/products/' + encodeURIComponent(product.slug)}
+      className="fm-showcase-card"
+      aria-label={'عرض ' + product.title}
+    >
+      <div className="fm-showcase-media">
+        {imageUrl ? (
+          <img src={imageUrl} alt={imageAlt} loading="lazy" />
+        ) : (
+          <div className="fm-showcase-placeholder">
+            <ShoppingBag size={30} aria-hidden="true" />
+          </div>
+        )}
+      </div>
+      <div className="fm-showcase-body">
+        <strong className="fm-showcase-title">{product.title}</strong>
+        <span className="fm-showcase-price">
+          {normalizePrice(product.price) !== null
+            ? new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(normalizePrice(product.price) as number) + ' ' + (product.currency || 'EGP')
+            : 'السعر عند التواصل'}
+        </span>
+        <span className="fm-showcase-meta">
+          <PackageCheck size={13} aria-hidden="true" />
+          {product.condition_grade ? CONDITION_LABELS[product.condition_grade] || 'حالة موضحة' : 'حالة غير محددة'}
+        </span>
+      </div>
+    </Link>
+  )
 }
 
 export default async function HomePage({
@@ -368,8 +402,23 @@ export default async function HomePage({
     },
   }))
 
+  const heroProducts = data.products.slice(0, 3)
+  const hasResultsFilter = Boolean(
+    q ||
+      category ||
+      condition ||
+      governorate ||
+      minPrice !== null ||
+      maxPrice !== null ||
+      safeSort !== 'newest',
+  )
+
   return (
-    <>
+    <div className="deba-future-home">
+      <div className="fm-announcement">
+        <span>تجربة DEBA الجديدة: اكتشف، قارن، واشترِ أو أضف ما تملك في سوق واحد.</span>
+      </div>
+
       <Header
         categories={presentationCategories.map((item) => ({
           id: item.row.id,
@@ -381,252 +430,385 @@ export default async function HomePage({
         promotions={data.headerAds}
       />
 
-      <section className="hero fade-in">
-        <div className="hero-content">
-          <span className="section-eyebrow">DEBA MARKETPLACE</span>
-          <h1>Marketplace مصري لبيع وشراء المنتجات</h1>
-          <p>اكتشف المنتجات، بع ما تملك، وتسوق عبر تجربة DEBA الحديثة</p>
-          <Link
-            href={category || q ? '/#featured' : '#featured'}
-            className="header-btn btn-primary"
-            style={{ fontSize: '1.1rem', padding: '14px 32px' }}
-          >
-            ابدأ التسوق الآن
-          </Link>
+      <main>
+        <section className="fm-hero">
+          <div className="fm-shell">
+            <div className="fm-hero-grid">
+              <div className="fm-hero-copy">
+                <span className="fm-eyebrow">DEBA MARKETPLACE</span>
+                <h1 className="fm-hero-title">
+                  تسوق <span className="fm-gradient">بذكاء</span>
+                  <br />
+                  بع <span className="fm-gradient">بثقة</span>
+                  <br />
+                  وعِش تجربة <span className="fm-gradient">مستقبلية</span>
+                </h1>
+                <p className="fm-hero-lead">
+                  سوق مصري حديث يجمع المنتجات المنشورة فعليًا مع تجربة بحث واضحة، تفاصيل
+                  قابلة للمقارنة، ومسارات بيع وشراء متصلة بحسابك.
+                </p>
 
-          <div className="hero-stats">
-            <div className="stat-item">
-              <div className="stat-number">{data.stats.products.toLocaleString('ar-EG')}+</div>
-              <div className="stat-label">منتج منشور</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">{data.stats.sellers.toLocaleString('ar-EG')}+</div>
-              <div className="stat-label">بائع على DEBA</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">{data.stats.members.toLocaleString('ar-EG')}+</div>
-              <div className="stat-label">عضو في المنصة</div>
+                <div className="fm-hero-actions">
+                  <Link href="#featured" className="fm-btn fm-btn-primary">
+                    <Search size={19} aria-hidden="true" />
+                    ابدأ الاستكشاف
+                  </Link>
+                  <Link href="/sell" className="fm-btn fm-btn-secondary">
+                    <Tag size={18} aria-hidden="true" />
+                    أضف إعلانك
+                  </Link>
+                </div>
+
+                <div className="fm-stats" aria-label="إحصاءات المنصة">
+                  <div className="fm-stat">
+                    <strong>{data.stats.products.toLocaleString('ar-EG')}+</strong>
+                    <span>منتج منشور</span>
+                  </div>
+                  <div className="fm-stat">
+                    <strong>{data.stats.sellers.toLocaleString('ar-EG')}+</strong>
+                    <span>بائع معلن</span>
+                  </div>
+                  <div className="fm-stat">
+                    <strong>{data.stats.members.toLocaleString('ar-EG')}+</strong>
+                    <span>عضو عام</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="fm-showcase" aria-label="منتجات من السوق">
+                <div className="fm-orb" aria-hidden="true" />
+                <div className="fm-showcase-grid">
+                  {heroProducts.map((product) => (
+                    <ProductShowcase
+                      key={product.id}
+                      product={product}
+                      imageUrl={getImageUrl(data.imageByProduct.get(product.id)?.storage_path || null)}
+                      imageAlt={data.imageByProduct.get(product.id)?.alt_text?.trim() || product.title}
+                    />
+                  ))}
+
+                  {!heroProducts.length ? (
+                    <div className="fm-showcase-empty">
+                      <ShoppingBag size={44} aria-hidden="true" />
+                      <strong>السوق يتشكل الآن</strong>
+                      <span>ستظهر المنتجات هنا تلقائيًا عند نشرها واعتمادها.</span>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="categories" id="categories">
-        <div className="section-header">
-          <h2 className="section-title">تصفح الفئات</h2>
-          <Link href="#featured" className="section-link">عرض الكل ←</Link>
-        </div>
-
-        <div className="categories-grid">
-          {presentationCategories.map((item) => (
-            <Link
-              key={item.row.id}
-              href={'/?category=' + encodeURIComponent(item.row.slug) + '#featured'}
-              className="category-card"
-            >
-              <div className="category-icon" aria-hidden="true"><item.icon size={30} /></div>
-              <div className="category-name">{item.label}</div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="deba-search-filters" aria-label="خيارات البحث المتقدم">
-        <div className="deba-search-filters-head">
-          <div>
-            <span>ADVANCED SEARCH</span>
-            <h2>صفِّ النتائج كما تريد</h2>
-          </div>
-          <span>{data.products.length.toLocaleString('ar-EG')} نتيجة ظاهرة</span>
-        </div>
-
-        <form action="/" method="get" className="deba-search-filters-form">
-          <input
-            name="minPrice"
-            type="number"
-            min="0"
-            step="1"
-            inputMode="numeric"
-            placeholder="أقل سعر"
-            defaultValue={minPrice ?? ''}
-            aria-label="أقل سعر"
-          />
-          <input
-            name="maxPrice"
-            type="number"
-            min="0"
-            step="1"
-            inputMode="numeric"
-            placeholder="أعلى سعر"
-            defaultValue={maxPrice ?? ''}
-            aria-label="أعلى سعر"
-          />
-          <select name="condition" defaultValue={condition || ''} aria-label="الحالة">
-            <option value="">كل الحالات</option>
-            {Object.entries(CONDITION_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-          <input
-            name="governorate"
-            type="text"
-            maxLength={80}
-            placeholder="المحافظة"
-            defaultValue={governorate || ''}
-            aria-label="المحافظة"
-          />
-          <select name="sort" defaultValue={safeSort} aria-label="ترتيب النتائج">
-            <option value="newest">الأحدث</option>
-            <option value="price_low">السعر: من الأقل</option>
-            <option value="price_high">السعر: من الأعلى</option>
-          </select>
-          {q ? <input type="hidden" name="q" value={q} /> : null}
-          {category ? <input type="hidden" name="category" value={category} /> : null}
-          <button type="submit">تطبيق</button>
-          {q || category || condition || governorate || minPrice !== null || maxPrice !== null || safeSort !== 'newest' ? (
-            <Link href="/#featured" className="deba-search-filter-reset">مسح الفلاتر</Link>
-          ) : null}
-        </form>
-      </section>
-
-      <section className="products" id="featured">
-        <div className="section-header">
-          <h2 className="section-title">منتجات مميزة</h2>
-          <Link href="/?type=sale#featured" className="section-link">عرض المزيد ←</Link>
-        </div>
+        </section>
 
         {data.products.length ? (
-          <div className="products-grid">
-            {data.products.slice(0, PRODUCT_LIMIT).map((product, index) => {
-              const image = data.imageByProduct.get(product.id)
-              const seller = product.owner_id ? data.profileById.get(product.owner_id) : null
-              const item: ProductCardItem = {
-                id: product.id,
-                slug: product.slug,
-                title: product.title,
-                description: product.description,
-                listingType: 'sale',
-                price: normalizePrice(product.price),
-                currency: product.currency || 'EGP',
-                conditionGrade: product.condition_grade,
-                city: product.city,
-                governorate: product.governorate,
-                categoryName:
-                  data.categories.find((categoryRow) => categoryRow.id === product.category_id)?.name_ar || null,
-                imageUrl: getImageUrl(image?.storage_path || null),
-                imageAlt: image?.alt_text?.trim() || product.title,
-                sellerId: product.owner_id,
-                sellerName: seller?.display_name || seller?.username || 'عضو DEBA',
-                sellerAvatar:
-                  seller?.avatar_url && /^https?:\/\//i.test(seller.avatar_url)
-                    ? seller.avatar_url
-                    : null,
-                sellerVerified: false,
-                quantityAvailable: product.quantity,
-                isLowStock: product.quantity > 0 && product.quantity <= 3,
-                deliveryMethod: product.delivery_method,
-              }
+          <section className="fm-section fm-section-muted" id="deals">
+            <div className="fm-shell">
+              <div className="fm-section-heading">
+                <div className="fm-heading-copy">
+                  <span className="fm-section-kicker">QUICK DISCOVERY</span>
+                  <h2 className="fm-section-title">اختيارات سريعة من السوق</h2>
+                  <p className="fm-section-subtitle">
+                    منتجات منشورة فعليًا وفق ترتيب العرض الحالي — بدون تقييمات أو نسب خصم مصطنعة.
+                  </p>
+                </div>
+                <Link href="#featured" className="fm-section-link">
+                  عرض كل النتائج <ArrowLeft size={15} aria-hidden="true" />
+                </Link>
+              </div>
 
-              return (
-                <ProductCard
-                  key={product.id}
-                  item={item}
-                  priority={index < 4}
-                />
-              )
-            })}
-          </div>
-        ) : (
-          <div className="empty-state" style={{ padding: '40px', textAlign: 'center' }}>
-            <div className="empty-icon">
-              <PackageCheck size={42} aria-hidden="true" />
-            </div>
-            <h3>لا توجد منتجات منشورة حاليًا</h3>
-            <p>
-              {q
-                ? 'لم نجد سلعًا منشورة تطابق بحثك.'
-                : 'ستظهر المنتجات هنا تلقائيًا بعد النشر والمراجعة.'}
-            </p>
-            <Link href="/sell" className="header-btn btn-primary" style={{ marginTop: 16 }}>
-              أضف أول إعلان
-            </Link>
-          </div>
-        )}
-      </section>
+              <div className="fm-deal-banner">
+                <div className="fm-deal-banner-copy">
+                  <span className="fm-deal-icon">
+                    <Sparkles size={21} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <strong>نركز على ما يستحق أن تراه</strong>
+                    <span>التصفية والترتيب والبحث مرتبطة مباشرة بكتالوج DEBA المنشور.</span>
+                  </div>
+                </div>
+                <span className="fm-privacy-note">لا ندّعي وجود عرض أو ندرة ما لم توجد في البيانات.</span>
+              </div>
 
-      <section className="community-section" id="community">
-        <div className="community-content">
-          <div className="community-info">
-            <span className="section-eyebrow" style={{ color: 'white' }}>DEBA COMMUNITY</span>
-            <h2>سوق واحد. قيمة أكبر.</h2>
-            <p>
-              في DEBA تتحول المنتجات غير المستخدمة إلى فرص جديدة. اكتشف منتجات واضحة التفاصيل،
-              تواصل مع البائعين، وأدر مشترياتك وإعلاناتك من حساب واحد.
-            </p>
+              <div className="products-grid">
+                {data.products.slice(0, 4).map((product, index) => {
+                  const image = data.imageByProduct.get(product.id)
+                  const seller = product.owner_id ? data.profileById.get(product.owner_id) : null
 
-            <Link
-              href="#featured"
-              className="header-btn"
-              style={{ background: 'white', color: 'var(--accent)', fontSize: '1.1rem', padding: '14px 32px' }}
-            >
-              استكشف السوق
-            </Link>
-          </div>
+                  const item: ProductCardItem = {
+                    id: product.id,
+                    slug: product.slug,
+                    title: product.title,
+                    description: product.description,
+                    listingType: 'sale',
+                    price: normalizePrice(product.price),
+                    currency: product.currency || 'EGP',
+                    conditionGrade: product.condition_grade,
+                    city: product.city,
+                    governorate: product.governorate,
+                    categoryName:
+                      data.categories.find((categoryRow) => categoryRow.id === product.category_id)?.name_ar || null,
+                    imageUrl: getImageUrl(image?.storage_path || null),
+                    imageAlt: image?.alt_text?.trim() || product.title,
+                    sellerId: product.owner_id,
+                    sellerName: seller?.display_name || seller?.username || 'عضو DEBA',
+                    sellerAvatar:
+                      seller?.avatar_url && /^https?:\/\//i.test(seller.avatar_url)
+                        ? seller.avatar_url
+                        : null,
+                    sellerVerified: false,
+                    quantityAvailable: product.quantity,
+                    isLowStock: product.quantity > 0 && product.quantity <= 3,
+                    deliveryMethod: product.delivery_method,
+                  }
 
-          <div className="community-visual">
-            <div className="community-card">
-              <div className="community-icon"><PackageCheck size={30} aria-hidden="true" /></div>
-              <div className="community-card-info">
-                <h4>اكتشف منتجات تستحقها</h4>
-                <p>تفاصيل واضحة، أسعار محددة، وتجربة شراء مصممة لتكون بسيطة واحترافية.</p>
+                  return <ProductCard key={product.id} item={item} priority={index < 2} />
+                })}
               </div>
             </div>
-            <div className="community-card">
-              <div className="community-icon"><Tag size={30} aria-hidden="true" /></div>
-              <div className="community-card-info">
-                <h4>حوّل ما لا تحتاجه إلى قيمة</h4>
-                <p>أضف إعلانك، قدّم بيانات دقيقة، ووصل إلى مجتمع DEBA المهتم بما تعرضه.</p>
+          </section>
+        ) : null}
+
+        <section className="fm-section" id="categories">
+          <div className="fm-shell">
+            <div className="fm-section-heading">
+              <div className="fm-heading-copy">
+                <span className="fm-section-kicker">EXPLORE</span>
+                <h2 className="fm-section-title">تصفح الأقسام</h2>
+                <p className="fm-section-subtitle">ابدأ من المجال الذي تبحث فيه بدل التمرير بلا نهاية.</p>
+              </div>
+              <Link href="#featured" className="fm-section-link">
+                مشاهدة المنتجات <ArrowLeft size={15} aria-hidden="true" />
+              </Link>
+            </div>
+
+            <div className="categories-grid">
+              {presentationCategories.map((item) => (
+                <Link
+                  key={item.row.id}
+                  href={'/?category=' + encodeURIComponent(item.row.slug) + '#featured'}
+                  className="category-card"
+                >
+                  <span className="category-icon" aria-hidden="true">
+                    <item.icon size={23} />
+                  </span>
+                  <span className="category-name">{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="fm-shell" aria-label="بحث وتصفية المنتجات">
+          <div className="deba-search-filters">
+            <div className="deba-search-filters-head">
+              <div>
+                <span>SMART SEARCH</span>
+                <h2>صل لما تريده أسرع</h2>
+              </div>
+              <span>{data.products.length.toLocaleString('ar-EG')} نتيجة معروضة</span>
+            </div>
+
+            <form action="/" method="get" className="deba-search-filters-form">
+              <input
+                name="minPrice"
+                type="number"
+                min="0"
+                step="1"
+                inputMode="numeric"
+                placeholder="أقل سعر"
+                defaultValue={minPrice ?? ''}
+                aria-label="أقل سعر"
+              />
+              <input
+                name="maxPrice"
+                type="number"
+                min="0"
+                step="1"
+                inputMode="numeric"
+                placeholder="أعلى سعر"
+                defaultValue={maxPrice ?? ''}
+                aria-label="أعلى سعر"
+              />
+              <select name="condition" defaultValue={condition || ''} aria-label="حالة المنتج">
+                <option value="">كل الحالات</option>
+                {Object.entries(CONDITION_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+              <input
+                name="governorate"
+                type="text"
+                maxLength={80}
+                placeholder="المحافظة"
+                defaultValue={governorate || ''}
+                aria-label="المحافظة"
+              />
+              <select name="sort" defaultValue={safeSort} aria-label="ترتيب النتائج">
+                <option value="newest">الأحدث</option>
+                <option value="price_low">السعر: من الأقل</option>
+                <option value="price_high">السعر: من الأعلى</option>
+              </select>
+              {q ? <input type="hidden" name="q" value={q} /> : null}
+              {category ? <input type="hidden" name="category" value={category} /> : null}
+
+              <button type="submit">
+                <Search size={16} aria-hidden="true" />
+                تطبيق
+              </button>
+
+              {hasResultsFilter ? (
+                <Link href="/#featured" className="deba-search-filter-reset">
+                  مسح الفلاتر
+                </Link>
+              ) : null}
+            </form>
+          </div>
+        </section>
+
+        <section className="products fm-section" id="featured">
+          <div className="fm-shell">
+            <div className="fm-section-heading">
+              <div className="fm-heading-copy">
+                <span className="fm-section-kicker">LIVE CATALOG</span>
+                <h2 className="fm-section-title">
+                  {q ? 'نتائج البحث' : 'منتجات منشورة الآن'}
+                </h2>
+                <p className="fm-section-subtitle">
+                  {q
+                    ? 'نتائج مرتبطة بعبارة البحث الحالية ويمكن تضييقها من الفلاتر.'
+                    : 'الكتالوج يتحدث من قاعدة البيانات الفعلية للمنتجات المنشورة والمعتمدة.'}
+                </p>
+              </div>
+              <Link href="?sort=newest#featured" className="fm-section-link">
+                الأحدث أولًا <ArrowLeft size={15} aria-hidden="true" />
+              </Link>
+            </div>
+
+            {data.products.length ? (
+              <div className="products-grid">
+                {data.products.slice(0, PRODUCT_LIMIT).map((product, index) => {
+                  const image = data.imageByProduct.get(product.id)
+                  const seller = product.owner_id ? data.profileById.get(product.owner_id) : null
+
+                  const item: ProductCardItem = {
+                    id: product.id,
+                    slug: product.slug,
+                    title: product.title,
+                    description: product.description,
+                    listingType: 'sale',
+                    price: normalizePrice(product.price),
+                    currency: product.currency || 'EGP',
+                    conditionGrade: product.condition_grade,
+                    city: product.city,
+                    governorate: product.governorate,
+                    categoryName:
+                      data.categories.find((categoryRow) => categoryRow.id === product.category_id)?.name_ar || null,
+                    imageUrl: getImageUrl(image?.storage_path || null),
+                    imageAlt: image?.alt_text?.trim() || product.title,
+                    sellerId: product.owner_id,
+                    sellerName: seller?.display_name || seller?.username || 'عضو DEBA',
+                    sellerAvatar:
+                      seller?.avatar_url && /^https?:\/\//i.test(seller.avatar_url)
+                        ? seller.avatar_url
+                        : null,
+                    sellerVerified: false,
+                    quantityAvailable: product.quantity,
+                    isLowStock: product.quantity > 0 && product.quantity <= 3,
+                    deliveryMethod: product.delivery_method,
+                  }
+
+                  return <ProductCard key={product.id} item={item} priority={index < 4} />
+                })}
+              </div>
+            ) : (
+              <div className="fm-empty-state">
+                <span className="fm-empty-icon">
+                  <PackageCheck size={42} aria-hidden="true" />
+                </span>
+                <h3>لا توجد منتجات تطابق العرض الحالي</h3>
+                <p>
+                  {q
+                    ? 'جرّب تعديل عبارة البحث أو إزالة بعض الفلاتر.'
+                    : 'ستظهر المنتجات هنا تلقائيًا بعد نشرها واعتمادها.'}
+                </p>
+                <div className="fm-hero-actions">
+                  <Link href="/sell" className="fm-btn fm-btn-primary">
+                    <Tag size={17} aria-hidden="true" />
+                    أضف أول إعلان
+                  </Link>
+                  {hasResultsFilter ? (
+                    <Link href="/#featured" className="fm-btn fm-btn-secondary">
+                      مسح البحث
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="fm-trust" id="trust">
+          <div className="fm-shell">
+            <div className="fm-section-heading">
+              <div className="fm-heading-copy">
+                <span className="fm-section-kicker">WHY DEBA</span>
+                <h2 className="fm-section-title">تجربة مبنية على الوضوح</h2>
+                <p className="fm-section-subtitle">
+                  التصميم الجيد لا يضغط على المستخدم؛ بل يجعل القرار أسهل وأكثر قابلية للفهم.
+                </p>
               </div>
             </div>
-            <div className="community-card">
-              <div className="community-icon"><ShieldCheck size={30} aria-hidden="true" /></div>
-              <div className="community-card-info">
-                <h4>ثقة تبدأ من التفاصيل</h4>
-                <p>معلومات المنتج والحالة والموقع والصور جزء أساسي من تجربة المنصة.</p>
+
+            <div className="fm-trust-grid">
+              <article className="fm-trust-card">
+                <span className="fm-trust-icon"><ShieldCheck size={28} aria-hidden="true" /></span>
+                <h3>حالة نشر واضحة</h3>
+                <p>السوق العام يعتمد على حالة النشر والمراجعة بدل عرض بيانات غير معتمدة للمشتري.</p>
+              </article>
+              <article className="fm-trust-card">
+                <span className="fm-trust-icon"><BadgeCheck size={28} aria-hidden="true" /></span>
+                <h3>بيانات قابلة للفحص</h3>
+                <p>السعر والحالة والموقع والصورة الأساسية تُسحب من الإعلان الحقيقي بدل fixtures تصميمية.</p>
+              </article>
+              <article className="fm-trust-card">
+                <span className="fm-trust-icon"><Truck size={28} aria-hidden="true" /></span>
+                <h3>توصيل مفهوم</h3>
+                <p>وسيلة التوصيل تظهر حسب ما حدده البائع في الإعلان بدل وعود شحن عامة غير مرتبطة بالمنتج.</p>
+              </article>
+              <article className="fm-trust-card">
+                <span className="fm-trust-icon"><HeartHandshake size={28} aria-hidden="true" /></span>
+                <h3>تجربة بيع وشراء متصلة</h3>
+                <p>الإعلان والحساب والسلة والطلبات مبنية على مسارات التطبيق الحالية وليست واجهة منفصلة.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section className="fm-seller" id="sell">
+          <div className="fm-shell">
+            <div className="fm-seller-card">
+              <div className="fm-seller-content">
+                <span className="fm-section-kicker">FOR SELLERS</span>
+                <h2>حوّل ما لا تحتاجه إلى قيمة</h2>
+                <p>
+                  أضف إعلانًا واضحًا، ارفع الصور، حدد السعر والحالة ووسيلة التوصيل، ثم أدر
+                  الإعلان من حسابك داخل DEBA.
+                </p>
+                <div className="fm-seller-tags">
+                  <span className="fm-seller-tag"><Camera size={13} /> صور المنتج</span>
+                  <span className="fm-seller-tag"><Tag size={13} /> السعر والحالة</span>
+                  <span className="fm-seller-tag"><Truck size={13} /> وسيلة التوصيل</span>
+                  <span className="fm-seller-tag"><ShieldCheck size={13} /> مسار المراجعة</span>
+                </div>
+                <Link href="/sell" className="fm-btn fm-btn-primary">
+                  <Tag size={18} aria-hidden="true" />
+                  أضف إعلانك الآن
+                </Link>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="trust-section" id="trust">
-        <div className="section-header">
-          <h2 className="section-title">لماذا DEBA؟</h2>
-        </div>
-
-        <div className="trust-grid">
-          <div className="trust-card">
-            <div className="trust-icon"><ShieldCheck size={30} aria-hidden="true" /></div>
-            <h3>إعلانات مُراجعة</h3>
-            <p>المنتجات الظاهرة في السوق العام تمر عبر حالة نشر ومراجعة قبل عرضها.</p>
-          </div>
-          <div className="trust-card">
-            <div className="trust-icon"><Compass size={30} aria-hidden="true" /></div>
-            <h3>تجربة موحدة</h3>
-            <p>تصفح، اشترِ، أو أضف إعلانك من تجربة واحدة مصممة للسوق المصري.</p>
-          </div>
-          <div className="trust-card">
-            <div className="trust-icon"><PackageCheck size={30} aria-hidden="true" /></div>
-            <h3>بيانات المنتج واضحة</h3>
-            <p>السعر والحالة والموقع والصور المعروضة تأتي من الإعلان نفسه.</p>
-          </div>
-          <div className="trust-card">
-            <div className="trust-icon"><TrendingUp size={30} aria-hidden="true" /></div>
-            <h3>قيمة مستدامة</h3>
-            <p>نساعد المنتجات على الوصول إلى أصحابها الجدد بدل بقائها بلا استخدام.</p>
-          </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <footer className="footer">
         <div className="footer-content">
@@ -646,7 +828,7 @@ export default async function HomePage({
               <li><Link href="/sell">ابدأ البيع</Link></li>
               <li><Link href="/profile">حساب البائع</Link></li>
               <li><Link href="/profile?tab=products">إعلاناتي</Link></li>
-              <li><Link href="/profile?tab=orders">طلبات العملاء</Link></li>
+              <li><Link href="/profile?tab=orders">الطلبات</Link></li>
             </ul>
           </div>
 
@@ -656,17 +838,7 @@ export default async function HomePage({
               <li><Link href="#featured">تصفح المنتجات</Link></li>
               <li><Link href="/?type=sale#featured">السلع للبيع</Link></li>
               <li><Link href="/profile?tab=favorites">المفضلة</Link></li>
-              <li><Link href="/profile?tab=orders">طلباتي</Link></li>
-            </ul>
-          </div>
-
-          <div className="footer-section">
-            <h4>مجتمع DEBA</h4>
-            <ul>
-              <li><Link href="#featured">اكتشف المنتجات</Link></li>
-              <li><Link href="#categories">تصفح الفئات</Link></li>
-              <li><Link href="/sell">أضف إعلانك</Link></li>
-              <li><Link href="#trust">لماذا DEBA</Link></li>
+              <li><Link href="/cart">السلة</Link></li>
             </ul>
           </div>
 
@@ -675,7 +847,7 @@ export default async function HomePage({
             <ul>
               <li><Link href="/profile">حسابي</Link></li>
               <li><Link href="/profile?tab=favorites">المفضلة</Link></li>
-              <li><Link href="/profile?tab=settings">إعدادات الحساب</Link></li>
+              <li><Link href="/profile?tab=settings">الإعدادات</Link></li>
               <li><Link href="/profile?tab=orders">الطلبات</Link></li>
             </ul>
           </div>
@@ -684,9 +856,8 @@ export default async function HomePage({
             <h4>DEBA</h4>
             <ul>
               <li><Link href="/">Marketplace المصري</Link></li>
-              <li><Link href="#categories">تصفح الفئات</Link></li>
-              <li><Link href="#featured">منتجات مميزة</Link></li>
-              <li><Link href="#community">DEBA Community</Link></li>
+              <li><Link href="#community">مجتمع DEBA</Link></li>
+              <li><Link href="/support">الدعم</Link></li>
               <li><Link href="/legal">السياسات والخصوصية</Link></li>
             </ul>
           </div>
@@ -696,6 +867,6 @@ export default async function HomePage({
           <p>© {new Date().getFullYear()} DEBA. جميع الحقوق محفوظة.</p>
         </div>
       </footer>
-    </>
+    </div>
   )
 }
