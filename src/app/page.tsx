@@ -6,6 +6,7 @@ import {
   BookOpen,
   Camera,
   Car,
+  Building2,
   Heart,
   HeartHandshake,
   KeyRound,
@@ -45,6 +46,7 @@ type SearchFilters = {
   maxPrice?: number
   condition?: string
   governorate?: string
+  city?: string
   sort?: 'newest' | 'price_low' | 'price_high'
 }
 
@@ -112,6 +114,7 @@ const CATEGORY_EMOJI_BY_SLUG: Record<string, string> = {
   'books-education': '📚',
   'toys-hobbies': '🎮',
   'vehicles-parts': '🚗',
+  'real-estate': '🏡',
   'tools-equipment': '🔧',
   'collectibles-antiques': '🏺',
   'baby-kids': '🧸',
@@ -224,6 +227,10 @@ async function loadHomeData(filters: SearchFilters) {
 
   if (filters.governorate) {
     productQuery = productQuery.ilike('governorate', filters.governorate)
+  }
+
+  if (filters.city) {
+    productQuery = productQuery.ilike('city', filters.city)
   }
 
   if (filters.sort === 'price_low') {
@@ -497,6 +504,49 @@ function HeroSection({
   )
 }
 
+function RealEstateSection({ category }: { category: CategoryRow | undefined }) {
+  const propertyTypes = [
+    ['شقق وفلل', 'سكني', '🏠'],
+    ['أراضي', 'سكني وتجاري', '📐'],
+    ['محلات ومكاتب', 'تجاري وإداري', '🏢'],
+    ['شاليهات ومصايف', 'مصايف', '🌊'],
+  ] as const
+
+  return (
+    <section className="deba-classified-real-estate" id="real-estate">
+      <div className="deba-classified-container">
+        <div className="deba-classified-section-header deba-classified-section-header-with-link">
+          <div>
+            <span>DEBA REAL ESTATE</span>
+            <h2>العقارات على DEBA</h2>
+          </div>
+          {category ? (
+            <Link href="/?category=real-estate" className="deba-classified-section-link">
+              اكتشف كل العقارات <span aria-hidden="true">←</span>
+            </Link>
+          ) : null}
+        </div>
+        <div className="deba-classified-real-estate-grid">
+          {propertyTypes.map(([title, subtitle, icon]) => (
+            <Link
+              key={title}
+              href="/?category=real-estate"
+              className="deba-classified-real-estate-card"
+            >
+              <span className="deba-classified-real-estate-icon" aria-hidden="true">{icon}</span>
+              <div>
+                <strong>{title}</strong>
+                <span>{subtitle}</span>
+              </div>
+              <span className="deba-classified-real-estate-arrow" aria-hidden="true">←</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function CategoryDiscovery({ categories }: { categories: CategoryRow[] }) {
   return (
     <section className="deba-classified-category-discovery" id="categories">
@@ -749,6 +799,7 @@ export default async function HomePage({
   const category = firstParam(params.category)
   const condition = firstParam(params.condition)
   const governorate = firstParam(params.governorate)
+  const city = firstParam(params.city)
   const sortValue = firstParam(params.sort)
   const minPrice = parsePositiveNumber(firstParam(params.minPrice))
   const maxPrice = parsePositiveNumber(firstParam(params.maxPrice))
@@ -769,6 +820,7 @@ export default async function HomePage({
     category,
     condition: safeCondition,
     governorate: governorate?.trim().slice(0, 80) || undefined,
+    city: city?.trim().slice(0, 100) || undefined,
     minPrice: minPrice ?? undefined,
     maxPrice: safeMaxPrice ?? undefined,
     sort: safeSort,
@@ -779,6 +831,7 @@ export default async function HomePage({
       (category && category !== 'all') ||
       safeCondition ||
       governorate ||
+      city ||
       minPrice !== null ||
       safeMaxPrice !== null ||
       safeSort !== 'newest',
@@ -812,6 +865,7 @@ export default async function HomePage({
                   q={q}
                   category={category}
                   governorate={governorate}
+                  city={city}
                   condition={safeCondition}
                   minPrice={minPrice}
                   maxPrice={safeMaxPrice}
@@ -831,6 +885,8 @@ export default async function HomePage({
             </section>
 
             <CategoryDiscovery categories={data.categories} />
+
+            <RealEstateSection category={data.categories.find((row) => row.slug === 'real-estate')} />
 
             <ListingRail
               title="أحدث الإعلانات"
