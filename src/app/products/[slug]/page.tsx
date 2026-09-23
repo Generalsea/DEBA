@@ -477,18 +477,20 @@ export default async function ProductDetailPage({
                   </div>
                 </div>
               ) : canBuy ? (
-                {cartProduct ? <CartAddButton product={cartProduct} /> : null}
+                <div className="deba-purchase-actions">
+                  {cartProduct ? <CartAddButton product={cartProduct} /> : null}
 
-                <Link href={purchaseHref} className="deba-purchase-primary">
+                  <Link href={purchaseHref} className="deba-purchase-primary">
                   <span className="deba-purchase-primary-icon">
                     <ShoppingBag size={21} />
                   </span>
-                  <span>
-                    <strong>اشترِ الآن</strong>
-                    <small>السعر ثابت — اختر الكمية وطريقة الاستلام ثم أكد طلبك</small>
-                  </span>
-                  <ArrowLeft size={20} />
-                </Link>
+                    <span>
+                      <strong>اشترِ الآن</strong>
+                      <small>السعر ثابت — اختر الكمية وطريقة الاستلام ثم أكد طلبك</small>
+                    </span>
+                    <ArrowLeft size={20} />
+                  </Link>
+                </div>
               ) : (
                 <div className="deba-owner-notice is-muted">
                   <Package size={18} />
