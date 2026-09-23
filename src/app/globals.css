@@ -11154,3 +11154,15 @@ html[data-theme="dark"] .deba-classified-shell {
     transition-duration: .01ms !important;
   }
 }
+
+
+/* Exact 3 × 2 hero collage layout from the supplied design. */
+.deba-classified-hero-listing-1,
+.deba-classified-hero-listing-2,
+.deba-classified-hero-listing-3,
+.deba-classified-hero-listing-4,
+.deba-classified-hero-listing-5,
+.deba-classified-hero-listing-6 {
+  grid-column: auto;
+  grid-row: auto;
+}
