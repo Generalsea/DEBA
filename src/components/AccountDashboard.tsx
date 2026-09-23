@@ -9,6 +9,7 @@ import {
   Heart,
   LayoutDashboard,
   LogOut,
+  Menu,
   MapPin,
   MessageCircle,
   Moon,
@@ -369,7 +370,7 @@ export default function AccountDashboard({ account, initialSection }: Props) {
           postalCode: profile.postalCode || null,
           bio: profile.bio || null,
           isPublic: profile.isPublic,
-          accountType: 'seller',
+          accountType: account.profile.accountType,
         }),
       })
       const data = await response.json() as { error?: string }
@@ -705,7 +706,7 @@ export default function AccountDashboard({ account, initialSection }: Props) {
           const sidebar = (event.currentTarget.parentElement?.querySelector('.sidebar') as HTMLElement | null)
           sidebar?.classList.toggle('open')
         }}>
-          <ChevronDown />
+          <Menu size={24} />
         </button>
       </div>
     </div>
