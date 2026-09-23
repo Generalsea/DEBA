@@ -2,6 +2,7 @@
 
 import { Moon, Sun } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import styles from './ThemeToggle.module.css'
 
 type Theme = 'light' | 'dark'
 
@@ -29,11 +30,13 @@ export default function ThemeToggle() {
     const nextTheme: Theme = theme === 'dark' ? 'light' : 'dark'
     document.documentElement.dataset.theme = nextTheme
     document.documentElement.style.colorScheme = nextTheme
+
     try {
       window.localStorage.setItem('deba-theme', nextTheme)
     } catch {
       // Theme persistence is best-effort.
     }
+
     setTheme(nextTheme)
   }
 
@@ -42,13 +45,13 @@ export default function ThemeToggle() {
   return (
     <button
       type="button"
-      className="deba-theme-toggle"
+      className={styles.toggle}
       onClick={toggle}
       aria-label={isLight ? 'التبديل إلى الواجهة المظلمة' : 'التبديل إلى الواجهة الفاتحة'}
       title={isLight ? 'واجهة مظلمة' : 'واجهة فاتحة'}
     >
       {isLight ? <Moon size={18} aria-hidden="true" /> : <Sun size={18} aria-hidden="true" />}
-      <span>{isLight ? 'داكن' : 'فاتح'}</span>
+      <span className={styles.label}>{isLight ? 'داكن' : 'فاتح'}</span>
     </button>
   )
 }
