@@ -10,11 +10,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: deba-ci-{{ github.ref }{'}'}
+  group: deba-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
+  quality:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -29,9 +29,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+
+      - name: Type-check
+        run: npm run typecheck
 
       - name: Build
         run: npm run build

@@ -1,9 +1,18 @@
 import type { Metadata } from 'next'
 import './globals.css'
 
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'http://localhost:3000').replace(/\/$/, '')
+
 export const metadata: Metadata = {
-  title: 'DEBA | Marketplace مصري - بيع، شراء، تبرع',
-  description: 'DEBA — منصة مصرية للبيع والشراء والتبرع بالسلع غير المستخدمة.',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'DEBA | Marketplace مصري - بيع، شراء، تبرع',
+    template: '%s | DEBA',
+  },
+  description: 'DEBA — منصة مصرية للبيع والشراء والتبادل والتبرع بالسلع غير المستخدمة.',
+  alternates: {
+    canonical: '/',
+  },
 }
 
 export default function RootLayout({
@@ -11,6 +20,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'DEBA',
+    url: SITE_URL,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: SITE_URL + '/?q={search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
+  }
+
   return (
     <html lang="ar" dir="rtl">
       <head>
@@ -20,6 +41,10 @@ export default function RootLayout({
         <link
           href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap"
           rel="stylesheet"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
       <body>{children}</body>
