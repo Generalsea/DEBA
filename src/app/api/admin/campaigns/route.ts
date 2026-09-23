@@ -164,6 +164,50 @@ async function removeStoragePath(path: string | null) {
   if (error) console.error('DEBA campaign storage cleanup failed', error)
 }
 
+async function writeAdminAudit(
+  userId: string,
+  action: 'create' | 'update' | 'delete',
+  id: string,
+  beforeData: Record<string, unknown> | null,
+  afterData: Record<string, unknown> | null,
+  request: Request,
+) {
+  try {
+    const admin = createAdminClient()
+    const metadata = {
+      source: 'admin_campaigns',
+      ip_address: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
+      user_agent: request.headers.get('user-agent')?.slice(0, 500) || null,
+    }
+
+    await Promise.all([
+      admin.from('admin_logs').insert({
+        actor_user_id: userId,
+        action: 'campaign.' + action,
+        entity_type: 'header_ad_campaign',
+        entity_id: id,
+        before_data: beforeData,
+        after_data: afterData,
+        metadata,
+        ip_address: metadata.ip_address,
+        user_agent: metadata.user_agent,
+      }),
+      admin.from('audit_logs').insert({
+        actor_id: userId,
+        action: 'campaign.' + action,
+        entity_type: 'header_ad_campaign',
+        entity_id: id,
+        before_data: beforeData,
+        after_data: afterData,
+        metadata,
+      }),
+    ])
+  } catch (error) {
+    console.error('DEBA campaign audit write failed', error)
+  }
+}
+
+
 export async function GET() {
   try {
     const { user, allowed } = await requireAdmin()
@@ -235,6 +279,15 @@ export async function DELETE(request: Request) {
       console.error('DEBA campaign delete failed', error)
       return NextResponse.json({ error: 'تعذر حذف الحملة.' }, { status: 500 })
     }
+
+    await writeAdminAudit(
+      user.id,
+      'delete',
+      id,
+      campaign as unknown as Record<string, unknown>,
+      null,
+      request,
+    )
 
     await Promise.all([
       removeStoragePath(campaign.media_storage_path),
@@ -407,6 +460,15 @@ async function mutateCampaign(request: Request, id: string | null) {
       console.error('DEBA campaign create failed', error)
       return NextResponse.json({ error: 'تعذر إنشاء الحملة.' }, { status: 500 })
     }
+
+    await writeAdminAudit(
+      user.id,
+      'create',
+      data.id,
+      null,
+      data as unknown as Record<string, unknown>,
+      request,
+    )
 
     return NextResponse.json({ campaign: data }, { status: 201 })
   } catch (error) {
