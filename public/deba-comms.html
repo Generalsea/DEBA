@@ -661,10 +661,31 @@
   window.DEBAComms = window.DEBAComms || {};
   window.DEBAComms.setChats = function(nextChats) {
     chats.splice(0, chats.length, ...nextChats);
+    const hasActive = chats.some(c => c.active);
     chats.forEach((chat, index) => {
-      chat.active = Boolean(chat.active) || (index === 0 && !chats.some(c => c.active));
+      chat.active = Boolean(chat.active) || (index === 0 && !hasActive);
     });
+    const unread = chats.reduce((sum, chat) => sum + Number(chat.unread || 0), 0);
+    const unreadTab = document.querySelector('.tab[data-tab="unread"]');
+    if (unreadTab) {
+      const existing = unreadTab.querySelector('.tab-badge');
+      if (unread > 0) {
+        const badge = existing || document.createElement('span');
+        badge.className = 'tab-badge';
+        badge.textContent = String(unread);
+        if (!existing) unreadTab.appendChild(badge);
+      } else if (existing) {
+        existing.remove();
+      }
+    }
     renderChatList();
+  };
+
+  window.DEBAComms.setStats = function(stats) {
+    const values = document.querySelectorAll('.sidebar-stats .stat-value');
+    if (values[0]) values[0].textContent = String(stats.conversations ?? 0);
+    if (values[1]) values[1].textContent = String(stats.activeOffers ?? 0);
+    if (values[2]) values[2].textContent = String(stats.responseRate ?? '—');
   };
 
   window.DEBAComms.setRoom = function(room) {
