@@ -215,3 +215,62 @@ html[data-theme='light'] .deba-future-home .deba-product-card {
   color: var(--fm-text-muted);
   font-size: .7rem;
 }
+
+.deba-future-home .fm-community {
+  padding: 18px 0 78px;
+}
+
+.deba-future-home .fm-community-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.deba-future-home .fm-community-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  min-height: 160px;
+  padding: 20px;
+  border: 1px solid var(--fm-border);
+  border-radius: 22px;
+  background: var(--fm-bg-card);
+  box-shadow: var(--fm-shadow-soft);
+  transition: 200ms ease;
+}
+
+.deba-future-home .fm-community-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,107,53,.25);
+}
+
+.deba-future-home .fm-community-icon {
+  width: 50px;
+  height: 50px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  color: var(--fm-orange);
+  background: linear-gradient(135deg, rgba(255,107,53,.11), rgba(139,92,246,.10));
+}
+
+.deba-future-home .fm-community-card h3 {
+  margin: 2px 0 7px;
+  color: var(--fm-text);
+  font-size: .95rem;
+  font-weight: 900;
+}
+
+.deba-future-home .fm-community-card p {
+  margin: 0;
+  color: var(--fm-text-soft);
+  font-size: .78rem;
+  line-height: 1.8;
+}
+
+@media (max-width: 860px) {
+  .deba-future-home .fm-community-grid {
+    grid-template-columns: 1fr;
+  }
+}
