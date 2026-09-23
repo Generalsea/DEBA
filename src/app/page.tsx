@@ -99,7 +99,7 @@ const CATEGORY_PRESENTATION: { slug: string; icon: LucideIcon; label: string }[]
   { slug: 'electronics', icon: Smartphone, label: 'إلكترونيات' },
   { slug: 'furniture-home', icon: Sofa, label: 'أثاث' },
   { slug: 'home-appliances', icon: Plug, label: 'أجهزة منزلية' },
-  { slug: 'fashion', icon: Layers3, label: 'ملابس' },
+  { slug: 'fashion', icon: Shirt, label: 'ملابس' },
   { slug: 'books-education', icon: BookOpen, label: 'كتب' },
   { slug: 'tools-equipment', icon: Wrench, label: 'أدوات' },
   { slug: 'collectibles-antiques', icon: Palette, label: 'تحف' },
