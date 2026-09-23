@@ -1,17 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import { Grid2X2, Heart, Home, ShoppingCart, UserRound } from 'lucide-react'
+import { Grid2X2, Heart, Home, MessageCircle, Plus, ShoppingCart, UserRound } from 'lucide-react'
 import type { HeaderCategory } from '@/components/Header'
 import { useCartStore } from '@/lib/cart-store'
 
 type MobileNavigationProps = {
+  variant?: 'commerce' | 'classified'
   categories?: HeaderCategory[]
   favoriteCount?: number
   authenticated?: boolean
 }
 
 export default function MobileNavigation({
+  variant = 'commerce',
   categories = [],
   favoriteCount = 0,
   authenticated = false,
@@ -25,6 +27,36 @@ export default function MobileNavigation({
     ? '/profile?tab=favorites'
     : '/login?next=%2Fprofile%3Ftab%3Dfavorites'
   const accountHref = authenticated ? '/profile' : '/login?next=%2Fprofile'
+
+  if (variant === 'classified') {
+    const sellHref = authenticated ? '/sell' : '/login?next=%2Fsell'
+    const chatHref = authenticated ? '/chat' : '/login?next=%2Fchat'
+
+    return (
+      <nav className="deba-classified-mobile-nav" aria-label="التنقل الرئيسي على الهاتف">
+        <Link href="/" className="deba-classified-mobile-nav-item active">
+          <span><Home size={22} aria-hidden="true" /></span>
+          <strong>الرئيسية</strong>
+        </Link>
+        <Link href="/#categories" className="deba-classified-mobile-nav-item">
+          <span><Grid2X2 size={22} aria-hidden="true" /></span>
+          <strong>الأقسام</strong>
+        </Link>
+        <Link href={sellHref} className="deba-classified-mobile-nav-item is-primary">
+          <span><Plus size={24} aria-hidden="true" /></span>
+          <strong>نشر إعلان</strong>
+        </Link>
+        <Link href={chatHref} className="deba-classified-mobile-nav-item">
+          <span><MessageCircle size={22} aria-hidden="true" /></span>
+          <strong>الرسائل</strong>
+        </Link>
+        <Link href={accountHref} className="deba-classified-mobile-nav-item">
+          <span><UserRound size={22} aria-hidden="true" /></span>
+          <strong>حسابي</strong>
+        </Link>
+      </nav>
+    )
+  }
 
   return (
     <nav className="deba-mobile-nav" aria-label="التنقل الرئيسي على الهاتف">
