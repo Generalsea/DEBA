@@ -338,7 +338,7 @@ async function loadDefinitions() {
 }
 
 async function ensureProduct(seed: ProductSeed, category: Category, definitions: AttributeDefinition[]) {
-  const slug = slugify(seed.title) + '-' + Math.random().toString(36).slice(2, 8)
+  const slug = slugify(seed.title)
   const cityText = seed.city
   const description =
     'إعلان تجريبي لمنصة DEBA لاختبار تجربة اكتشاف المنتجات والبحث والفلاتر وتفاصيل الإعلان. ' +
@@ -528,7 +528,7 @@ async function main() {
     const { data: demoProducts, error } = await supabase
       .from('products')
       .select('id')
-      .filter('metadata->>demo_fixture', 'eq', 'true')
+      .eq('metadata->>demo_fixture', 'true')
 
     if (error) throw error
 
