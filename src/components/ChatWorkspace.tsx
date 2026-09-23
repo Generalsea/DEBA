@@ -207,6 +207,81 @@ function offerData(message: Message) {
   }
 }
 
+
+function demoMessages(room: Room | null, currentUserId: string | null): Message[] {
+  if (!room || !currentUserId || room.product?.title !== 'شليور لاسلكي 18V — تجربة DEBA') return []
+  const sellerId = room.counterparty?.id || 'demo-seller'
+  const imageUrl = room.product.imageUrl || ''
+  const base = '2026-09-24T14:'
+  return [
+    {
+      id: 'demo-1',
+      room_id: room.id,
+      sender_id: currentUserId,
+      body: 'السلام عليكم، أنا مهتم بالشليور اللاسلكي. هل لا يزال متاحًا؟',
+      message_type: 'text',
+      metadata: {},
+      created_at: base + '32:00',
+    },
+    {
+      id: 'demo-2',
+      room_id: room.id,
+      sender_id: sellerId,
+      body: 'وعليكم السلام ورحمة الله! نعم متاح، استخدمته شوية بس في حالة ممتازة. معاه بطاريتين وشاحن أصلي.',
+      message_type: 'text',
+      metadata: {},
+      created_at: base + '35:00',
+    },
+    {
+      id: 'demo-3',
+      room_id: room.id,
+      sender_id: currentUserId,
+      body: 'ممتاز! هل يمكن رؤية صور إضافية للبطاريات؟ وهل السعر قابل للتفاوض؟',
+      message_type: 'text',
+      metadata: {},
+      created_at: base + '36:00',
+    },
+    {
+      id: 'demo-4',
+      room_id: room.id,
+      sender_id: sellerId,
+      body: null,
+      message_type: 'product_card',
+      metadata: {
+        product: {
+          title: 'شليور لاسلكي 18V + بطاريتين',
+          price: '180 جنيه',
+          imageUrl,
+          location: 'القاهرة',
+        },
+      },
+      created_at: base + '38:00',
+    },
+    {
+      id: 'demo-5',
+      room_id: room.id,
+      sender_id: sellerId,
+      body: null,
+      message_type: 'offer',
+      metadata: {
+        amount: 160,
+        currency: 'EGP',
+        note: 'يمكنني تخفيض السعر إلى 160 جنيه إذا استلمته اليوم من المعادي.',
+      },
+      created_at: base + '40:00',
+    },
+    {
+      id: 'demo-6',
+      room_id: room.id,
+      sender_id: currentUserId,
+      body: 'شكرًا على الصور! السعر معقول. هل يمكن الاستلام من مدينة نصر بدل المعادي؟',
+      message_type: 'text',
+      metadata: {},
+      created_at: base + '42:00',
+    },
+  ]
+}
+
 function PackagePlaceholder({ compact = false }: { compact?: boolean }) {
   return (
     <div className={'deba-comms-package-placeholder' + (compact ? ' compact' : '')}>
@@ -483,6 +558,15 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
     ? messages.find((message) => message.id === contextMenu.messageId)
     : null
 
+  const demoPreview =
+    process.env.NODE_ENV !== 'production' &&
+    selectedRoom?.product?.title === 'شليور لاسلكي 18V — تجربة DEBA' &&
+    messages.length === 0
+
+  const renderedMessages = demoPreview
+    ? demoMessages(selectedRoom, currentUserId)
+    : messages
+
   const sellerName = selectedRoom?.counterparty?.display_name || selectedRoom?.counterparty?.username || 'عضو DEBA'
   const sellerAvatar = initials(sellerName)
   const sellerGradient = gradientForName(sellerName)
@@ -619,15 +703,15 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
                   <Loader2 size={21} className="deba-comms-spin" />
                   جاري تحميل الرسائل...
                 </div>
-              ) : messages.length ? (
+              ) : renderedMessages.length ? (
                 <>
                   <div className="deba-comms-date-divider">
                     <span className="deba-comms-date-divider-label">
-                      {formatDateLabel(messages[0]?.created_at)} · {formatTime(messages[0]?.created_at)}
+                      {formatDateLabel(renderedMessages[0]?.created_at)} · {formatTime(renderedMessages[0]?.created_at)}
                     </span>
                   </div>
 
-                  {messages.map((message) => {
+                  {renderedMessages.map((message) => {
                     const mine = Boolean(message.sender_id && currentUserId && message.sender_id === currentUserId)
                     const messageProduct = productCardData(message, selectedRoom)
                     const offer = offerData(message)
@@ -706,7 +790,7 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
                 </div>
               )}
 
-              {typing ? (
+              {(typing || demoPreview) ? (
                 <div className="deba-comms-message received">
                   <div className="deba-comms-message-avatar" style={{ background: sellerGradient }}>{sellerAvatar}</div>
                   <div className="deba-comms-message-content">
