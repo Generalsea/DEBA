@@ -15,10 +15,18 @@ export default async function ChatPage({
   if (typeof data?.claims?.sub !== 'string') redirect('/login?next=%2Fchat')
 
   const product = (await searchParams)?.product || ''
+  const { data: categoryRows } = await supabase
+    .from('categories')
+    .select('id,name_ar,slug')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
 
   return (
     <>
-      <Header />
+      <Header
+        variant="classified"
+        categories={(categoryRows || []).map((item) => ({ id: item.id, nameAr: item.name_ar, slug: item.slug }))}
+      />
       <main className="deba-chat-page" dir="rtl">
         <ChatWorkspace initialProduct={product} />
       </main>
