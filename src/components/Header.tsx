@@ -35,6 +35,7 @@ type HeaderProps = {
   initialCategory?: string
   favoriteCount?: number
   cartCount?: number
+  negotiationCount?: number
   promotions?: HeaderPromo[]
 }
 
