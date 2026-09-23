@@ -832,6 +832,7 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
 
                 <textarea
                   ref={inputRef}
+                  id="messageInput"
                   className="message-input"
                   value={draft}
                   placeholder="اكتب رسالة واضحة داخل DEBA..."
@@ -903,6 +904,7 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
                 </svg>
                 <input
                   type="text"
+                  id="searchInput"
                   className="search-input"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
@@ -923,7 +925,7 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
               </button>
             </div>
 
-            <div className="chat-list">
+            <div className="chat-list" id="chatList">
               {loading && !filteredChats.length ? (
                 <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-tertiary)' }}>جاري تحميل المحادثات...</div>
               ) : filteredChats.length ? (
@@ -1008,6 +1010,7 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
 
       {contextMenu ? (
         <div
+          id="contextMenu"
           className="context-menu show"
           style={{ left: contextMenu.x, top: contextMenu.y, display: 'block' }}
           onClick={(event) => event.stopPropagation()}
