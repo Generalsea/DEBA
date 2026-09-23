@@ -7,6 +7,7 @@ import {
   Heart,
   LoaderCircle,
   MapPin,
+  MessageCircle,
   Menu,
   Plus,
   Search,
@@ -15,7 +16,7 @@ import {
   X,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import NotificationBell from '@/components/NotificationBell'
 import ThemeToggle from '@/components/ThemeToggle'
 import MobileNavigation from '@/components/MobileNavigation'
@@ -79,10 +80,18 @@ export default function Header({
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [recentSearches, setRecentSearches] = useState<string[]>([])
+  const [liveFavoriteCount, setLiveFavoriteCount] = useState(favoriteCount)
+  const [location, setLocation] = useState<{ city: string | null; district: string | null; governorate: string | null; source: 'browser' | 'network' | 'profile' } | null>(null)
+  const searchRef = useRef<HTMLDivElement>(null)
+  const categoryRef = useRef<HTMLDivElement>(null)
   const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'anonymous'>('loading')
   const [identity, setIdentity] = useState<HeaderIdentity | null>(null)
   const supabase = useMemo(() => createClient(), [])
   const cart = useCartStore()
+
+  useEffect(() => {
+    setLiveFavoriteCount(favoriteCount)
+  }, [favoriteCount])
 
   useEffect(() => {
     setQuery(initialSearch)
@@ -95,6 +104,26 @@ export default function Header({
   useEffect(() => {
     setRecentSearches(readRecentSearches())
   }, [])
+
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null
+      if (searchOpen && searchRef.current && target && !searchRef.current.contains(target)) setSearchOpen(false)
+      if (menuOpen && categoryRef.current && target && !categoryRef.current.contains(target)) setMenuOpen(false)
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSearchOpen(false)
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [searchOpen, menuOpen])
 
   useEffect(() => {
     let mounted = true
@@ -170,6 +199,58 @@ export default function Header({
     }
   }, [supabase])
 
+  useEffect(() => {
+    let active = true
+    const apply = (data: { city?: string | null; district?: string | null; governorate?: string | null; source?: 'browser' | 'network' | 'profile' }) => {
+      if (!active) return
+      if (data.city || data.district || data.governorate) {
+        setLocation({ city: data.city || null, district: data.district || null, governorate: data.governorate || null, source: data.source || 'network' })
+      }
+    }
+
+    fetch('/api/location', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null).then((data) => {
+      if (data?.location) apply(data.location)
+    }).catch(() => undefined)
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          fetch('/api/location', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
+          }).then((response) => response.ok ? response.json() : null).then((data) => {
+            if (data?.location) apply({ ...data.location, source: 'browser' })
+          }).catch(() => undefined)
+        },
+        () => undefined,
+        { enableHighAccuracy: false, maximumAge: 300000, timeout: 5000 },
+      )
+    }
+
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    const syncFavorites = async (userId: string) => {
+      const { count } = await supabase.from('favorites').select('product_id', { count: 'exact', head: true }).eq('user_id', userId)
+      setLiveFavoriteCount(count || 0)
+    }
+    const onFavoriteChanged = (event: Event) => {
+      const detail = (event as CustomEvent<{ isFavorite?: boolean }>).detail
+      if (!detail || typeof detail.isFavorite !== 'boolean') return
+      setLiveFavoriteCount((count) => Math.max(0, count + (detail.isFavorite ? 1 : -1)))
+    }
+    window.addEventListener('deba:favorite-changed', onFavoriteChanged)
+    if (authState === 'authenticated') {
+      void supabase.auth.getClaims().then(({ data }) => {
+        const userId = typeof data?.claims?.sub === 'string' ? data.claims.sub : null
+        if (userId) void syncFavorites(userId)
+      })
+    }
+    return () => window.removeEventListener('deba:favorite-changed', onFavoriteChanged)
+  }, [authState, supabase])
+
   const accountHref = authState === 'authenticated' ? '/profile' : '/login?next=%2Fprofile'
   const favoritesHref =
     authState === 'authenticated'
@@ -225,17 +306,19 @@ export default function Header({
     window.location.assign('/?' + params.toString())
   }
 
+  const visibleLocation = [location?.district, location?.city, location?.governorate]
+    .filter(Boolean)
+    .join('، ')
+
   return (
     <>
       <header className="deba-site-header">
         <div className="deba-utility-bar">
           <div className="deba-header-container deba-utility-inner">
-            <span className="deba-utility-location">
+            <span className="deba-utility-location" title="الموقع الحالي لا يُحفظ تلقائيًا في ملفك">
               <MapPin size={14} aria-hidden="true" />
               <span>التسوق في مصر</span>
-              {identity?.city || identity?.governorate ? (
-                <strong>· {identity.city || identity.governorate}</strong>
-              ) : null}
+              <strong>· {visibleLocation || [identity?.city, identity?.governorate].filter(Boolean).join('، ') || 'مصر'}</strong>
             </span>
 
             <div className="deba-utility-links">
@@ -266,7 +349,7 @@ export default function Header({
               </span>
             </Link>
 
-            <div className="deba-search-wrap">
+            <div className="deba-search-wrap" ref={searchRef}>
               <form onSubmit={submitSearch} className="deba-search" role="search">
                 <div className="deba-search-category">
                   <select
@@ -400,6 +483,11 @@ export default function Header({
                 </span>
               </Link>
 
+              <Link href="/chat" className="deba-action">
+                <span className="deba-action-icon"><MessageCircle size={19} /></span>
+                <span className="deba-action-text"><small>تواصل</small><strong>المحادثات</strong></span>
+              </Link>
+
               <Link href="/profile?tab=orders" className="deba-action">
                 <span className="deba-action-icon"><ClipboardList size={19} /></span>
                 <span className="deba-action-text"><small>متابعة</small><strong>الطلبات</strong></span>
@@ -408,7 +496,7 @@ export default function Header({
               <Link href={favoritesHref} className="deba-action">
                 <span className="deba-action-icon">
                   <Heart size={19} />
-                  {favoriteCount > 0 ? <em>{badge(favoriteCount)}</em> : null}
+                  {liveFavoriteCount > 0 ? <em>{badge(liveFavoriteCount)}</em> : null}
                 </span>
                 <span className="deba-action-text"><small>محفوظ</small><strong>المفضلة</strong></span>
               </Link>
@@ -433,7 +521,7 @@ export default function Header({
         </div>
 
         <div className={'deba-category-bar' + (menuOpen ? ' is-open' : '')}>
-          <div className="deba-header-container deba-category-inner">
+          <div className="deba-header-container deba-category-inner" ref={categoryRef}>
             <button
               type="button"
               className="deba-category-all"
@@ -488,7 +576,7 @@ export default function Header({
       <HeaderReelsRail items={promotions} />
       <MobileNavigation
         categories={categories}
-        favoriteCount={favoriteCount}
+        favoriteCount={liveFavoriteCount}
         authenticated={authState === 'authenticated'}
       />
     </>
