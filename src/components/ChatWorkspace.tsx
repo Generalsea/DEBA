@@ -14,7 +14,6 @@ import {
   MapPin,
   MessageCircle,
   MoreVertical,
-  Package,
   Paperclip,
   Phone,
   Pin,
