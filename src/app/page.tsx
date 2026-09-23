@@ -20,6 +20,7 @@ import {
   Truck,
   Wrench,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import Header from '@/components/Header'
 import ProductCard, { type ProductCardItem } from '@/components/ProductCard'
 import type { HeaderPromo } from '@/components/HeaderReelsRail'
@@ -99,7 +100,7 @@ const CONDITION_LABELS: Record<string, string> = {
   for_parts: 'للقطع / الإصلاح',
 }
 
-const CATEGORY_PRESENTATION: { slug: string; icon: typeof Smartphone; label: string }[] = [
+const CATEGORY_PRESENTATION: { slug: string; icon: LucideIcon; label: string }[] = [
   { slug: 'electronics', icon: Smartphone, label: 'إلكترونيات' },
   { slug: 'furniture-home', icon: Sofa, label: 'أثاث' },
   { slug: 'home-appliances', icon: Plug, label: 'أجهزة منزلية' },
