@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 }
 
 const BUCKET = 'deba-product-media'
-const PRODUCT_LIMIT = 24
+const PRODUCT_LIMIT = 36
 
 type SearchParamValue = string | string[] | undefined
 
@@ -450,10 +450,6 @@ export default async function HomePage({
 
   return (
     <div className="deba-future-home">
-      <div className="fm-announcement">
-        <span>تجربة DEBA الجديدة: اكتشف، قارن، واشترِ أو أضف ما تملك في سوق واحد.</span>
-      </div>
-
       <Header
         categories={presentationCategories.map((item) => ({
           id: item.row.id,
