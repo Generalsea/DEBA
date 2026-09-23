@@ -63,12 +63,13 @@ test('header advertising rail is data-driven, 9:16, and isolated from persistenc
     'supabase/migrations/20260923141939_create_header_ad_promotions.sql',
   )
   const rail = await read('src/components/HeaderReelsRail.tsx')
+  const railCss = await read('src/components/HeaderReelsRail.module.css')
   const page = await read('src/app/page.tsx')
 
   assert.match(migration, /media_type text not null check \(media_type in \('image', 'video'\)\)/)
   assert.match(migration, /create policy "Public can read active header ads"/)
   assert.match(migration, /starts_at is null or starts_at <= now\(\)/)
-  assert.match(rail, /aspect-ratio: 9 \/ 16/)
+  assert.match(railCss, /aspect-ratio: 9 \/ 16/)
   assert.match(rail, /muted/)
   assert.match(rail, /playsInline/)
   assert.match(page, /from\('header_ad_promotions'\)/)
