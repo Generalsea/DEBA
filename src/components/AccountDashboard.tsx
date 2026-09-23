@@ -330,6 +330,11 @@ export default function AccountDashboard({ account, initialSection }: Props) {
   }, [])
 
   function switchSection(next: SectionId) {
+    if (next === 'messages') {
+      window.location.assign('/chat')
+      return
+    }
+
     setActive(next)
     setStatus('')
   }
