@@ -1,12 +1,10 @@
 'use client'
 
 import {
-  Bell,
   ChevronDown,
   Heart,
   LoaderCircle,
   Menu,
-  MessageSquareText,
   Plus,
   Search,
   ShoppingCart,
@@ -16,6 +14,7 @@ import {
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import NotificationBell from '@/components/NotificationBell'
+import ThemeToggle from '@/components/ThemeToggle'
 import { createClient } from '@/utils/supabase/client'
 import { useCartStore } from '@/lib/cart-store'
 import HeaderReelsRail, { type HeaderPromo } from '@/components/HeaderReelsRail'
@@ -83,7 +82,7 @@ export default function Header({
       if (!mounted || !data) return
 
       let avatarUrl = data.avatar_url as string | null
-      if (avatarUrl && !/^https?:\/\//i.test(avatarUrl)) {
+      if (avatarUrl && !/^https?:\\/\\//i.test(avatarUrl)) {
         avatarUrl = supabase.storage.from('deba-profile-media').getPublicUrl(avatarUrl).data.publicUrl
       }
 
@@ -150,142 +149,143 @@ export default function Header({
   return (
     <>
       <header className="deba-site-header">
-      <div className="deba-header-main">
-        <div className="deba-header-inner">
-          <button
-            type="button"
-            className="deba-mobile-trigger"
-            aria-label={menuOpen ? 'إغلاق قائمة الأقسام' : 'فتح قائمة الأقسام'}
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-
-          <Link href="/" className="deba-brand" aria-label="DEBA - الرئيسية">
-            <span className="deba-brand-mark">D</span>
-            <span className="deba-brand-copy">
-              <strong>DEBA</strong>
-              <small>سوق التبادل المصري</small>
-            </span>
-          </Link>
-
-          <form action="/" method="get" className="deba-search" role="search">
-            <div className="deba-search-category">
-              <select
-                name="category"
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-                aria-label="اختيار قسم البحث"
-              >
-                <option value="all">كل الأقسام</option>
-                {categories.map((item) => (
-                  <option key={item.id} value={item.slug}>
-                    {item.nameAr}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={16} aria-hidden="true" />
-            </div>
-
-            <input
-              name="q"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              type="search"
-              inputMode="search"
-              autoComplete="off"
-              placeholder="ابحث عن سلعة، بائع، أو قسم..."
-              aria-label="البحث في DEBA"
-            />
-
-            {query && (
-              <button
-                type="button"
-                className="deba-search-clear"
-                aria-label="مسح البحث"
-                onClick={() => setQuery('')}
-              >
-                <X size={16} />
-              </button>
-            )}
-
-            <button type="submit" className="deba-search-submit" aria-label="بحث">
-              <Search size={21} strokeWidth={2.2} />
-            </button>
-          </form>
-
-          <nav className="deba-header-actions" aria-label="الحساب والتسوق">
-            <Link href={accountHref} className="deba-action">
-              <span className={'deba-action-icon' + (authState === 'authenticated' ? ' deba-account-avatar' : '')}>
-                {authState === 'loading' ? (
-                  <LoaderCircle size={18} className="deba-spin" />
-                ) : identity?.avatarUrl ? (
-                  <img src={identity.avatarUrl} alt="" />
-                ) : (
-                  <UserRound size={19} />
-                )}
-              </span>
-              <span className="deba-action-text">
-                <small className="deba-account-greeting">
-                  {authState === 'authenticated'
-                    ? 'أهلاً يا ' + (identity?.username || identity?.displayName || 'بك')
-                    : 'مرحبًا'}
-                </small>
-                <strong>حسابي</strong>
-              </span>
-            </Link>
-
-            <Link href={favoritesHref} className="deba-action">
-              <span className="deba-action-icon">
-                <Heart size={19} />
-                <em>{badge(favoriteCount)}</em>
-              </span>
-              <span className="deba-action-text">
-                <small>المختارة</small>
-                <strong>المفضلة</strong>
-              </span>
-            </Link>
-
-            <Link href={cartHref} className="deba-action">
-              <span className="deba-action-icon">
-                <ShoppingCart size={19} />
-                <em>{badge(cart.hydrated ? cart.items.reduce((sum, item) => sum + item.quantity, 0) : cartCount)}</em>
-              </span>
-              <span className="deba-action-text">
-                <small>مشترياتك</small>
-                <strong>السلة</strong>
-              </span>
-            </Link>
-
-            <NotificationBell enabled={authState === 'authenticated'} />
-
-            <Link href={sellHref} className="deba-sell-button">
-              <Plus size={18} />
-              <span>أضف إعلانك</span>
-            </Link>
-          </nav>
-        </div>
-      </div>
-
-      <div className={'deba-category-bar' + (menuOpen ? ' is-open' : '')}>
-        <div className="deba-category-inner">
-          <Link href="/" className="deba-category-all">
-            <Menu size={16} />
-            تصفح جميع الأقسام
-          </Link>
-
-          {categories.map((item) => (
-            <Link
-              key={item.id}
-              href={'/?category=' + encodeURIComponent(item.slug)}
-              className={initialCategory === item.slug ? 'is-active' : ''}
+        <div className="deba-header-main">
+          <div className="deba-header-inner">
+            <button
+              type="button"
+              className="deba-mobile-trigger"
+              aria-label={menuOpen ? 'إغلاق قائمة الأقسام' : 'فتح قائمة الأقسام'}
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((open) => !open)}
             >
-              {item.nameAr}
+              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+
+            <Link href="/" className="deba-brand" aria-label="DEBA - الرئيسية">
+              <span className="deba-brand-mark">D</span>
+              <span className="deba-brand-copy">
+                <strong>DEBA</strong>
+                <small>سوق التبادل المصري</small>
+              </span>
             </Link>
-          ))}
+
+            <form action="/" method="get" className="deba-search" role="search">
+              <div className="deba-search-category">
+                <select
+                  name="category"
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
+                  aria-label="اختيار قسم البحث"
+                >
+                  <option value="all">كل الأقسام</option>
+                  {categories.map((item) => (
+                    <option key={item.id} value={item.slug}>
+                      {item.nameAr}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={16} aria-hidden="true" />
+              </div>
+
+              <input
+                name="q"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                type="search"
+                inputMode="search"
+                autoComplete="off"
+                placeholder="ابحث عن سلعة، بائع، أو قسم..."
+                aria-label="البحث في DEBA"
+              />
+
+              {query && (
+                <button
+                  type="button"
+                  className="deba-search-clear"
+                  aria-label="مسح البحث"
+                  onClick={() => setQuery('')}
+                >
+                  <X size={16} />
+                </button>
+              )}
+
+              <button type="submit" className="deba-search-submit" aria-label="بحث">
+                <Search size={21} strokeWidth={2.2} />
+              </button>
+            </form>
+
+            <nav className="deba-header-actions" aria-label="الحساب والتسوق">
+              <Link href={accountHref} className="deba-action">
+                <span className={'deba-action-icon' + (authState === 'authenticated' ? ' deba-account-avatar' : '')}>
+                  {authState === 'loading' ? (
+                    <LoaderCircle size={18} className="deba-spin" />
+                  ) : identity?.avatarUrl ? (
+                    <img src={identity.avatarUrl} alt="" />
+                  ) : (
+                    <UserRound size={19} />
+                  )}
+                </span>
+                <span className="deba-action-text">
+                  <small className="deba-account-greeting">
+                    {authState === 'authenticated'
+                      ? 'أهلاً يا ' + (identity?.username || identity?.displayName || 'بك')
+                      : 'مرحبًا'}
+                  </small>
+                  <strong>حسابي</strong>
+                </span>
+              </Link>
+
+              <Link href={favoritesHref} className="deba-action">
+                <span className="deba-action-icon">
+                  <Heart size={19} />
+                  <em>{badge(favoriteCount)}</em>
+                </span>
+                <span className="deba-action-text">
+                  <small>المختارة</small>
+                  <strong>المفضلة</strong>
+                </span>
+              </Link>
+
+              <Link href={cartHref} className="deba-action">
+                <span className="deba-action-icon">
+                  <ShoppingCart size={19} />
+                  <em>{badge(cart.hydrated ? cart.items.reduce((sum, item) => sum + item.quantity, 0) : cartCount)}</em>
+                </span>
+                <span className="deba-action-text">
+                  <small>مشترياتك</small>
+                  <strong>السلة</strong>
+                </span>
+              </Link>
+
+              <ThemeToggle />
+              <NotificationBell enabled={authState === 'authenticated'} />
+
+              <Link href={sellHref} className="deba-sell-button">
+                <Plus size={18} />
+                <span>أضف إعلانك</span>
+              </Link>
+            </nav>
+          </div>
         </div>
-      </div>
+
+        <div className={'deba-category-bar' + (menuOpen ? ' is-open' : '')}>
+          <div className="deba-category-inner">
+            <Link href="/" className="deba-category-all">
+              <Menu size={16} />
+              تصفح جميع الأقسام
+            </Link>
+
+            {categories.map((item) => (
+              <Link
+                key={item.id}
+                href={'/?category=' + encodeURIComponent(item.slug)}
+                className={initialCategory === item.slug ? 'is-active' : ''}
+              >
+                {item.nameAr}
+              </Link>
+            ))}
+          </div>
+        </div>
       </header>
       <HeaderReelsRail items={promotions} />
     </>
