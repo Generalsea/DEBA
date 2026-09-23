@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "typecheck": "tsc --noEmit",
+    "test": "node --test scripts/contracts.test.mjs",
     "start": "next start",
     "seed:demo-catalog-images": "node scripts/seed-demo-catalog-images.mjs",
     "catalog:seed": "node scripts/seed-demo-catalog.mjs"
