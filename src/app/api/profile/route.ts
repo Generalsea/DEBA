@@ -23,13 +23,13 @@ export async function GET() {
     if (typeof userId !== 'string') return NextResponse.json({ error: 'يجب تسجيل الدخول.' }, { status: 401 })
 
     const [profileResult, privateResult] = await Promise.all([
-      supabase.from('profiles').select('display_name,city,governorate').eq('id', userId).maybeSingle(),
+      supabase.from('profiles').select('display_name,city,governorate,seller_store_key').eq('id', userId).maybeSingle(),
       supabase.from('profile_private').select('phone,address_line1,address_line2,district,postal_code').eq('user_id', userId).maybeSingle(),
     ])
     if (profileResult.error) { console.error('DEBA profile GET failed', profileResult.error); return NextResponse.json({ error: 'تعذر تحميل بيانات الحساب.' }, { status: 500 }) }
     if (!profileResult.data) return NextResponse.json({ error: 'ملف الحساب غير موجود.' }, { status: 404 })
     return NextResponse.json({
-      profile: { displayName: profileResult.data.display_name, city: profileResult.data.city, governorate: profileResult.data.governorate },
+      profile: { displayName: profileResult.data.display_name, city: profileResult.data.city, governorate: profileResult.data.governorate, sellerStoreKey: profileResult.data.seller_store_key },
       privateProfile: privateResult.data ? {
         phone: privateResult.data.phone, addressLine1: privateResult.data.address_line1, addressLine2: privateResult.data.address_line2,
         district: privateResult.data.district, postalCode: privateResult.data.postal_code,
@@ -152,9 +152,16 @@ export async function PATCH(request: Request) {
       )
     }
 
+    const { data: refreshedProfile } = await supabase
+      .from('profiles')
+      .select('account_type,seller_store_key')
+      .eq('id', userId)
+      .maybeSingle()
+
     return NextResponse.json({
       ok: true,
-      accountType: requestedAccountType || currentProfile.account_type,
+      accountType: refreshedProfile?.account_type || requestedAccountType || currentProfile.account_type,
+      storeKey: refreshedProfile?.seller_store_key || null,
       ...(hasAvatarUrl ? { avatarUrl: requestedAvatarUrl } : {}),
     })
   } catch (error) {
