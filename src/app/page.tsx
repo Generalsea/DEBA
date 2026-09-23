@@ -815,6 +815,44 @@ export default async function HomePage({
           </div>
         </section>
 
+        <section className="fm-community" id="community">
+          <div className="fm-shell">
+            <div className="fm-section-heading">
+              <div className="fm-heading-copy">
+                <span className="fm-section-kicker">DEBA COMMUNITY</span>
+                <h2 className="fm-section-title">سوق واحد. قيمة أكبر.</h2>
+                <p className="fm-section-subtitle">
+                  تجربة تجمع الاكتشاف والبيع والشراء حول بيانات المنتج الحقيقية، بدل واجهات منفصلة لكل خطوة.
+                </p>
+              </div>
+            </div>
+
+            <div className="fm-community-grid">
+              <article className="fm-community-card">
+                <span className="fm-community-icon"><PackageCheck size={26} aria-hidden="true" /></span>
+                <div>
+                  <h3>اكتشف منتجات تستحق النظر</h3>
+                  <p>صور وحالة وسعر وموقع مأخوذة من الإعلان المنشور، مع مسار واضح للوصول إلى صفحة المنتج.</p>
+                </div>
+              </article>
+              <article className="fm-community-card">
+                <span className="fm-community-icon"><Tag size={26} aria-hidden="true" /></span>
+                <div>
+                  <h3>حوّل ما لا تحتاجه إلى قيمة</h3>
+                  <p>ابدأ من صفحة البيع الحالية، وارفع بيانات المنتج ثم مرره عبر دورة النشر والمراجعة الموجودة في النظام.</p>
+                </div>
+              </article>
+              <article className="fm-community-card">
+                <span className="fm-community-icon"><ShieldCheck size={26} aria-hidden="true" /></span>
+                <div>
+                  <h3>الثقة تبدأ من الوضوح</h3>
+                  <p>لا نعرض تقييمًا أو ندرة أو حالة توثيق إلا عندما تكون لها بيانات حقيقية مرتبطة بالحساب أو المنتج.</p>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
         <section className="fm-seller" id="sell">
           <div className="fm-shell">
             <div className="fm-seller-card">
