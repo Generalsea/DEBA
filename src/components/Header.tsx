@@ -404,7 +404,6 @@ export default function Header({
                   <span>الرسائل</span>
                 </Link>
                 <Link href={sellHref} className="deba-classified-publish-btn">
-                  <Plus size={17} aria-hidden="true" />
                   + نشر إعلان
                 </Link>
                 <button
