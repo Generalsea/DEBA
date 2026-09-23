@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import './globals.css'
 import './future-marketplace.css'
 import './future-marketplace-overrides.css'
@@ -58,13 +59,17 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
           rel="stylesheet"
         />
-        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Script id="deba-theme-bootstrap" strategy="beforeInteractive">
+          {themeBootstrap}
+        </Script>
+      </body>
     </html>
   )
 }
