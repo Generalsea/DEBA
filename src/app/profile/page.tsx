@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation'
-import Header, { type HeaderCategory } from '@/components/Header'
 import AccountDashboard from '@/components/AccountDashboard'
-import {
-  type ProfileAccountData,
+import { type ProfileAccountData,
   type ProfileOrder,
   type ProfileProduct,
   type ProfileFavorite,
@@ -386,22 +384,22 @@ export default async function ProfilePage({
   }
 
   const requestedTab = (await searchParams)?.tab || 'overview'
+  const dashboardMap: Record<string, string> = {
+    overview: 'dashboard',
+    products: 'listings',
+    listings: 'listings',
+    favorites: 'favorites',
+    messages: 'messages',
+    chat: 'messages',
+    notifications: 'notifications',
+    profile: 'profile',
+    settings: 'settings',
+    help: 'help',
+  }
 
   return (
-    <>
-      <Header
-        categories={categories.map(
-          (item): HeaderCategory => ({
-            id: item.id,
-            nameAr: item.name_ar,
-            slug: item.slug,
-          }),
-        )}
-        favoriteCount={favorites.length}
-      />
-      <main className="deba-profile-page" dir="rtl">
-        <AccountDashboard account={account} initialSection={requestedTab === 'overview' ? 'dashboard' : requestedTab} />
-      </main>
-    </>
+    <main className="deba-profile-page" dir="rtl">
+      <AccountDashboard account={account} initialSection={dashboardMap[requestedTab] || 'dashboard'} />
+    </main>
   )
 }
