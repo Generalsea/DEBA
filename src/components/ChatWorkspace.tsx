@@ -140,17 +140,18 @@ const demoChats: DemoChat[] = [
 ]
 
 const DEMO_MESSAGES: Array<{
+  id: string
   from: 'mine' | 'seller'
   kind: 'text' | 'product' | 'offer'
   time: string
   body?: string
 }> = [
-  { from: 'mine', kind: 'text', time: '14:32', body: 'السلام عليكم، أنا مهتم بالشليور اللاسلكي. هل لا يزال متاحًا؟' },
-  { from: 'seller', kind: 'text', time: '14:35', body: 'وعليكم السلام ورحمة الله! نعم متاح، استخدمته شوية بس في حالة ممتازة. معاه بطاريتين وشاحن أصلي.' },
-  { from: 'mine', kind: 'text', time: '14:36', body: 'ممتاز! هل يمكن رؤية صور إضافية للبطاريات؟ وهل السعر قابل للتفاوض؟' },
-  { from: 'seller', kind: 'product', time: '14:38' },
-  { from: 'seller', kind: 'offer', time: '14:40' },
-  { from: 'mine', kind: 'text', time: '14:42', body: 'شكرًا على الصور! السعر معقول. هل يمكن الاستلام من مدينة نصر بدل المعادي؟' },
+  { id: 'demo-message-1', from: 'mine', kind: 'text', time: '14:32', body: 'السلام عليكم، أنا مهتم بالشليور اللاسلكي. هل لا يزال متاحًا؟' },
+  { id: 'demo-message-2', from: 'seller', kind: 'text', time: '14:35', body: 'وعليكم السلام ورحمة الله! نعم متاح، استخدمته شوية بس في حالة ممتازة. معاه بطاريتين وشاحن أصلي.' },
+  { id: 'demo-message-3', from: 'mine', kind: 'text', time: '14:36', body: 'ممتاز! هل يمكن رؤية صور إضافية للبطاريات؟ وهل السعر قابل للتفاوض؟' },
+  { id: 'demo-message-4', from: 'seller', kind: 'product', time: '14:38' },
+  { id: 'demo-message-5', from: 'seller', kind: 'offer', time: '14:40' },
+  { id: 'demo-message-6', from: 'mine', kind: 'text', time: '14:42', body: 'شكرًا على الصور! السعر معقول. هل يمكن الاستلام من مدينة نصر بدل المعادي؟' },
 ]
 
 function formatTime(value: string | null | undefined) {
@@ -490,9 +491,11 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
 
   async function copyMessage(messageId: string) {
     const message = messages.find((item) => item.id === messageId)
-    if (!message?.body) return
+    const demoMessage = DEMO_MESSAGES.find((item) => item.id === messageId)
+    const body = message?.body || demoMessage?.body
+    if (!body) return
     try {
-      await navigator.clipboard.writeText(message.body)
+      await navigator.clipboard.writeText(body)
       showToast('📋 تم النسخ')
     } catch {
       showToast('تعذر نسخ الرسالة')
@@ -506,6 +509,7 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
   const listingTitle = selectedRoom?.product?.title || 'شليور لاسلكي 18V'
   const listingPrice = selectedRoom?.product ? formatMoney(selectedRoom.product.price, selectedRoom.product.currency) : '180 جنيه'
   const productLink = selectedRoom?.product?.slug ? '/products/' + encodeURIComponent(selectedRoom.product.slug) : '/'
+  const showDemoConversation = preserveDemoConversation
 
   const liveMessages = showDemoConversation ? [] : messages
 
