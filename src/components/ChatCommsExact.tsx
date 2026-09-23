@@ -118,6 +118,11 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         onSend?: () => void | Promise<void>
         onQuick?: (text: string) => void | Promise<void>
         onRefresh?: () => void | Promise<void>
+        onAttach?: (kind: 'image' | 'file') => void | Promise<void>
+        onFileSelected?: (file: File, kind: 'image' | 'file') => void | Promise<void>
+        onLocation?: () => void | Promise<void>
+        onOffer?: () => void | Promise<void>
+        onOfferAction?: (action: 'accept' | 'counter' | 'decline', offerMessageId: string | null) => void | Promise<void>
       }
       showToast?: (message: string) => void
       setTimeout: typeof window.setTimeout
@@ -231,6 +236,156 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
       return data.room.room_id
     }
 
+    const postJsonMessage = async (roomId: string, payload: Record<string, unknown>) => {
+      const response = await fetch('/api/chat/rooms/' + encodeURIComponent(roomId) + '/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        cache: 'no-store',
+      })
+      const data = await response.json() as { message?: Message; error?: string }
+      if (!response.ok || !data.message) throw new Error(data.error || 'تعذر إرسال الرسالة.')
+      return data.message
+    }
+
+    const uploadFile = async (file: File, kind: 'image' | 'file') => {
+      const roomId = roomIdRef.current
+      if (!roomId) {
+        showToast('لا توجد محادثة حقيقية مفتوحة.')
+        return
+      }
+
+      const form = new FormData()
+      form.set('file', file)
+      form.set('kind', kind)
+
+      const response = await fetch('/api/chat/rooms/' + encodeURIComponent(roomId) + '/messages', {
+        method: 'POST',
+        body: form,
+        cache: 'no-store',
+      })
+      const data = await response.json() as { message?: Message; error?: string }
+      if (!response.ok || !data.message) throw new Error(data.error || 'تعذر رفع الملف الآن.')
+
+      showToast(kind === 'image' ? '📷 تم إرسال الصورة' : '📎 تم إرسال الملف')
+      await loadMessages(roomId)
+      await refreshRooms(false)
+    }
+
+    const shareLocation = async () => {
+      const roomId = roomIdRef.current
+      if (!roomId) {
+        showToast('لا توجد محادثة حقيقية مفتوحة.')
+        return
+      }
+      if (!navigator.geolocation) {
+        showToast('📍 المتصفح لا يدعم تحديد الموقع')
+        return
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            await postJsonMessage(roomId, {
+              messageType: 'system',
+              metadata: {
+                kind: 'location',
+                location: {
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                  accuracy: position.coords.accuracy,
+                },
+              },
+            })
+            showToast('📍 تم إرسال موقعك')
+            await loadMessages(roomId)
+            await refreshRooms(false)
+          } catch (error) {
+            showToast(error instanceof Error ? error.message : 'تعذر إرسال الموقع.')
+          }
+        },
+        (error) => {
+          const message =
+            error.code === 1
+              ? '📍 اسمح للمتصفح بالوصول إلى موقعك أولًا.'
+              : error.code === 3
+                ? '📍 انتهت مهلة تحديد الموقع.'
+                : 'تعذر الوصول إلى الموقع.'
+          showToast(message)
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
+      )
+    }
+
+    const createOffer = async () => {
+      const roomId = roomIdRef.current
+      if (!roomId) {
+        showToast('لا توجد محادثة حقيقية مفتوحة.')
+        return
+      }
+
+      const rawAmount = window.prompt('أدخل قيمة العرض بالجنيه', '160')
+      if (rawAmount == null) return
+
+      const amount = Number(rawAmount.replace(/,/g, ''))
+      if (!Number.isFinite(amount) || amount <= 0) {
+        showToast('💰 قيمة العرض غير صحيحة.')
+        return
+      }
+
+      const note = window.prompt(
+        'اكتب ملاحظة العرض',
+        'يمكنني تخفيض السعر إلى ' + amount + ' جنيه إذا استلمته اليوم من المعادي.',
+      )
+      if (note == null) return
+
+      try {
+        await postJsonMessage(roomId, {
+          messageType: 'offer',
+          metadata: {
+            amount,
+            currency: 'EGP',
+            note: note.trim().slice(0, 1000),
+            title: 'عرض سعر من البائع',
+          },
+        })
+        showToast('💰 تم إرسال عرض السعر')
+        await loadMessages(roomId)
+        await refreshRooms(false)
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'تعذر إرسال عرض السعر.')
+      }
+    }
+
+    const offerAction = async (action: 'accept' | 'counter' | 'decline', offerMessageId: string | null) => {
+      const roomId = roomIdRef.current
+      if (!roomId) {
+        showToast('لا توجد محادثة حقيقية مفتوحة.')
+        return
+      }
+
+      try {
+        await postJsonMessage(roomId, {
+          messageType: 'system',
+          metadata: {
+            kind: 'offer_action',
+            action,
+            offerMessageId,
+          },
+        })
+        const labels = {
+          accept: '✅ تم قبول عرض السعر',
+          counter: '💰 تم طلب التفاوض على العرض',
+          decline: '❌ تم رفض عرض السعر',
+        }
+        showToast(labels[action])
+        await loadMessages(roomId)
+        await refreshRooms(false)
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'تعذر تنفيذ إجراء العرض.')
+      }
+    }
+
     const sendMessage = async () => {
       const doc = frame.contentDocument
       const input = doc?.getElementById('messageInput') as HTMLTextAreaElement | null
@@ -281,6 +436,26 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
 
       bridge.onOpenChat = openLiveRoom
       bridge.onSend = sendMessage
+      bridge.onAttach = (kind) => {
+        const input = frame.contentDocument?.getElementById('attachmentInput') as HTMLInputElement | null
+        if (!input) return
+        input.accept = kind === 'image'
+          ? 'image/jpeg,image/png,image/webp,image/gif'
+          : 'application/pdf,text/plain,text/csv,application/zip,.doc,.docx,.xls,.xlsx'
+        input.dataset.kind = kind
+        input.value = ''
+        input.click()
+      }
+      bridge.onFileSelected = async (file, kind) => {
+        try {
+          await uploadFile(file, kind)
+        } catch (error) {
+          showToast(error instanceof Error ? error.message : 'تعذر رفع الملف.')
+        }
+      }
+      bridge.onLocation = shareLocation
+      bridge.onOffer = createOffer
+      bridge.onOfferAction = offerAction
       bridge.onQuick = async (text) => {
         const input = frame.contentDocument?.getElementById('messageInput') as HTMLTextAreaElement | null
         if (!input) return
