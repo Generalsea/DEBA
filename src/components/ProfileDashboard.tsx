@@ -9,6 +9,9 @@ import {
   CheckCircle2,
   ChevronLeft,
   CircleUserRound,
+  Copy,
+  ExternalLink,
+  MessageCircle,
   Heart,
   LayoutDashboard,
   LogOut,
@@ -88,6 +91,7 @@ export type ProfileAccountData = {
     governorate: string | null
     isPublic: boolean
     accountType: 'buyer' | 'seller'
+    storeKey: string | null
     createdAt: string
     phone: string | null
     addressLine1: string | null
@@ -369,8 +373,12 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
         }),
       })
 
-      const result = (await response.json()) as { error?: string }
+      const result = (await response.json()) as { error?: string; storeKey?: string | null; accountType?: 'buyer' | 'seller' }
       if (!response.ok) throw new Error(result.error || 'تعذر حفظ بيانات الحساب.')
+      if (result.accountType === 'seller' && result.storeKey) {
+        setProfile((current) => ({ ...current, storeKey: result.storeKey || null }))
+        setIsSeller(true)
+      }
 
       window.dispatchEvent(
         new CustomEvent('deba:profile-updated', {
@@ -635,10 +643,22 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
           </div>
         </div>
         {isSeller ? (
-          <Link href="/sell" className="deba-profile-primary-action">
-            إضافة إعلان
-            <Plus size={17} />
-          </Link>
+          <div className="deba-profile-role-actions">
+            {profile.storeKey ? (
+              <Link href={'/' + profile.storeKey} className="deba-profile-store-link">
+                <ExternalLink size={15} />
+                متجري
+              </Link>
+            ) : null}
+            <Link href="/chat" className="deba-profile-ghost-action">
+              <MessageCircle size={15} />
+              المحادثات
+            </Link>
+            <Link href="/sell" className="deba-profile-primary-action">
+              إضافة إعلان
+              <Plus size={17} />
+            </Link>
+          </div>
         ) : (
           <button
             type="button"
@@ -652,9 +672,10 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ displayName: profile.displayName, accountType: 'seller' }),
                 })
-                const result = (await response.json()) as { error?: string }
+                const result = (await response.json()) as { error?: string; storeKey?: string | null }
                 if (!response.ok) throw new Error(result.error || 'تعذر تفعيل وضع البائع.')
                 setIsSeller(true)
+                setProfile((current) => ({ ...current, storeKey: result.storeKey || null }))
                 setStatusMessage('تم تفعيل وضع البائع. يمكنك الآن إنشاء إعلانات.')
               } catch (error) {
                 setErrorMessage(error instanceof Error ? error.message : 'تعذر تفعيل وضع البائع.')
@@ -726,6 +747,7 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
           {isSeller ? (
             <div className="deba-profile-sidebar-section">
               <span className="deba-profile-sidebar-title">البائع</span>
+              {profile.storeKey ? <Link href={'/' + profile.storeKey} className="deba-profile-sidebar-store"><ExternalLink size={14} /> متجر البائع</Link> : null}
               <button className={activeTab === 'products' ? 'active' : ''} onClick={() => goTab('products')}>
                 <Store size={17} /> إعلاناتي
                 <em>{account.stats.sellerProducts}</em>
