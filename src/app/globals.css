@@ -9012,6 +9012,7 @@ html[data-theme="dark"] .brand-side {
 }
 
 .deba-chat-shell {
+  position: relative;
   width: min(var(--deba-container), calc(100% - 40px));
   height: min(720px, calc(100vh - 190px));
   min-height: 580px;
