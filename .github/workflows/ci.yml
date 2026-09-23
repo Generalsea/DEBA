@@ -2,7 +2,7 @@ name: DEBA CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, chore/release-hardening]
   pull_request:
     branches: [main]
 
@@ -29,7 +29,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Verify runtime
         run: |
@@ -42,18 +41,20 @@ jobs:
           if [ -f package-lock.json ]; then
             npm ci --no-audit --no-fund
           else
-            echo "package-lock.json is not committed yet; using npm install temporarily."
+            echo "package-lock.json is not committed yet; generating one for this CI run."
             npm install --no-audit --no-fund
           fi
 
       - name: Check lockfile stability
         shell: bash
         run: |
-          if [ -f package-lock.json ]; then
+          if git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
             git diff --exit-code -- package-lock.json || {
-              echo "package-lock.json changed during CI. Commit the generated lockfile with the project."
+              echo "package-lock.json changed during CI."
               exit 1
             }
+          else
+            echo "package-lock.json is not tracked yet; CI will enforce it once committed."
           fi
 
       - name: Type-check
