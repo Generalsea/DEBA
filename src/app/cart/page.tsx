@@ -2,7 +2,7 @@
 import { useMemo } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ShoppingBag } from 'lucide-react'
-import { clearCart, moveSavedItemToCart, setCartDeliveryMethod, useCartStore } from '@/lib/cart-store'
+import { moveSavedItemToCart, useCartStore } from '@/lib/cart-store'
 import { SellerGroup } from '@/components/cart/SellerGroup'
 import { CartSummary } from '@/components/cart/CartSummary'
 import { EmptyCart } from '@/components/cart/EmptyCart'
