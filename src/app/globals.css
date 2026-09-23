@@ -9574,3 +9574,20 @@ html[data-theme="dark"] .brand-side {
     padding-inline: 8px;
   }
 }
+
+.deba-chat-mobile-back {
+  display: none;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--deba-border);
+  border-radius: 9px;
+  background: var(--deba-surface-2);
+  color: var(--deba-text);
+}
+@media (max-width: 760px) {
+  .deba-chat-mobile-back {
+    display: grid;
+  }
+}
