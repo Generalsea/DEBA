@@ -3,6 +3,7 @@ import Header from '@/components/Header'
 import AdminModeration from '@/components/AdminModeration'
 import AdminAnalytics from '@/components/AdminAnalytics'
 import AdminCampaigns from '@/components/AdminCampaigns'
+import AdminChatSecurity from '@/components/AdminChatSecurity'
 import { createClient } from '@/utils/supabase/server'
 
 export default async function AdminPage() {
@@ -28,6 +29,7 @@ export default async function AdminPage() {
       <main className="deba-admin-page" dir="rtl">
         <AdminAnalytics />
         <AdminModeration />
+        <AdminChatSecurity />
         {role.role === 'admin' ? <AdminCampaigns /> : null}
       </main>
     </>
