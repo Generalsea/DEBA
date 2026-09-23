@@ -186,7 +186,7 @@ export default function Header({
               <span className="deba-brand-mark">D</span>
               <span className="deba-brand-copy">
                 <strong>DEBA</strong>
-                <small>سوق التبادل المصري</small>
+                <small>سوق مصري للبيع والشراء والتبادل</small>
               </span>
             </Link>
 
