@@ -96,3 +96,19 @@ test('admin campaign management keeps write access server-side and supports sche
   assert.match(migration, /media_storage_path/)
   assert.match(migration, /poster_storage_path/)
 })
+
+test('future marketplace theme is persistent and does not invent commerce metrics', async () => {
+  const toggle = await read('src/components/ThemeToggle.tsx')
+  const layout = await read('src/app/layout.tsx')
+  const page = await read('src/app/page.tsx')
+  const card = await read('src/components/ProductCard.tsx')
+
+  assert.match(toggle, /localStorage\.setItem\(['"]deba-theme['"]/)
+  assert.match(layout, /localStorage\.getItem\(['"]deba-theme['"]/)
+  assert.match(layout, /prefers-color-scheme: light/)
+  assert.match(page, /from\('reviews'\)/)
+  assert.match(page, /status', 'published'/)
+  assert.match(card, /ratingValue/)
+  assert.match(card, /ratingCount/)
+  assert.doesNotMatch(page, /50,000|15,000|100,000/)
+})
