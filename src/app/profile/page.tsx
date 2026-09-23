@@ -269,7 +269,7 @@ export default async function ProfilePage({
       ? supabase
           .from('product_images')
           .select('product_id,storage_path,alt_text,sort_order,is_primary')
-          .in('product_id', sellerProducts.map((product) => product.id))
+          .in('product_id', allProductIds)
           .order('is_primary', { ascending: false })
           .order('sort_order', { ascending: true })
       : Promise.resolve({ data: [], error: null }),
@@ -321,7 +321,7 @@ export default async function ProfilePage({
     moderationStatus: product.moderation_status,
     conditionGrade: product.condition_grade,
     createdAt: product.created_at,
-    imageUrl: imageLookup.get(product.id)?.storage_path || null,
+    imageUrl: (() => { const path = imageLookup.get(product.id)?.storage_path; return path ? supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl : null })(),
   }))
 
   const serializedFavorites: ProfileFavorite[] = favorites
@@ -337,6 +337,7 @@ export default async function ProfilePage({
         conditionGrade: product.condition_grade,
         status: product.status,
         createdAt: favorite.created_at,
+        imageUrl: (() => { const path = imageLookup.get(product.id)?.storage_path; return path ? supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl : null })(),
       }
     })
     .filter((item): item is ProfileFavorite => item !== null)
