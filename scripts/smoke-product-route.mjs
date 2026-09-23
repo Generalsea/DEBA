@@ -79,6 +79,10 @@ const response = await fetch(url, {
   signal: AbortSignal.timeout(15_000),
 })
 const body = await response.text()
+const hasDetailLayout = body.includes('<main class="deba-detail-page" dir="rtl">')
+const hasDetailContent = body.includes('class="deba-detail-layout"')
+const hasNotFoundBoundary = body.includes('deba-detail-empty-state')
+const hasErrorBoundary = body.includes('deba-detail-error-state')
 
 console.log(
   JSON.stringify(
@@ -88,7 +92,10 @@ console.log(
       productId: product.id,
       title: product.title,
       bodyHasTitle: body.includes(product.title),
-      bodyHasNotFound: body.includes('السلعة غير موجودة'),
+      hasDetailLayout,
+      hasDetailContent,
+      hasNotFoundBoundary,
+      hasErrorBoundary,
     },
     null,
     2,
@@ -100,9 +107,9 @@ if (response.status !== 200) {
   throw new Error('Product detail route did not return HTTP 200.')
 }
 
-if (body.includes('السلعة غير موجودة')) {
-  console.error(body.slice(0, 8_000))
-  throw new Error('Product detail route rendered the not-found state.')
+if (!hasDetailLayout || !hasDetailContent) {
+  console.error(body.slice(0, 12_000))
+  throw new Error('Product detail route did not render the product detail layout.')
 }
 
 if (!body.includes(product.title)) {
@@ -110,4 +117,4 @@ if (!body.includes(product.title)) {
   throw new Error('Product detail route did not render the expected product title.')
 }
 
-console.log('Product detail smoke test passed.')
+console.log('Product detail smoke test passed: detail layout rendered.')
