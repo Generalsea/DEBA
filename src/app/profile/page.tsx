@@ -26,6 +26,7 @@ type ProfileRow = {
   account_type: 'buyer' | 'seller'
   created_at: string
   updated_at: string
+  seller_store_key: string | null
 }
 
 const BUCKET = 'deba-product-media'
@@ -122,7 +123,7 @@ export default async function ProfilePage({
   ] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id,username,display_name,avatar_url,bio,city,governorate,is_public,account_type,created_at,updated_at')
+      .select('id,username,display_name,avatar_url,bio,city,governorate,is_public,account_type,seller_store_key,created_at,updated_at')
       .eq('id', userId)
       .maybeSingle(),
     supabase
@@ -319,6 +320,7 @@ export default async function ProfilePage({
       governorate: profile.governorate,
       isPublic: profile.is_public,
       accountType: profile.account_type,
+      storeKey: profile.seller_store_key,
       createdAt: profile.created_at,
       phone: privateProfile?.phone || null,
       addressLine1: privateProfile?.address_line1 || null,
