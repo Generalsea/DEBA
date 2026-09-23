@@ -221,6 +221,8 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
   const [toast, setToast] = useState('')
   const [contextMenu, setContextMenu] = useState<{ messageId: string; x: number; y: number } | null>(null)
   const [refreshToken, setRefreshToken] = useState(0)
+  const [selectedDemoChatId, setSelectedDemoChatId] = useState('demo-1')
+  const [readDemoIds, setReadDemoIds] = useState<string[]>([])
   const [demoReply, setDemoReply] = useState<string | null>(null)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const toastTimer = useRef<number | null>(null)
@@ -263,11 +265,16 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
     const demos = demoMode
       ? demoChats
           .filter((chat) => !live.some((room) => room.name === chat.name && room.product?.title?.startsWith(chat.product?.title || '\u0000')))
-          .map((chat) => ({ ...chat, live: false as const }))
+          .map((chat) => ({
+            ...chat,
+            live: false as const,
+            active: chat.id === selectedDemoChatId && !selectedRoomId,
+            unread: readDemoIds.includes(chat.id) ? 0 : chat.unread,
+          }))
       : []
 
     return [...live, ...demos]
-  }, [demoMode, rooms, selectedRoomId, refreshToken])
+  }, [demoMode, readDemoIds, rooms, selectedDemoChatId, selectedRoomId, refreshToken])
 
   const filteredChats = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase('ar')
@@ -925,7 +932,16 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
                     key={chat.id}
                     type="button"
                     className={'chat-item ' + (chat.id === selectedRoomId || (!selectedRoomId && chat.active) ? 'active ' : '') + (chat.unread > 0 ? 'unread' : '')}
-                    onClick={() => void (chat.live ? openRoom(chat.id) : showToast('💬 فتح محادثة مع ' + chat.name))}
+                    onClick={() => {
+                      if (chat.live) {
+                        showToast('💬 فتح محادثة مع ' + chat.name)
+                        void openRoom(chat.id)
+                        return
+                      }
+                      setSelectedDemoChatId(chat.id)
+                      setReadDemoIds((current) => current.includes(chat.id) ? current : [...current, chat.id])
+                      showToast('💬 فتح محادثة مع ' + chat.name)
+                    }}
                     style={{ width: '100%', textAlign: 'right' }}
                   >
                     <span className={'chat-item-avatar ' + (chat.online ? 'online' : '')} style={{ background: chat.gradient }}>
