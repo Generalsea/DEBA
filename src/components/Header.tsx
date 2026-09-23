@@ -25,6 +25,7 @@ import MobileNavigation from '@/components/MobileNavigation'
 import { createClient } from '@/utils/supabase/client'
 import { useCartStore } from '@/lib/cart-store'
 import HeaderReelsRail, { type HeaderPromo } from '@/components/HeaderReelsRail'
+import DebaLogo from '@/components/DebaLogo'
 
 export type HeaderCategory = {
   id: string
@@ -352,10 +353,10 @@ export default function Header({
 
           <div className="deba-classified-main-header">
             <div className="deba-classified-container deba-classified-header-content">
-              <Link href="/" className="deba-classified-logo-section" aria-label="DEBA - الرئيسية">
-                <span className="deba-classified-logo">DEBA</span>
+              <div className="deba-classified-logo-section">
+                <DebaLogo href="/" />
                 <span className="deba-classified-logo-tagline">سوق الإعلانات والبيع المباشر في مصر</span>
-              </Link>
+              </div>
 
               <div className="deba-classified-search-section">
                 <form className="deba-classified-search-container" onSubmit={submitSearch} role="search">
@@ -485,13 +486,7 @@ export default function Header({
               {menuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
-            <Link href="/" className="deba-brand" aria-label="DEBA - الرئيسية">
-              <span className="deba-brand-mark">D</span>
-              <span className="deba-brand-copy">
-                <strong>DEBA</strong>
-                <small>سوق مصري للبيع والشراء والتبادل</small>
-              </span>
-            </Link>
+            <DebaLogo href="/" className="deba-header-logo" />
 
             <div className="deba-search-wrap" ref={searchRef}>
               <form onSubmit={submitSearch} className="deba-search" role="search">
