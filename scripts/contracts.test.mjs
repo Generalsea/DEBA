@@ -125,6 +125,6 @@ test('total frontend replacement has no legacy marketplace style layer', async (
   for (const legacySelector of ['.header {', '.product-card {', '.hero {', '.category-card {', '.products-grid {', '.section-header {', '.mobile-nav {']) {
     assert.equal(globals.includes(legacySelector), false, 'legacy selector remains: ' + legacySelector)
   }
-  assert.match(globals, /\\.deba-market-card\\s*\\{/)
-  assert.match(globals, /\\.deba-site-header\\s*\\{/)
+  assert.match(globals, /\.deba-market-card\s*\{/)
+  assert.match(globals, /\.deba-site-header\s*\{/)
 })
