@@ -880,7 +880,7 @@ export default async function HomePage({
     .slice(0, 3)
 
   return (
-    <div className="deba-future-home">
+    <div className="deba-marketplace">
       <Header
         categories={presentationCategories.map((item) => ({
           id: item.row.id,
