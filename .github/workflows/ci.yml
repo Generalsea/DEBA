@@ -1,4 +1,5 @@
 name: DEBA CI
+# Route regression coverage for non-ASCII dynamic product slugs.
 
 on:
   push:
