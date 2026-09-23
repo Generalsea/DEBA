@@ -82,7 +82,7 @@ export default function Header({
       if (!mounted || !data) return
 
       let avatarUrl = data.avatar_url as string | null
-      if (avatarUrl && !/^https?:\\/\\//i.test(avatarUrl)) {
+      if (avatarUrl && !/^https?:\/\//i.test(avatarUrl)) {
         avatarUrl = supabase.storage.from('deba-profile-media').getPublicUrl(avatarUrl).data.publicUrl
       }
 
