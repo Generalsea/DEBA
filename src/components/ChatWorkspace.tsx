@@ -20,6 +20,7 @@ type Room = {
   id: string
   product_id: string | null
   updated_at: string
+  unreadCount?: number
   product: { id: string; title: string; slug: string; price: number; currency: string } | null
   participant: { last_read_at: string | null; is_muted: boolean } | null
   counterparty: { id: string; display_name: string; username: string | null; avatar_url: string | null; account_type: 'buyer' | 'seller' } | null
@@ -79,50 +80,59 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
 
   useEffect(() => {
     let active = true
-    const supabase = createClient()
-    void supabase.auth.getClaims().then(({ data }) => {
-      const id = typeof data?.claims?.sub === 'string' ? data.claims.sub : null
-      if (active) setCurrentUserId(id)
-    })
-    loadRooms()
-      .then((data) => {
+
+    async function boot() {
+      try {
+        const supabase = createClient()
+        const { data: claims } = await supabase.auth.getClaims()
+        const id = typeof claims?.claims?.sub === 'string' ? claims.claims.sub : null
+        if (!id) {
+          if (active) {
+            setCurrentUserId(null)
+            setLoadingRooms(false)
+            setError('يجب تسجيل الدخول لاستخدام مركز المحادثات.')
+          }
+          return
+        }
+
+        if (active) setCurrentUserId(id)
+        let data = await loadRooms()
         if (!active) return
+
         const url = new URL(window.location.href)
         const preferred = url.searchParams.get('room')
         if (preferred && data.some((room) => room.id === preferred)) {
-          void openRoom(preferred)
-        } else if (data[0]) {
-          void openRoom(data[0].id)
+          await openRoom(preferred)
+          return
         }
-      })
-      .catch((e) => {
+
+        if (initialProduct) {
+          const response = await fetch('/api/chat/rooms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId: initialProduct }),
+          })
+          const payload = await response.json() as { room?: { room_id?: string }; error?: string }
+          if (!response.ok || !payload.room?.room_id) {
+            throw new Error(payload.error || 'تعذر فتح المحادثة.')
+          }
+          data = await loadRooms()
+          if (!active) return
+          await openRoom(payload.room.room_id)
+          void data
+          return
+        }
+
+        if (data[0]) await openRoom(data[0].id)
+      } catch (e) {
         if (active) {
           setLoadingRooms(false)
           setError(e instanceof Error ? e.message : 'تعذر تحميل المحادثات.')
         }
-      })
-    return () => { active = false }
-  }, [])
-
-  useEffect(() => {
-    if (!initialProduct) return
-    let active = true
-    fetch('/api/chat/rooms', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId: initialProduct }),
-    }).then(async (response) => {
-      const data = await response.json() as { room?: { room_id?: string }; error?: string }
-      if (!response.ok) throw new Error(data.error || 'تعذر فتح المحادثة.')
-      if (active && data.room?.room_id) {
-        const roomId = data.room.room_id
-        setSelectedRoomId(roomId)
-        await openRoom(roomId)
-        await loadRooms()
       }
-    }).catch((e) => {
-      if (active) setError(e instanceof Error ? e.message : 'تعذر فتح المحادثة.')
-    })
+    }
+
+    void boot()
     return () => { active = false }
   }, [initialProduct])
 
