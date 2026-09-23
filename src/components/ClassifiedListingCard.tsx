@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Heart, MapPin, MessageCircle, PackageSearch, Tag, UserRound } from 'lucide-react'
+import { MapPin, MessageCircle, PackageSearch, Tag, UserRound } from 'lucide-react'
 import FavoriteButton from '@/components/FavoriteButton'
 
 export type ClassifiedListingItem = {
@@ -24,13 +24,9 @@ export type ClassifiedListingItem = {
   publishedAt?: string | null
 }
 
-function formatPrice(value: number | null, currency: string) {
-  if (value === null) return 'السعر عند التواصل'
-  return (
-    new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(value) +
-    ' ' +
-    (currency || 'جنيه')
-  )
+function formatAmount(value: number | null) {
+  if (value === null) return null
+  return new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(value)
 }
 
 function formatRelativeTime(value: string | null | undefined) {
@@ -110,8 +106,14 @@ export default function ClassifiedListingCard({
         </Link>
 
         <div className="deba-classified-listing-price">
-          {formatPrice(item.price, item.currency).replace(/\s?EGP$/, ' جنيه')}
-          {item.price !== null ? <span className="currency">جنيه</span> : null}
+          {item.price === null ? (
+            'السعر عند التواصل'
+          ) : (
+            <>
+              {formatAmount(item.price)}
+              <span className="currency">{item.currency === 'EGP' ? 'جنيه' : item.currency}</span>
+            </>
+          )}
         </div>
 
         <div className="deba-classified-listing-meta">
