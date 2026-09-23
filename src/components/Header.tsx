@@ -40,6 +40,8 @@ type HeaderIdentity = {
   username: string | null
   displayName: string | null
   avatarUrl: string | null
+  city: string | null
+  governorate: string | null
 }
 
 function badge(value: number) {
