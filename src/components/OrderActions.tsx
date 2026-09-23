@@ -25,7 +25,10 @@ const SHIPMENT_ACTIONS: Record<string, Array<{ status: string; label: string }>>
     { status: 'picked_up', label: 'تم الاستلام' },
     { status: 'cancelled', label: 'إلغاء الشحنة' },
   ],
-  picked_up: [{ status: 'in_transit', label: 'بدء النقل' }, { status: 'cancelled', label: 'إلغاء الشحنة' }],
+  picked_up: [
+    { status: 'in_transit', label: 'بدء النقل' },
+    { status: 'cancelled', label: 'إلغاء الشحنة' },
+  ],
   in_transit: [
     { status: 'out_for_delivery', label: 'خرج للتسليم' },
     { status: 'delivered', label: 'تم التسليم' },
@@ -167,6 +170,7 @@ export default function OrderActions({
   const canCompleteOrder =
     isBuyer &&
     orderStatus === 'ready' &&
+    paymentStatus === 'paid' &&
     (deliveryMethod === 'pickup' || shipment?.status === 'delivered')
 
   return (
@@ -186,28 +190,28 @@ export default function OrderActions({
       {actions
         .filter((action) => action.status !== 'completed' || canCompleteOrder)
         .map((action) => (
-        <button
-          key={action.status}
-          type="button"
-          className={
-            action.status === 'cancelled'
-              ? 'deba-order-action danger'
-              : 'deba-order-action'
-          }
-          disabled={loading !== null}
-          onClick={() => void transitionOrder(action.status)}
-        >
-          {loading === action.status ? (
-            <Loader2 size={17} className="deba-spin" />
-          ) : action.status === 'cancelled' ? (
-            <XCircle size={17} />
-          ) : (
-            <CheckCircle2 size={17} />
-          )}
-          {action.label}
-        </button>
-      ))}
-
+          <button
+            key={action.status}
+            type="button"
+            className={
+              action.status === 'cancelled'
+                ? 'deba-order-action danger'
+                : 'deba-order-action'
+            }
+            disabled={loading !== null}
+            onClick={() => void transitionOrder(action.status)}
+          >
+            {loading === action.status ? (
+              <Loader2 size={17} className="deba-spin" />
+            ) : action.status === 'cancelled' ? (
+              <XCircle size={17} />
+            ) : (
+              <CheckCircle2 size={17} />
+            )}
+            {action.label}
+          </button>
+        ))}
+      
       {isSeller && deliveryMethod !== 'pickup' && !shipment && ['confirmed','processing','ready'].includes(orderStatus) ? (
         <button
           type="button"
