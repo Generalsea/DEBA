@@ -175,7 +175,7 @@ export default function ProductCard({ item, priority = false, compact = false }:
             <strong>
               {item.ratingValue.toLocaleString('ar-EG', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
             </strong>
-            <span>({item.ratingCount.toLocaleString('ar-EG')})</span>
+            <span>({(item.ratingCount ?? 0).toLocaleString('ar-EG')})</span>
           </div>
         ) : null}
 
