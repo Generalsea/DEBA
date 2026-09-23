@@ -313,9 +313,15 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
       }
 
       if (pollingTimer == null) {
-        pollingTimer = window.setInterval(async () => {
-          await refreshRooms(false)
-          if (roomIdRef.current) await loadMessages(roomIdRef.current)
+        pollingTimer = window.setInterval(() => {
+          void (async () => {
+            try {
+              await refreshRooms(false)
+              if (roomIdRef.current) await loadMessages(roomIdRef.current)
+            } catch {
+              // A transient network error must not break the original UI surface.
+            }
+          })()
         }, 5000)
       }
     }
