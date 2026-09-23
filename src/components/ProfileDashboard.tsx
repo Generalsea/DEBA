@@ -75,6 +75,7 @@ export type ProfileFavorite = {
   conditionGrade: string | null
   status: string
   createdAt: string
+  imageUrl?: string | null
 }
 
 export type ProfileAccountData = {
