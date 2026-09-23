@@ -112,3 +112,19 @@ test('future marketplace theme is persistent and does not invent commerce metric
   assert.match(card, /ratingCount/)
   assert.doesNotMatch(page, /50,000|15,000|100,000/)
 })
+
+test('total frontend replacement has no legacy marketplace style layer', async () => {
+  const layout = await read('src/app/layout.tsx')
+  const globals = await read('src/app/globals.css')
+
+  assert.doesNotMatch(layout, /future-marketplace(?:-overrides)?\\.css/)
+  for (const legacyFile of ['src/app/future-marketplace.css', 'src/app/future-marketplace-overrides.css']) {
+    await assert.rejects(readFile(new URL('../' + legacyFile, import.meta.url)))
+  }
+
+  for (const legacySelector of ['.header {', '.product-card {', '.hero {', '.category-card {', '.products-grid {', '.section-header {', '.mobile-nav {']) {
+    assert.equal(globals.includes(legacySelector), false, 'legacy selector remains: ' + legacySelector)
+  }
+  assert.match(globals, /\\.deba-market-card\\s*\\{/)
+  assert.match(globals, /\\.deba-site-header\\s*\\{/)
+})
