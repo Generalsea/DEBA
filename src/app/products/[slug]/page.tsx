@@ -17,6 +17,7 @@ import { notFound } from 'next/navigation'
 import Header, { type HeaderCategory } from '@/components/Header'
 import ProductCard, { type ProductCardItem } from '@/components/ProductCard'
 import FavoriteButton from '@/components/FavoriteButton'
+import CartAddButton from '@/components/CartAddButton'
 import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGallery'
 import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components/ProductDetailTabs'
 import { createClient } from '@/utils/supabase/server'
@@ -363,6 +364,22 @@ export default async function ProductDetailPage({
   const isOwner = Boolean(product.owner_id && data.userId === product.owner_id)
   const canBuy = price !== null && price > 0 && product.quantity > 0
   const purchaseHref = '/products/' + encodeURIComponent(product.slug) + '/checkout'
+  const cartProduct = price !== null ? {
+    id: product.id,
+    title: product.title,
+    slug: product.slug,
+    price,
+    currency: product.currency || 'EGP',
+    conditionGrade: product.condition_grade,
+    listingType: 'sale' as const,
+    quantityAvailable: product.quantity,
+    sellerId: product.owner_id || '',
+    sellerName,
+    sellerAvatar: product.seller?.avatar_url || null,
+    imageUrl: images[0]?.url || null,
+    imageAlt: images[0]?.alt || product.title,
+    deliveryMethod: product.delivery_method as 'pickup' | 'seller_delivery' | 'platform_delivery' | 'both',
+  } : null
 
   return (
     <>
@@ -460,6 +477,8 @@ export default async function ProductDetailPage({
                   </div>
                 </div>
               ) : canBuy ? (
+                {cartProduct ? <CartAddButton product={cartProduct} /> : null}
+
                 <Link href={purchaseHref} className="deba-purchase-primary">
                   <span className="deba-purchase-primary-icon">
                     <ShoppingBag size={21} />
