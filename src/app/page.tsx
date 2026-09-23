@@ -791,6 +791,7 @@ export default async function HomePage({
     maxPrice?: SearchParamValue
     condition?: SearchParamValue
     governorate?: SearchParamValue
+    city?: SearchParamValue
     sort?: SearchParamValue
   }>
 }) {
