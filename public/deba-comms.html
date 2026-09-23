@@ -847,7 +847,7 @@
     }
 
     list.innerHTML = filtered.map(c => `
-      <div class="chat-item ${c.active ? 'active' : ''} ${c.unread > 0 ? 'unread' : ''}" onclick="openChat(${JSON.stringify(c.id)})">
+      <div class="chat-item ${c.active ? 'active' : ''} ${c.unread > 0 ? 'unread' : ''}" onclick="openChat('${String(c.id)}')">
         <div class="chat-item-avatar ${c.online ? 'online' : ''}" style="background: ${c.gradient}">${c.avatar}</div>
         <div class="chat-item-info">
           <div class="chat-item-top"><div class="chat-item-name">${c.name} ${c.verified ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="#3B82F6"><path d="M12 2L14.09 4.26L17 3.27L17.74 6.26L20.73 7L19.74 9.91L22 12L19.74 14.09L20.73 17.74L17.74 17L17 20.73L14.09 19.74L12 22L9.91 19.74L7 20.73L6.26 17.74L3.27 17L4.26 14.09L2 12L4.26 9.91L3.27 7L6.26 6.26L7 3.27L9.91 4.26L12 2Z"/><path d="M10 12L11.5 13.5L14 10" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</div><div class="chat-item-time">${c.lastTime}</div></div>
