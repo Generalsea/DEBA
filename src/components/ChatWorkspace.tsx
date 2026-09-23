@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
 
 type Room = {
   id: string
@@ -77,7 +78,11 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
 
   useEffect(() => {
     let active = true
-    fetch('/api/profile', { cache: 'no-store' }).catch(() => null)
+    const supabase = createClient()
+    void supabase.auth.getClaims().then(({ data }) => {
+      const id = typeof data?.claims?.sub === 'string' ? data.claims.sub : null
+      if (active) setCurrentUserId(id)
+    })
     loadRooms()
       .then((data) => {
         if (!active) return
