@@ -196,3 +196,22 @@ html[data-theme='light'] .deba-future-home .deba-product-card {
     padding-bottom: 24px;
   }
 }
+
+.deba-future-home .deba-product-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 9px;
+  color: var(--fm-warning);
+  font-size: .76rem;
+}
+
+.deba-future-home .deba-product-rating strong {
+  color: var(--fm-text);
+  font-weight: 900;
+}
+
+.deba-future-home .deba-product-rating span {
+  color: var(--fm-text-muted);
+  font-size: .7rem;
+}
