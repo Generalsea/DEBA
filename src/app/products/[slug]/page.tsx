@@ -22,6 +22,8 @@ import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGa
 import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components/ProductDetailTabs'
 import { createClient } from '@/utils/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 const BUCKET = 'deba-product-media'
 
 type RouteParams = {
