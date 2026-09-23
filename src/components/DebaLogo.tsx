@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 type Props = {
@@ -10,14 +11,14 @@ type Props = {
 export default function DebaLogo({ href = '/', compact = false, className = '', title = 'DEBA' }: Props) {
   const content = (
     <span className={'deba-logo-lockup ' + (compact ? 'is-compact ' : '') + className}>
-      <svg className="deba-logo-mark-svg" viewBox="0 0 48 48" aria-hidden="true">
-        <path
-          d="M14 8h11.5C34.6 8 41 14.4 41 23.8S34.6 40 25.5 40H14V8Zm8 7v18h3.2c5 0 8.8-3.1 8.8-9.2S30.2 15 25.2 15H22Z"
-          fill="currentColor"
-        />
-        <path d="M8 24h17" stroke="#1A2B3C" strokeWidth="4" strokeLinecap="round" opacity=".95" />
-      </svg>
-      <span className="deba-logo-wordmark" aria-label={title}>DEBA</span>
+      <Image
+        src="/brand/deba-logo.png"
+        alt={title}
+        width={180}
+        height={60}
+        priority
+        className="deba-logo-image"
+      />
     </span>
   )
 
