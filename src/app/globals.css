@@ -11553,3 +11553,1708 @@ html[data-theme="dark"] .deba-classified-shell {
   .deba-classified-logo-section .deba-logo-mark-svg { width:34px; height:34px; }
   .deba-header-logo .deba-logo-wordmark { font-size:23px; }
 }
+
+
+/* =========================================================
+   DEBA COMMS — dedicated communications workspace
+   Ported from the approved DEBA Comms visual specification.
+   All selectors are scoped so the rest of DEBA remains intact.
+   ========================================================= */
+
+.deba-comms-page {
+  --primary: #FF6B35;
+  --primary-dark: #E85A2A;
+  --primary-soft: rgba(255, 107, 53, 0.06);
+  --primary-glow: rgba(255, 107, 53, 0.12);
+  --primary-ring: rgba(255, 107, 53, 0.18);
+  --bg: #F5F6F8;
+  --bg-elevated: #FFFFFF;
+  --bg-subtle: #F1F3F5;
+  --bg-hover: #E8EBEE;
+  --bg-chat: #F7F8FA;
+  --bg-input: #F1F3F5;
+  --text: #0A0E1A;
+  --text-secondary: #4A5568;
+  --text-tertiary: #8A94A6;
+  --text-muted: #B8C1CE;
+  --border: #E2E6EC;
+  --border-light: #EEF1F5;
+  --border-strong: #D1D6DE;
+  --success: #10B981;
+  --success-bg: rgba(16, 185, 129, 0.1);
+  --warning: #F59E0B;
+  --warning-bg: rgba(245, 158, 11, 0.1);
+  --danger: #EF4444;
+  --danger-bg: rgba(239, 68, 68, 0.08);
+  --info: #3B82F6;
+  --info-bg: rgba(59, 130, 246, 0.08);
+  --shadow-xs: 0 1px 2px rgba(10, 14, 26, 0.04);
+  --shadow-sm: 0 2px 8px rgba(10, 14, 26, 0.06);
+  --shadow-md: 0 4px 16px rgba(10, 14, 26, 0.08);
+  --shadow-lg: 0 8px 32px rgba(10, 14, 26, 0.12);
+  --shadow-xl: 0 16px 48px rgba(10, 14, 26, 0.16);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+  --font-ar: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-en: 'Inter', sans-serif;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  height: 100dvh;
+  min-height: 640px;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ar);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html[data-theme="dark"] .deba-comms-page {
+  --bg: #0A0D14;
+  --bg-elevated: #111622;
+  --bg-subtle: #161D2B;
+  --bg-hover: #1E2636;
+  --bg-chat: #0D1118;
+  --bg-input: #161D2B;
+  --text: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-tertiary: #64748B;
+  --text-muted: #3F4A5C;
+  --border: #1E2636;
+  --border-light: #161D2B;
+  --border-strong: #2A3347;
+  --primary-soft: rgba(255, 107, 53, 0.1);
+  --primary-glow: rgba(255, 107, 53, 0.18);
+  --primary-ring: rgba(255, 107, 53, 0.25);
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+.deba-comms-page * {
+  box-sizing: border-box;
+}
+
+.deba-comms-page button {
+  font-family: inherit;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+
+.deba-comms-page input,
+.deba-comms-page textarea {
+  font-family: inherit;
+}
+
+.deba-comms-page a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.deba-comms-page img {
+  display: block;
+  max-width: 100%;
+}
+
+.deba-comms-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg);
+  direction: ltr;
+}
+
+.deba-comms-top-header {
+  min-height: 68px;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  position: relative;
+  z-index: 20;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  direction: rtl;
+}
+
+.deba-comms-header-right,
+.deba-comms-header-help,
+.deba-comms-header-left,
+.deba-comms-location-badge,
+.deba-comms-logo {
+  display: flex;
+  align-items: center;
+}
+
+.deba-comms-header-right {
+  gap: 24px;
+  min-width: 0;
+}
+
+.deba-comms-location-badge {
+  gap: 6px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.deba-comms-location-badge svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.deba-comms-location-badge span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deba-comms-header-help {
+  gap: 16px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.deba-comms-header-help a {
+  color: var(--text-secondary);
+  transition: color .2s var(--ease);
+}
+
+.deba-comms-header-help a:hover {
+  color: var(--primary);
+}
+
+.deba-comms-divider {
+  width: 1px;
+  height: 16px;
+  flex: 0 0 auto;
+  background: var(--border);
+}
+
+.deba-comms-header-left {
+  gap: 20px;
+}
+
+.deba-comms-logo {
+  gap: 8px;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -.5px;
+}
+
+.deba-comms-logo-mark {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, .3);
+}
+
+.deba-comms-logo-sub {
+  margin-top: -2px;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.deba-comms-main-content {
+  min-height: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 0;
+  overflow: hidden;
+  padding: 16px;
+  direction: ltr;
+}
+
+.deba-comms-chat-panel,
+.deba-comms-sidebar {
+  min-height: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  direction: rtl;
+}
+
+.deba-comms-chat-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.deba-comms-chat-topbar {
+  min-height: 74px;
+  padding: 14px 20px;
+  display: grid;
+  grid-template-columns: minmax(210px, 1fr) auto minmax(132px, 1fr);
+  align-items: center;
+  gap: 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+.deba-comms-listing-back {
+  justify-self: start;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all .2s var(--ease);
+}
+
+.deba-comms-listing-back:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.deba-comms-listing-back svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.deba-comms-listing-back-label {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.deba-comms-listing-inline {
+  max-width: 330px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  margin-top: 1px;
+}
+
+.deba-comms-listing-title,
+.deba-comms-listing-price {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deba-comms-listing-title {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.deba-comms-listing-price {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.deba-comms-seller-info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.deba-comms-seller-avatar-sm,
+.deba-comms-message-avatar,
+.deba-comms-chat-item-avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  color: #fff;
+  font-weight: 700;
+}
+
+.deba-comms-seller-avatar-sm {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  font-size: 16px;
+}
+
+.deba-comms-seller-avatar-sm img,
+.deba-comms-message-avatar img,
+.deba-comms-chat-item-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.deba-comms-online-dot {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--success);
+  border: 2px solid var(--bg-elevated);
+}
+
+.deba-comms-seller-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.deba-comms-seller-label {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.deba-comms-seller-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.deba-comms-verified-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--info);
+}
+
+.deba-comms-topbar-actions {
+  justify-self: end;
+  display: flex;
+  gap: 6px;
+}
+
+.deba-comms-icon-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent !important;
+  color: var(--text-secondary) !important;
+  transition: all .2s var(--ease);
+}
+
+.deba-comms-icon-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+.deba-comms-security-banner {
+  min-height: 49px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(90deg, rgba(255,107,53,.08) 0%, rgba(255,107,53,.04) 100%);
+  border-bottom: 1px solid rgba(255,107,53,.12);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.deba-comms-security-banner svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.deba-comms-security-banner strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.deba-comms-product-context {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.deba-comms-product-context-card {
+  min-width: 0;
+  display: flex;
+  gap: 14px;
+  padding: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: all .2s var(--ease);
+  cursor: pointer;
+}
+
+.deba-comms-product-context-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.deba-comms-product-thumb {
+  width: 72px;
+  height: 72px;
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 auto;
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+}
+
+.deba-comms-product-thumb > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.deba-comms-product-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.deba-comms-product-details {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.deba-comms-product-title {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deba-comms-product-meta {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.deba-comms-product-meta > span:not(.deba-comms-product-dot) {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.deba-comms-product-dot {
+  width: 3px;
+  height: 3px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.deba-comms-product-price-row {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.deba-comms-product-price {
+  color: var(--primary);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.deba-comms-view-listing-btn {
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+  transition: all .2s var(--ease);
+}
+
+.deba-comms-product-context-card:hover .deba-comms-view-listing-btn {
+  background: var(--primary);
+  color: #fff;
+}
+
+.deba-comms-package-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 3px;
+  color: var(--text-tertiary);
+  background: var(--bg-subtle);
+}
+
+.deba-comms-package-placeholder span {
+  font-family: var(--font-en);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .14em;
+}
+
+.deba-comms-package-placeholder svg {
+  width: 25px;
+  height: 25px;
+}
+
+.deba-comms-package-placeholder.compact {
+  height: 150px;
+}
+
+.deba-comms-messages-area {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg-chat);
+  scroll-behavior: smooth;
+}
+
+.deba-comms-messages-area::-webkit-scrollbar,
+.deba-comms-chat-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.deba-comms-messages-area::-webkit-scrollbar-track,
+.deba-comms-chat-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.deba-comms-messages-area::-webkit-scrollbar-thumb,
+.deba-comms-chat-list::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: var(--border);
+}
+
+.deba-comms-date-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.deba-comms-date-divider::before,
+.deba-comms-date-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.deba-comms-date-divider-label {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-elevated);
+  color: var(--text-tertiary);
+  font-family: var(--font-en);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-xs);
+}
+
+.deba-comms-message {
+  max-width: 72%;
+  display: flex;
+  gap: 10px;
+  animation: debaCommsMessageIn .35s var(--ease-spring);
+}
+
+@keyframes debaCommsMessageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.deba-comms-message.sent {
+  align-self: flex-start;
+  flex-direction: row;
+}
+
+.deba-comms-message.received {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.deba-comms-message-avatar {
+  width: 32px;
+  height: 32px;
+  align-self: flex-end;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+}
+
+.deba-comms-message.sent .deba-comms-message-avatar {
+  background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+}
+
+.deba-comms-message-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.deba-comms-message-bubble {
+  position: relative;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-xs);
+  font-size: 14px;
+  line-height: 1.65;
+  word-wrap: break-word;
+}
+
+.deba-comms-message.sent .deba-comms-message-bubble {
+  border-top-right-radius: 4px;
+}
+
+.deba-comms-message.received .deba-comms-message-bubble {
+  border-color: transparent;
+  border-top-left-radius: 4px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(255,107,53,.25);
+}
+
+.deba-comms-message-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  color: var(--text-tertiary);
+  font-family: var(--font-en);
+  font-size: 11px;
+}
+
+.deba-comms-message.received .deba-comms-message-meta {
+  flex-direction: row-reverse;
+}
+
+.deba-comms-read-receipt {
+  display: flex;
+  align-items: center;
+  color: var(--info);
+}
+
+.deba-comms-product-card-msg {
+  max-width: 300px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-md);
+}
+
+.deba-comms-product-card-msg > img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.deba-comms-product-card-msg-body {
+  padding: 12px;
+}
+
+.deba-comms-product-card-msg-title {
+  margin-bottom: 4px;
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.deba-comms-product-card-msg-price {
+  margin-bottom: 8px;
+  color: var(--primary);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.deba-comms-product-card-msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.deba-comms-offer-card {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+.deba-comms-offer-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.deba-comms-offer-header svg {
+  width: 14px;
+  height: 14px;
+  color: var(--primary);
+}
+
+.deba-comms-offer-amount {
+  margin-bottom: 4px;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.deba-comms-offer-note {
+  margin-bottom: 12px;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.deba-comms-offer-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.deba-comms-offer-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  font-weight: 700;
+  transition: all .2s var(--ease);
+}
+
+.deba-comms-offer-btn.accept {
+  background: var(--success);
+  color: #fff;
+}
+
+.deba-comms-offer-btn.accept:hover {
+  background: #059669;
+}
+
+.deba-comms-offer-btn.counter {
+  background: var(--bg-subtle);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.deba-comms-offer-btn.counter:hover {
+  background: var(--bg-hover);
+}
+
+.deba-comms-offer-btn.decline {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.deba-comms-offer-btn.decline:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.deba-comms-typing-indicator {
+  width: fit-content;
+  display: flex;
+  gap: 4px;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  border-top-right-radius: 4px;
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-xs);
+}
+
+.deba-comms-typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  animation: debaCommsTyping 1.4s infinite;
+}
+
+.deba-comms-typing-dot:nth-child(2) { animation-delay: .2s; }
+.deba-comms-typing-dot:nth-child(3) { animation-delay: .4s; }
+
+@keyframes debaCommsTyping {
+  0%, 60%, 100% { transform: translateY(0); opacity: .4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+.deba-comms-quick-replies {
+  min-width: 0;
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+}
+
+.deba-comms-quick-replies::-webkit-scrollbar {
+  display: none;
+}
+
+.deba-comms-quick-reply {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-full);
+  background: var(--bg-subtle) !important;
+  color: var(--text-secondary) !important;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all .2s var(--ease);
+}
+
+.deba-comms-quick-reply:hover {
+  border-color: var(--primary) !important;
+  background: var(--primary-soft) !important;
+  color: var(--primary) !important;
+}
+
+.deba-comms-input-area {
+  padding: 16px 20px;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+}
+
+.deba-comms-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 8px 8px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--bg-input);
+  transition: all .2s var(--ease);
+}
+
+.deba-comms-input-wrapper:focus-within {
+  border-color: var(--primary);
+  background: var(--bg-elevated);
+  box-shadow: 0 0 0 4px var(--primary-ring);
+}
+
+.deba-comms-input-actions {
+  display: flex;
+  gap: 2px;
+  padding-bottom: 4px;
+}
+
+.deba-comms-input-action-btn {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  color: var(--text-tertiary) !important;
+  transition: all .2s var(--ease);
+}
+
+.deba-comms-input-action-btn:hover {
+  background: var(--bg-hover);
+  color: var(--primary) !important;
+}
+
+.deba-comms-message-input {
+  min-width: 0;
+  min-height: 20px;
+  max-height: 120px;
+  flex: 1;
+  padding: 10px 8px;
+  resize: none;
+  outline: none;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.deba-comms-message-input::placeholder {
+  color: var(--text-muted);
+}
+
+.deba-comms-send-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(255,107,53,.35);
+  transition: all .2s var(--ease);
+}
+
+.deba-comms-send-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(255,107,53,.45);
+}
+
+.deba-comms-send-btn:active:not(:disabled) {
+  transform: scale(.95);
+}
+
+.deba-comms-send-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.deba-comms-send-btn svg {
+  transform: rotate(180deg);
+}
+
+.deba-comms-legal-footer {
+  min-height: 40px;
+  padding: 10px 20px;
+  text-align: center;
+  color: var(--text-tertiary);
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.deba-comms-error {
+  margin: 0 20px 8px;
+  padding: 9px 12px;
+  border: 1px solid rgba(239,68,68,.16);
+  border-radius: 10px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.deba-comms-empty-state,
+.deba-comms-empty-conversation,
+.deba-comms-filter-empty {
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.deba-comms-empty-state {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 28px 16px;
+  font-size: 12px;
+}
+
+.deba-comms-empty-conversation {
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 30px 18px;
+}
+
+.deba-comms-empty-conversation strong,
+.deba-comms-filter-empty strong {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.deba-comms-empty-conversation span,
+.deba-comms-filter-empty span {
+  max-width: 320px;
+  color: var(--text-tertiary);
+  font-size: 11.5px;
+  line-height: 1.7;
+}
+
+.deba-comms-spin {
+  animation: debaCommsSpin 1s linear infinite;
+}
+
+@keyframes debaCommsSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== Sidebar ===== */
+
+.deba-comms-sidebar {
+  margin-left: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.deba-comms-sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.deba-comms-sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.deba-comms-brand {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.deba-comms-brand-label {
+  color: var(--primary);
+  font-family: var(--font-en);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.deba-comms-brand-title {
+  overflow: hidden;
+  margin: 0;
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deba-comms-refresh-btn {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated) !important;
+  color: var(--text-secondary) !important;
+  transition: all .2s var(--ease);
+}
+
+.deba-comms-refresh-btn:hover {
+  background: var(--bg-subtle) !important;
+  color: var(--text) !important;
+}
+
+.deba-comms-security-banner-sm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255,107,53,.15);
+  border-radius: var(--radius-md);
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+html[data-theme="dark"] .deba-comms-security-banner-sm {
+  color: var(--primary);
+}
+
+.deba-comms-security-banner-sm svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.deba-comms-search-box {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.deba-comms-search-input-wrapper {
+  position: relative;
+}
+
+.deba-comms-search-input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  outline: none;
+  background: var(--bg-subtle);
+  color: var(--text);
+  font-size: 13px;
+  transition: all .2s var(--ease);
+}
+
+.deba-comms-search-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.deba-comms-search-input:focus {
+  border-color: var(--primary);
+  background: var(--bg-elevated);
+  box-shadow: 0 0 0 3px var(--primary-ring);
+}
+
+.deba-comms-search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  color: var(--text-tertiary);
+}
+
+.deba-comms-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.deba-comms-tab {
+  position: relative;
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary) !important;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all .2s var(--ease);
+}
+
+.deba-comms-tab:hover {
+  background: var(--bg-subtle) !important;
+  color: var(--text) !important;
+}
+
+.deba-comms-tab.active {
+  background: var(--primary-soft) !important;
+  color: var(--primary) !important;
+}
+
+.deba-comms-tab-badge {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  margin-right: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.deba-comms-chat-list {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.deba-comms-chat-item {
+  width: 100%;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 2px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  text-align: right;
+  color: var(--text) !important;
+  transition: all .2s var(--ease);
+}
+
+.deba-comms-chat-item:hover {
+  background: var(--bg-subtle) !important;
+}
+
+.deba-comms-chat-item.active {
+  background: var(--primary-soft) !important;
+}
+
+.deba-comms-chat-item.active::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 24px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+.deba-comms-chat-item-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  font-size: 18px;
+}
+
+.deba-comms-chat-item-avatar.online::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2.5px solid var(--bg-elevated);
+  background: var(--success);
+}
+
+.deba-comms-chat-item-info {
+  min-width: 0;
+  flex: 1;
+  display: block;
+}
+
+.deba-comms-chat-item-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.deba-comms-chat-item-name {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deba-comms-chat-item-name svg {
+  flex: 0 0 auto;
+  color: var(--info);
+}
+
+.deba-comms-chat-item-time {
+  color: var(--text-tertiary);
+  font-family: var(--font-en);
+  font-size: 10.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.deba-comms-chat-item-preview {
+  display: block;
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deba-comms-chat-item.unread .deba-comms-chat-item-preview {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.deba-comms-chat-item.unread .deba-comms-chat-item-time {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.deba-comms-chat-item-product {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--border-light);
+  color: var(--text-tertiary);
+  font-size: 10.5px;
+}
+
+.deba-comms-chat-item-product > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deba-comms-chat-item-product-thumb {
+  width: 20px !important;
+  height: 20px !important;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.deba-comms-unread-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.deba-comms-filter-empty {
+  min-height: 180px;
+  padding: 32px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.deba-comms-sidebar-stats {
+  padding: 14px 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border);
+}
+
+.deba-comms-stat-item {
+  text-align: center;
+}
+
+.deba-comms-stat-value {
+  color: var(--text);
+  font-family: var(--font-en);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.deba-comms-stat-label {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* ===== Toast ===== */
+
+.deba-comms-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 1000;
+  transform: translateX(-50%) translateY(100px);
+  min-width: 180px;
+  padding: 12px 20px;
+  border-radius: var(--radius-full);
+  background: var(--text);
+  color: var(--bg);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: var(--shadow-xl);
+  opacity: 0;
+  pointer-events: none;
+  transition: all .3s var(--ease);
+}
+
+.deba-comms-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ===== Context Menu ===== */
+
+.deba-comms-context-menu {
+  position: fixed;
+  min-width: 180px;
+  z-index: 1100;
+  display: none;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-lg);
+}
+
+.deba-comms-context-menu.show {
+  display: block;
+  animation: debaCommsMenuIn .15s var(--ease);
+}
+
+@keyframes debaCommsMenuIn {
+  from { opacity: 0; transform: scale(.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.deba-comms-context-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  text-align: right;
+  color: var(--text) !important;
+  font-size: 13px;
+  transition: all .2s var(--ease);
+}
+
+.deba-comms-context-item:hover {
+  background: var(--bg-subtle) !important;
+}
+
+.deba-comms-context-item.danger {
+  color: var(--danger) !important;
+}
+
+.deba-comms-context-item svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+
+.deba-comms-context-divider {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--border);
+}
+
+/* ===== Accessibility / Motion ===== */
+
+.deba-comms-page *:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deba-comms-page *,
+  .deba-comms-page *::before,
+  .deba-comms-page *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+@media (max-width: 1100px) {
+  .deba-comms-main-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .deba-comms-sidebar {
+    display: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .deba-comms-chat-topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .deba-comms-seller-info-bar {
+    justify-self: end;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .deba-comms-listing-back {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .deba-comms-topbar-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .deba-comms-chat-topbar {
+    padding-bottom: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .deba-comms-top-header {
+    padding: 10px 16px;
+  }
+
+  .deba-comms-header-help,
+  .deba-comms-location-badge span {
+    display: none;
+  }
+
+  .deba-comms-main-content {
+    padding: 8px;
+  }
+
+  .deba-comms-listing-title,
+  .deba-comms-listing-price {
+    display: none;
+  }
+
+  .deba-comms-message {
+    max-width: 85%;
+  }
+
+  .deba-comms-product-context {
+    padding: 12px;
+  }
+
+  .deba-comms-security-banner {
+    padding-inline: 14px;
+  }
+
+  .deba-comms-quick-replies,
+  .deba-comms-input-area {
+    padding-inline: 12px;
+  }
+}
+
+@media (max-width: 540px) {
+  .deba-comms-page {
+    min-height: 0;
+  }
+
+  .deba-comms-top-header {
+    min-height: 58px;
+  }
+
+  .deba-comms-logo {
+    font-size: 18px;
+  }
+
+  .deba-comms-logo-mark {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .deba-comms-logo-sub {
+    display: none;
+  }
+
+  .deba-comms-chat-topbar {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .deba-comms-listing-back {
+    padding: 7px 10px;
+  }
+
+  .deba-comms-seller-name {
+    font-size: 13.5px;
+  }
+
+  .deba-comms-product-context-card {
+    padding: 9px;
+  }
+
+  .deba-comms-product-thumb {
+    width: 62px;
+    height: 62px;
+  }
+
+  .deba-comms-product-meta {
+    font-size: 10.5px;
+  }
+
+  .deba-comms-message {
+    max-width: 92%;
+  }
+
+  .deba-comms-message-bubble {
+    padding: 10px 13px;
+    font-size: 13px;
+  }
+
+  .deba-comms-input-actions {
+    gap: 0;
+  }
+
+  .deba-comms-input-action-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .deba-comms-send-btn {
+    width: 42px;
+    height: 42px;
+  }
+
+  .deba-comms-legal-footer {
+    padding-inline: 12px;
+    font-size: 10px;
+  }
+}
