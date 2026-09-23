@@ -183,11 +183,21 @@ function formatPublishedDate(value: string | null) {
   }).format(new Date(value))
 }
 
+function normalizeRouteSlug(value: string) {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
 async function getProduct(slug: string) {
   const supabase = await createClient()
+  const normalizedSlug = normalizeRouteSlug(slug)
 
   console.error('DEBA PRODUCT DEBUG BEFORE QUERY', {
     slug,
+    normalizedSlug,
     encodedSlug: encodeURIComponent(slug),
     slugLength: slug.length,
     expected: 'أداة-منزلية-متعددة-الاستخدام-تجربة-deba',
@@ -196,7 +206,7 @@ async function getProduct(slug: string) {
   const { data, error } = await supabase
     .from('products')
     .select(SELECT)
-    .eq('slug', slug)
+    .eq('slug', normalizedSlug)
     .eq('status', 'published')
     .eq('moderation_status', 'approved')
     .eq('listing_type', 'sale')
