@@ -82,11 +82,33 @@ export async function GET(request: Request) {
     const profileMap = new Map((profiles || []).map((profile) => [profile.id, profile]))
     const userId = userData.user.id
 
+    const lastReadByRoom = new Map(
+      (participants || []).map((row) => [row.room_id, row.last_read_at]),
+    )
+    const unreadByRoom = new Map<string, number>()
+    if (roomIds.length) {
+      const { data: recentMessages } = await supabase
+        .from('messages')
+        .select('room_id,sender_id,created_at')
+        .in('room_id', roomIds)
+        .neq('sender_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(500)
+
+      for (const message of recentMessages || []) {
+        const lastReadAt = lastReadByRoom.get(message.room_id)
+        if (!lastReadAt || new Date(message.created_at).getTime() > new Date(lastReadAt).getTime()) {
+          unreadByRoom.set(message.room_id, (unreadByRoom.get(message.room_id) || 0) + 1)
+        }
+      }
+    }
+
     return NextResponse.json({
       rooms: (rooms || []).map((room) => {
         const counterpartId = (roomPeople || []).find((person) => person.room_id === room.id && person.user_id !== userId)?.user_id
         return {
           ...room,
+          unreadCount: unreadByRoom.get(room.id) || 0,
           product: room.product_id ? productMap.get(room.product_id) || null : null,
           participant: participantMap.get(room.id) || null,
           counterparty: counterpartId ? profileMap.get(counterpartId) || null : null,
