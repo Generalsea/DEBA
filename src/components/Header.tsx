@@ -18,6 +18,7 @@ import { useEffect, useMemo, useState } from 'react'
 import NotificationBell from '@/components/NotificationBell'
 import { createClient } from '@/utils/supabase/client'
 import { useCartStore } from '@/lib/cart-store'
+import HeaderReelsRail, { type HeaderPromo } from '@/components/HeaderReelsRail'
 
 export type HeaderCategory = {
   id: string
@@ -32,6 +33,7 @@ type HeaderProps = {
   favoriteCount?: number
   negotiationCount?: number
   cartCount?: number
+  promotions?: HeaderPromo[]
 }
 
 type HeaderIdentity = {
@@ -50,6 +52,7 @@ export default function Header({
   initialCategory = 'all',
   favoriteCount = 0,
   cartCount = 0,
+  promotions = [],
 }: HeaderProps) {
   const [query, setQuery] = useState(initialSearch)
   const [category, setCategory] = useState(initialCategory || 'all')
@@ -145,7 +148,8 @@ export default function Header({
   const sellHref = authState === 'authenticated' ? '/sell' : '/login?next=%2Fsell'
 
   return (
-    <header className="deba-site-header">
+    <>
+      <header className="deba-site-header">
       <div className="deba-header-main">
         <div className="deba-header-inner">
           <button
@@ -282,6 +286,8 @@ export default function Header({
           ))}
         </div>
       </div>
-    </header>
+      </header>
+      <HeaderReelsRail items={promotions} />
+    </>
   )
 }
