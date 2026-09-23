@@ -22,6 +22,8 @@ import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGa
 import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components/ProductDetailTabs'
 import { createClient } from '@/utils/supabase/server'
 
+// Next.js 16 currently has a non-ASCII dynamic-route cache-tag issue.
+// Product slugs may contain Arabic text, so this route must stay fully dynamic.
 export const dynamic = 'force-dynamic'
 
 const BUCKET = 'deba-product-media'
@@ -121,6 +123,14 @@ function formatMoney(value: number | null, currency: string) {
   )
 }
 
+function normalizeRouteSlug(value: string) {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
 function getImageUrl(
   supabase: Awaited<ReturnType<typeof createClient>>,
   storagePath: string | null,
@@ -185,25 +195,9 @@ function formatPublishedDate(value: string | null) {
   }).format(new Date(value))
 }
 
-function normalizeRouteSlug(value: string) {
-  try {
-    return decodeURIComponent(value)
-  } catch {
-    return value
-  }
-}
-
 async function getProduct(slug: string) {
   const supabase = await createClient()
   const normalizedSlug = normalizeRouteSlug(slug)
-
-  console.error('DEBA PRODUCT DEBUG BEFORE QUERY', {
-    slug,
-    normalizedSlug,
-    encodedSlug: encodeURIComponent(slug),
-    slugLength: slug.length,
-    expected: 'أداة-منزلية-متعددة-الاستخدام-تجربة-deba',
-  })
 
   const { data, error } = await supabase
     .from('products')
@@ -213,14 +207,6 @@ async function getProduct(slug: string) {
     .eq('moderation_status', 'approved')
     .eq('listing_type', 'sale')
     .maybeSingle()
-
-  console.error('DEBA PRODUCT DEBUG AFTER QUERY', {
-    slug,
-    dataId: data?.id ?? null,
-    dataSlug: data?.slug ?? null,
-    errorCode: error?.code ?? null,
-    errorMessage: error?.message ?? null,
-  })
 
   if (error) {
     console.error('DEBA product detail query failed', error)
@@ -324,11 +310,12 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
+  const normalizedSlug = normalizeRouteSlug(slug)
   const supabase = await createClient()
   const { data } = await supabase
     .from('products')
     .select('title,description')
-    .eq('slug', slug)
+    .eq('slug', normalizedSlug)
     .eq('status', 'published')
     .eq('moderation_status', 'approved')
     .eq('listing_type', 'sale')
@@ -359,10 +346,321 @@ export default async function ProductDetailPage({
 
   if (!data) notFound()
 
+  const { product } = data
+  const images: ProductGalleryImage[] = [...(product.images || [])]
+    .sort(
+      (left, right) =>
+        Number(right.is_primary) - Number(left.is_primary) ||
+        left.sort_order - right.sort_order,
+    )
+    .map((image) => ({
+      id: image.id,
+      url: getImageUrl(data.supabase, image.storage_path) || '',
+      alt: image.alt_text?.trim() || product.title,
+    }))
+    .filter((image) => image.url)
+
+  const price = normalizePrice(product.price)
+  const sellerName =
+    product.seller?.display_name ||
+    product.seller?.username ||
+    'عضو في مجتمع DEBA'
+  const sellerLocation = [product.seller?.city, product.seller?.governorate]
+    .filter(Boolean)
+    .join('، ')
+  const location = [product.city, product.governorate, product.district]
+    .filter(Boolean)
+    .join('، ')
+  const condition =
+    product.condition_grade
+      ? CONDITION_LABELS[product.condition_grade] || 'حالة موثقة'
+      : 'حالة غير محددة'
+  const isOwner = Boolean(product.owner_id && data.userId === product.owner_id)
+  const canBuy = Boolean(product.owner_id) && price !== null && price > 0 && product.quantity > 0
+  const purchaseHref = '/products/' + encodeURIComponent(product.slug) + '/checkout'
+  const cartProduct = price !== null ? {
+    id: product.id,
+    title: product.title,
+    slug: product.slug,
+    price,
+    currency: product.currency || 'EGP',
+    conditionGrade: product.condition_grade,
+    listingType: 'sale' as const,
+    quantityAvailable: product.quantity,
+    sellerId: product.owner_id || '',
+    sellerName,
+    sellerAvatar: product.seller?.avatar_url || null,
+    imageUrl: images[0]?.url || null,
+    imageAlt: images[0]?.alt || product.title,
+    deliveryMethod: product.delivery_method as 'pickup' | 'seller_delivery' | 'platform_delivery' | 'both',
+  } : null
+
   return (
-    <main data-deba-route-probe="product-found" dir="rtl">
-      <h1>{data.product.title}</h1>
-      <p>{data.product.id}</p>
-    </main>
+    <>
+      <Header
+        categories={data.categories}
+        favoriteCount={data.favoriteCount}
+        negotiationCount={data.negotiationCount}
+      />
+
+      <main className="deba-detail-page" dir="rtl">
+        <div className="deba-breadcrumbs">
+          <Link href="/">الرئيسية</Link>
+          <span>/</span>
+          {product.category ? (
+            <Link href={'/?category=' + encodeURIComponent(product.category.slug)}>
+              {product.category.name_ar}
+            </Link>
+          ) : (
+            <span>المنتجات</span>
+          )}
+          <span>/</span>
+          <strong>{product.title}</strong>
+        </div>
+
+        <div className="deba-detail-layout">
+          <div className="deba-detail-media-column">
+            <ProductGallery images={images} productTitle={product.title} />
+
+            <section className="deba-detail-trust-grid">
+              <div>
+                <ShieldCheck size={20} />
+                <strong>إعلان مُراجع</strong>
+                <span>الإعلان اجتاز حالة المراجعة المطلوبة للظهور العام.</span>
+              </div>
+              <div>
+                <BadgeCheck size={20} />
+                <strong>سعر ثابت</strong>
+                <span>السعر المعلن ثابت ويمكنك إتمام الطلب مباشرة.</span>
+              </div>
+              <div>
+                <Truck size={20} />
+                <strong>الاستلام واضح</strong>
+                <span>{DELIVERY_LABELS[product.delivery_method] || product.delivery_method}</span>
+              </div>
+            </section>
+          </div>
+
+          <div className="deba-detail-info">
+            <div className="deba-detail-topline">
+              <div className="deba-detail-badges">
+                <span className="deba-detail-badge">
+                  <BadgeCheck size={14} />
+                  {condition}
+                </span>
+                <span className="deba-detail-badge is-muted">
+                  <CheckCircle2 size={14} />
+                  سعر ثابت
+                </span>
+              </div>
+
+              <FavoriteButton
+                productId={product.id}
+                initialFavorite={data.isFavorite}
+                label="إضافة المنتج إلى المفضلة"
+                className="deba-detail-favorite"
+                size={20}
+              />
+            </div>
+
+            <h1>{product.title}</h1>
+
+            <div className="deba-detail-price-row">
+              <div>
+                <span>السعر</span>
+                <strong>{formatMoney(price, product.currency)}</strong>
+              </div>
+              <span className="deba-detail-negotiable is-fixed-price">
+                <CheckCircle2 size={15} />
+                سعر ثابت
+              </span>
+            </div>
+
+            <div className="deba-detail-location">
+              <MapPin size={16} />
+              <span>{location || 'الموقع يُحدد مع البائع'}</span>
+            </div>
+
+            <section className="deba-primary-purchase-zone">
+              {isOwner ? (
+                <div className="deba-owner-notice">
+                  <UserRound size={18} />
+                  <div>
+                    <strong>هذا إعلانك</strong>
+                    <span>يمكنك إدارة إعلانك، لكن لا يمكنك شراء سلعتك الخاصة.</span>
+                  </div>
+                </div>
+              ) : canBuy ? (
+                <div className="deba-purchase-actions">
+                  {cartProduct ? <CartAddButton product={cartProduct} /> : null}
+
+                  <Link href={purchaseHref} className="deba-purchase-primary">
+                  <span className="deba-purchase-primary-icon">
+                    <ShoppingBag size={21} />
+                  </span>
+                    <span>
+                      <strong>اشترِ الآن</strong>
+                      <small>السعر ثابت — اختر الكمية وطريقة الاستلام ثم أكد طلبك</small>
+                    </span>
+                    <ArrowLeft size={20} />
+                  </Link>
+                </div>
+              ) : (
+                <div className="deba-owner-notice is-muted">
+                  <Package size={18} />
+                  <div>
+                    <strong>المنتج غير متاح للشراء حاليًا</strong>
+                    <span>تحقق من توفر الكمية والسعر ثم حاول مرة أخرى.</span>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className="deba-detail-section">
+              <div className="deba-detail-section-title">عن السلعة</div>
+              <p>
+                {product.description ||
+                  'لم يضف صاحب الإعلان وصفًا تفصيليًا بعد.'}
+              </p>
+              {product.condition_details && (
+                <div className="deba-condition-note">
+                  <CheckCircle2 size={16} />
+                  <span>{product.condition_details}</span>
+                </div>
+              )}
+            </section>
+
+            <section className="deba-spec-card deba-spec-card-expanded">
+              <div>
+                <span>الحالة</span>
+                <strong>{condition}</strong>
+              </div>
+              <div>
+                <span>القسم</span>
+                <strong>{product.category?.name_ar || 'غير محدد'}</strong>
+              </div>
+              <div>
+                <span>الكمية المتاحة</span>
+                <strong>{product.quantity.toLocaleString('ar-EG')}</strong>
+              </div>
+              <div>
+                <span>الاستلام</span>
+                <strong>{DELIVERY_LABELS[product.delivery_method] || product.delivery_method}</strong>
+              </div>
+              <div>
+                <span>الموقع</span>
+                <strong>{location || 'يُحدد مع البائع'}</strong>
+              </div>
+              <div>
+                <span>تاريخ النشر</span>
+                <strong>{formatPublishedDate(product.published_at || product.created_at)}</strong>
+              </div>
+            </section>
+
+
+            <section className="deba-seller-card">
+              <div className="deba-seller-avatar">
+                {product.seller?.avatar_url ? (
+                  <Image
+                    src={product.seller.avatar_url}
+                    alt={sellerName}
+                    fill
+                    sizes="56px"
+                  />
+                ) : (
+                  (sellerName[0] || 'D').toUpperCase()
+                )}
+              </div>
+              <div className="deba-seller-copy">
+                <span>البائع</span>
+                <strong>{sellerName}</strong>
+                {sellerLocation && (
+                  <small>
+                    <MapPin size={12} /> {sellerLocation}
+                  </small>
+                )}
+                {product.seller?.bio && <p>{product.seller.bio}</p>}
+              </div>
+              <div className="deba-seller-verified">
+                <ShieldCheck size={17} />
+                <span>حساب داخل DEBA</span>
+              </div>
+            </section>
+
+
+
+            <div className="deba-detail-security">
+              <ShieldCheck size={17} />
+              <span>
+                السعر الظاهر هو السعر الثابت للمنتج. طلب الشراء يُسجل داخل DEBA،
+                والدفع الإلكتروني غير مفعل في النسخة الحالية.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <ProductDetailTabs
+          productId={product.id}
+          metadata={product.metadata}
+          description={product.description}
+          conditionDetails={product.condition_details}
+          conditionLabel={condition}
+          categoryName={product.category?.name_ar || product.category?.name_en || 'غير محدد'}
+          location={location || 'يُحدد مع البائع'}
+          deliveryLabel={DELIVERY_LABELS[product.delivery_method] || product.delivery_method}
+          quantity={product.quantity}
+          publishedDate={formatPublishedDate(product.published_at || product.created_at)}
+          detailsSchemaVersion={product.details_schema_version}
+          detailsLastCompletedAt={product.details_last_completed_at}
+          definitions={data.definitions}
+        />
+
+        <section className="deba-purchase-steps">
+          <div>
+            <span>1</span>
+            <strong>راجع التفاصيل</strong>
+            <small>السعر والحالة والموقع والبيانات الإضافية.</small>
+          </div>
+          <div>
+            <span>2</span>
+            <strong>اختر الكمية والاستلام</strong>
+            <small>حدد الكمية وطريقة الاستلام وأدخل البيانات المطلوبة.</small>
+          </div>
+          <div>
+            <span>3</span>
+            <strong>أكد طلب الشراء</strong>
+            <small>يسجل الطلب بالسعر الثابت ويظهر لك رقم الطلب.</small>
+          </div>
+        </section>
+
+        {data.related.length > 0 && (
+          <section className="deba-related-section">
+            <div className="deba-related-head">
+              <div>
+                <span>MORE FROM DEBA</span>
+                <h2>منتجات مشابهة تستحق الاكتشاف</h2>
+              </div>
+              {product.category && (
+                <Link href={'/?category=' + encodeURIComponent(product.category.slug)}>
+                  تصفح الفئة
+                  <ArrowRight size={15} />
+                </Link>
+              )}
+            </div>
+
+            <div className="deba-product-grid deba-related-grid">
+              {data.related.map((item) => (
+                <ProductCard key={item.id} item={item} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <Link href="/" className="deba-detail-back">
+          <ArrowRight size={16} />
+          العودة إلى السوق
+        </Link>
+      </main>
+    </>
   )
 }
