@@ -186,6 +186,13 @@ function formatPublishedDate(value: string | null) {
 async function getProduct(slug: string) {
   const supabase = await createClient()
 
+  console.error('DEBA PRODUCT DEBUG BEFORE QUERY', {
+    slug,
+    encodedSlug: encodeURIComponent(slug),
+    slugLength: slug.length,
+    expected: 'أداة-منزلية-متعددة-الاستخدام-تجربة-deba',
+  })
+
   const { data, error } = await supabase
     .from('products')
     .select(SELECT)
@@ -194,6 +201,14 @@ async function getProduct(slug: string) {
     .eq('moderation_status', 'approved')
     .eq('listing_type', 'sale')
     .maybeSingle()
+
+  console.error('DEBA PRODUCT DEBUG AFTER QUERY', {
+    slug,
+    dataId: data?.id ?? null,
+    dataSlug: data?.slug ?? null,
+    errorCode: error?.code ?? null,
+    errorMessage: error?.message ?? null,
+  })
 
   if (error) {
     console.error('DEBA product detail query failed', error)
@@ -329,6 +344,12 @@ export default async function ProductDetailPage({
 }: RouteParams) {
   const { slug } = await params
   const data = await getProduct(slug)
+
+  console.error('DEBA PRODUCT DEBUG PAGE RESULT', {
+    slug,
+    found: Boolean(data),
+    productId: data?.product?.id ?? null,
+  })
 
   if (!data) notFound()
 
