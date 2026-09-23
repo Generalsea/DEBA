@@ -1,7 +1,7 @@
 'use client'
 
 import { Moon, Sun } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import styles from './ThemeToggle.module.css'
 
 type Theme = 'light' | 'dark'
@@ -20,11 +20,7 @@ function getInitialTheme(): Theme {
 }
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('dark')
-
-  useEffect(() => {
-    setTheme(getInitialTheme())
-  }, [])
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
 
   const toggle = () => {
     const nextTheme: Theme = theme === 'dark' ? 'light' : 'dark'
