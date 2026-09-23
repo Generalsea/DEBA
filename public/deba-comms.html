@@ -770,7 +770,6 @@
       empty.style.cssText = 'padding:32px 16px;text-align:center;color:var(--text-tertiary);';
       empty.innerHTML = '<div style="font-size:32px;margin-bottom:8px;">💬</div><div style="font-size:13px;font-weight:600;margin-bottom:4px;">لا توجد رسائل بعد</div><div style="font-size:11.5px;">اكتب أول رسالة لبدء التفاوض داخل DEBA.</div>';
       area.appendChild(empty);
-      return;
     }
 
     items.forEach(message => {
@@ -785,19 +784,73 @@
 
       const content = document.createElement('div');
       content.className = 'message-content';
+      const metadata = message.metadata && typeof message.metadata === 'object' ? message.metadata : {};
 
-      if (message.message_type === 'offer' && message.metadata && typeof message.metadata === 'object') {
+      if (message.message_type === 'offer') {
         const offer = document.createElement('div');
         offer.className = 'offer-card';
-        const amount = message.metadata.amount || message.metadata.price || '—';
-        const note = message.metadata.note || message.body || 'عرض سعر مرتبط بالمحادثة';
+        const amount = Number(metadata.amount);
+        const formattedAmount = Number.isFinite(amount)
+          ? new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(amount)
+          : '—';
+        const currency = metadata.currency === 'EGP' || !metadata.currency ? 'جنيه' : String(metadata.currency);
+        const note = typeof metadata.note === 'string' && metadata.note.trim()
+          ? metadata.note.trim()
+          : (message.body || 'عرض سعر مرتبط بالمحادثة');
+
         offer.innerHTML =
-          '<div class="offer-header"><span>عرض سعر</span></div>' +
-          '<div class="offer-amount">' + String(amount) + ' جنيه</div>' +
-          '<div class="offer-note"></div>';
+          '<div class="offer-header">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+              '<line x1="12" y1="1" x2="12" y2="23"></line>' +
+              '<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>' +
+            '</svg>' +
+            '<span>' + (metadata.title || 'عرض سعر من البائع') + '</span>' +
+          '</div>' +
+          '<div class="offer-amount">' + formattedAmount + ' ' + currency + '</div>' +
+          '<div class="offer-note"></div>' +
+          '<div class="offer-actions">' +
+            '<button class="offer-btn accept" type="button" onclick="handleOffer(\'accept\',\'' + message.id + '\')">قبول</button>' +
+            '<button class="offer-btn counter" type="button" onclick="handleOffer(\'counter\',\'' + message.id + '\')">تفاوض</button>' +
+            '<button class="offer-btn decline" type="button" onclick="handleOffer(\'decline\',\'' + message.id + '\')">رفض</button>' +
+          '</div>';
+
         const noteNode = offer.querySelector('.offer-note');
-        if (noteNode) noteNode.textContent = String(note);
+        if (noteNode) noteNode.textContent = note;
         content.appendChild(offer);
+      } else if (metadata.kind === 'image' && typeof metadata.url === 'string') {
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        const image = document.createElement('img');
+        image.src = metadata.url;
+        image.alt = typeof metadata.fileName === 'string' ? metadata.fileName : 'صورة مرفقة';
+        image.style.cssText = 'display:block;max-width:280px;max-height:220px;width:auto;height:auto;border-radius:12px;object-fit:cover;';
+        bubble.appendChild(image);
+        content.appendChild(bubble);
+      } else if (metadata.kind === 'file' && typeof metadata.url === 'string') {
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        const link = document.createElement('a');
+        link.href = metadata.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = '📎 ' + (typeof metadata.fileName === 'string' ? metadata.fileName : 'ملف مرفق');
+        link.style.cssText = 'color:inherit;text-decoration:underline;font-weight:700;';
+        bubble.appendChild(link);
+        content.appendChild(bubble);
+      } else if (metadata.kind === 'location' && metadata.location && typeof metadata.location === 'object') {
+        const location = metadata.location;
+        const latitude = Number(location.latitude);
+        const longitude = Number(location.longitude);
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        const link = document.createElement('a');
+        link.href = 'https://www.google.com/maps?q=' + encodeURIComponent(latitude + ',' + longitude);
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = '📍 موقع مشترك';
+        link.style.cssText = 'color:inherit;text-decoration:underline;font-weight:700;';
+        bubble.appendChild(link);
+        content.appendChild(bubble);
       } else {
         const bubble = document.createElement('div');
         bubble.className = 'message-bubble';
@@ -824,13 +877,47 @@
       area.appendChild(row);
     });
 
-    const typing = document.createElement('div');
-    typing.className = 'message received';
-    typing.id = 'typingMsg';
-    typing.innerHTML = '<div class="message-avatar">أ</div><div class="message-content"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
-    area.appendChild(typing);
+    if (items.length) {
+      const typing = document.createElement('div');
+      typing.className = 'message received';
+      typing.id = 'typingMsg';
+      typing.innerHTML = '<div class="message-avatar">أ</div><div class="message-content"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
+      area.appendChild(typing);
+    }
+
     area.scrollTop = area.scrollHeight;
   };
+
+  function attachFile(kind) {
+    if (typeof window.DEBAComms.onAttach === 'function') return window.DEBAComms.onAttach(kind);
+    const input = document.getElementById('attachmentInput');
+    if (!input) return;
+    input.accept = kind === 'image'
+      ? 'image/jpeg,image/png,image/webp,image/gif'
+      : 'application/pdf,text/plain,text/csv,application/zip,.doc,.docx,.xls,.xlsx';
+    input.dataset.kind = kind;
+    input.value = '';
+    input.click();
+  }
+
+  function shareLocation() {
+    if (typeof window.DEBAComms.onLocation === 'function') return window.DEBAComms.onLocation();
+    if (!navigator.geolocation) {
+      showToast('📍 المتصفح لا يدعم تحديد الموقع');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      () => showToast('📍 تم تحديد موقعك'),
+      () => showToast('تعذر الوصول إلى الموقع'),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
+  }
+
+  function createOffer() {
+    if (typeof window.DEBAComms.onOffer === 'function') return window.DEBAComms.onOffer();
+    const amount = window.prompt('أدخل قيمة العرض بالجنيه');
+    if (amount) showToast('💰 تم إعداد عرض بقيمة ' + amount + ' جنيه');
+  }
 
   function renderChatList() {
     const list = document.getElementById('chatList');
@@ -938,9 +1025,12 @@
     handleSend();
   }
 
-  function handleOffer(action) {
-    const messages = { accept: '✅ تم قبول عرض السعر (160 جنيه)', counter: '💰 فتح نافذة التفاوض على السعر', decline: '❌ تم رفض عرض السعر' };
-    showToast(messages[action]);
+  function handleOffer(action, offerMessageId) {
+    if (typeof window.DEBAComms.onOfferAction === 'function') {
+      return window.DEBAComms.onOfferAction(action, offerMessageId || null);
+    }
+    const messages = { accept: '✅ تم قبول عرض السعر', counter: '💰 فتح نافذة التفاوض على السعر', decline: '❌ تم رفض عرض السعر' };
+    showToast(messages[action] || 'تم تنفيذ الإجراء');
   }
 
   document.addEventListener('contextmenu', function(e) {
@@ -972,6 +1062,18 @@
     }
     showToast('🔄 تم تحديث المحادثات');
     renderChatList();
+  }
+
+  const attachmentInput = document.getElementById('attachmentInput');
+  if (attachmentInput) {
+    attachmentInput.addEventListener('change', function() {
+      const file = this.files && this.files[0];
+      const kind = this.dataset.kind || 'file';
+      if (file && typeof window.DEBAComms.onFileSelected === 'function') {
+        window.DEBAComms.onFileSelected(file, kind);
+      }
+      this.value = '';
+    });
   }
 
   renderChatList();
