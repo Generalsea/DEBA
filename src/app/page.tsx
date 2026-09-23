@@ -445,7 +445,7 @@ function Hero({
   const latest = products.slice(0, 8)
 
   return (
-    <section className="deba-market-pulse" aria-label="أحدث المعروض للبيع">
+    <section id="latest" className="deba-market-pulse" aria-label="أحدث المعروض للبيع">
       <div className="fm-container">
         <div className="deba-market-pulse-head">
           <div>
