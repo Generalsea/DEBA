@@ -36,6 +36,14 @@ type Message = {
   created_at: string
 }
 
+type ApiDebug = {
+  code?: string | null
+  message?: string | null
+  details?: string | null
+  hint?: string | null
+  supabaseHost?: string | null
+}
+
 function formatTime(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
@@ -52,6 +60,7 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
+  const [debug, setDebug] = useState<ApiDebug | null>(null)
 
   async function loadRooms() {
     const response = await fetch('/api/chat/rooms', { cache: 'no-store' })
@@ -66,6 +75,7 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
     setSelectedRoomId(roomId)
     setLoadingMessages(true)
     setError('')
+    setDebug(null)
     try {
       const response = await fetch('/api/chat/rooms/' + encodeURIComponent(roomId) + '/messages?limit=100', { cache: 'no-store' })
       const data = await response.json() as { messages?: Message[]; error?: string }
@@ -103,8 +113,13 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ productId: initialProduct }),
           })
-          const payload = await response.json() as { room?: { room_id?: string }; error?: string }
+          const payload = await response.json() as {
+            room?: { room_id?: string }
+            error?: string
+            debug?: ApiDebug
+          }
           if (!response.ok || !payload.room?.room_id) {
+            if (payload.debug) setDebug(payload.debug)
             throw new Error(payload.error || 'تعذر فتح المحادثة.')
           }
           if (!active) return
@@ -316,6 +331,18 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
             {error ? (
               <>
                 <div className="deba-chat-error" role="alert">{error}</div>
+                {debug ? (
+                  <details className="deba-chat-debug">
+                    <summary>تفاصيل الخطأ التقنية</summary>
+                    <dl>
+                      <div><dt>Supabase</dt><dd>{debug.supabaseHost || 'غير معروف'}</dd></div>
+                      <div><dt>Code</dt><dd>{debug.code || '—'}</dd></div>
+                      <div><dt>Message</dt><dd>{debug.message || '—'}</dd></div>
+                      <div><dt>Details</dt><dd>{debug.details || '—'}</dd></div>
+                      <div><dt>Hint</dt><dd>{debug.hint || '—'}</dd></div>
+                    </dl>
+                  </details>
+                ) : null}
                 <button
                   type="button"
                   className="deba-profile-primary-action"
