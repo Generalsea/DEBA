@@ -11166,3 +11166,364 @@ html[data-theme="dark"] .deba-classified-shell {
   grid-column: auto;
   grid-row: auto;
 }
+
+
+/* =========================================================
+   DEBA Account Dashboard — supplied visual system, wired to real data
+   Scoped to .deba-account-dashboard to preserve the rest of the app.
+   ========================================================= */
+.deba-account-dashboard {
+  --primary: #FF6B35;
+  --primary-dark: #E55A2B;
+  --primary-light: #FF8C5A;
+  --primary-bg: rgba(255, 107, 53, 0.08);
+  --secondary: #1A2B3C;
+  --accent: #2C5F8A;
+  --bg-primary: #F8F9FA;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #F1F3F5;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F8F9FA;
+  --text-primary: #1A1A1A;
+  --text-secondary: #495057;
+  --text-tertiary: #868E96;
+  --text-muted: #ADB5BD;
+  --border: #E9ECEF;
+  --border-light: #F1F3F5;
+  --success: #28A745;
+  --success-bg: rgba(40, 167, 69, 0.1);
+  --warning: #FFC107;
+  --warning-bg: rgba(255, 193, 7, 0.1);
+  --danger: #DC3545;
+  --danger-bg: rgba(220, 53, 69, 0.1);
+  --info: #17A2B8;
+  --info-bg: rgba(23, 162, 184, 0.1);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-xl: 0 8px 32px rgba(0,0,0,0.16);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  font-family: Cairo, -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+}
+
+[data-theme="dark"] .deba-account-dashboard {
+  --bg-primary: #0F1419;
+  --bg-secondary: #1A1F2E;
+  --bg-tertiary: #252B3B;
+  --bg-card: #1E2433;
+  --bg-hover: #252B3B;
+  --text-primary: #F8F9FA;
+  --text-secondary: #CED4DA;
+  --text-tertiary: #868E96;
+  --text-muted: #495057;
+  --border: #2C3440;
+  --border-light: #1E2433;
+  --primary-bg: rgba(255, 107, 53, 0.15);
+  --success-bg: rgba(40, 167, 69, 0.15);
+  --warning-bg: rgba(255, 193, 7, 0.15);
+  --danger-bg: rgba(220, 53, 69, 0.15);
+  --info-bg: rgba(23, 162, 184, 0.15);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-xl: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.deba-account-dashboard * { box-sizing: border-box; }
+.deba-account-dashboard button,
+.deba-account-dashboard input,
+.deba-account-dashboard textarea,
+.deba-account-dashboard select { font: inherit; }
+.deba-account-dashboard a { color: inherit; }
+
+.deba-account-dashboard .dashboard-layout { display: flex; min-height: 100vh; }
+.deba-account-dashboard .sidebar {
+  width: 280px;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border);
+  padding: var(--spacing-lg) 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  overflow-y: auto;
+  z-index: 50;
+  transition: transform .25s ease;
+}
+.deba-account-dashboard .sidebar-header { padding: 0 var(--spacing-lg) var(--spacing-lg); border-bottom: 1px solid var(--border); margin-bottom: var(--spacing-md); }
+.deba-account-dashboard .sidebar-logo { display: flex; align-items: center; gap: var(--spacing-sm); margin-bottom: var(--spacing-md); }
+.deba-account-dashboard .sidebar-logo > a { display: inline-flex; text-decoration: none; }
+.deba-account-dashboard .sidebar-logo .badge { font-size: 10px; background: var(--primary-bg); color: var(--primary); padding: 2px 8px; border-radius: var(--radius-full); font-weight: 600; }
+.deba-account-dashboard .deba-logo-lockup { display: inline-flex; align-items: center; gap: 8px; color: var(--primary); }
+.deba-account-dashboard .deba-logo-mark-svg { width: 31px; height: 31px; flex: 0 0 auto; }
+.deba-account-dashboard .deba-logo-wordmark { font-size: 24px; letter-spacing: .04em; font-weight: 900; line-height: 1; }
+.deba-account-dashboard .deba-logo-lockup.is-compact .deba-logo-wordmark { font-size: 21px; }
+.deba-account-dashboard .deba-logo-lockup.is-compact .deba-logo-mark-svg { width: 28px; height: 28px; }
+
+.deba-account-dashboard .user-profile-card { display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-md); background: var(--bg-tertiary); border-radius: var(--radius-lg); }
+.deba-account-dashboard .user-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+.deba-account-dashboard .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.deba-account-dashboard .user-info { flex: 1; min-width: 0; }
+.deba-account-dashboard .user-name,.deba-account-dashboard .user-email { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deba-account-dashboard .user-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.deba-account-dashboard .user-email { font-size: 12px; color: var(--text-tertiary); margin-top: 1px; }
+.deba-account-dashboard .user-status { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--success); margin-top: 2px; }
+.deba-account-dashboard .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; display: inline-block; }
+.deba-account-dashboard nav { min-height: calc(100vh - 160px); display: flex; flex-direction: column; }
+.deba-account-dashboard .nav-section { padding: 0 var(--spacing-md); margin-bottom: var(--spacing-lg); }
+.deba-account-dashboard .nav-section-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; padding: 0 var(--spacing-md); margin-bottom: var(--spacing-sm); }
+.deba-account-dashboard .nav-item { width: 100%; display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-sm) var(--spacing-md); color: var(--text-secondary); text-decoration: none; border-radius: var(--radius-md); font-size: 14px; font-weight: 500; transition: all .15s ease; cursor: pointer; position: relative; border: 0; background: transparent; text-align: right; }
+.deba-account-dashboard .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.deba-account-dashboard .nav-item.active { background: var(--primary-bg); color: var(--primary); font-weight: 600; }
+.deba-account-dashboard .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+.deba-account-dashboard .nav-badge { margin-right: auto; background: var(--primary); color: white; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: var(--radius-full); min-width: 20px; text-align: center; }
+.deba-account-dashboard .nav-badge.warning { background: var(--warning); color: var(--text-primary); }
+.deba-account-dashboard .dashboard-signout { margin-top: auto; padding-top: var(--spacing-md); border-top: 1px solid var(--border); }
+.deba-account-dashboard .danger-text { color: var(--danger); }
+
+.deba-account-dashboard .main-content { flex: 1; margin-right: 280px; padding: var(--spacing-lg); max-width: calc(100vw - 280px); }
+.deba-account-dashboard .top-bar { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: var(--spacing-lg); padding-bottom: var(--spacing-md); border-bottom: 1px solid var(--border); }
+.deba-account-dashboard .page-title { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+.deba-account-dashboard .page-subtitle { font-size: 14px; color: var(--text-tertiary); margin-top: 2px; }
+.deba-account-dashboard .top-actions { display: flex; gap: var(--spacing-sm); align-items: center; }
+.deba-account-dashboard .icon-btn { width: 40px; height: 40px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; transition: all .15s ease; position: relative; }
+.deba-account-dashboard .icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.deba-account-dashboard .notification-dot { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--bg-secondary); }
+
+.deba-account-dashboard .theme-toggle { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--spacing-sm); cursor: pointer; color: var(--text-secondary); transition: all .15s ease; }
+.deba-account-dashboard .theme-toggle:hover { background: var(--bg-hover); }
+.deba-account-dashboard .content-section { display: none; }
+.deba-account-dashboard .content-section.active { display: block; }
+.deba-account-dashboard .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-lg); }
+.deba-account-dashboard .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--spacing-lg); transition: all .15s ease; }
+.deba-account-dashboard .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.deba-account-dashboard .stat-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:var(--spacing-md); }
+.deba-account-dashboard .stat-icon { width:44px; height:44px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; }
+.deba-account-dashboard .stat-icon.primary { background:var(--primary-bg); color:var(--primary); }
+.deba-account-dashboard .stat-icon.success { background:var(--success-bg); color:var(--success); }
+.deba-account-dashboard .stat-icon.warning { background:var(--warning-bg); color:var(--warning); }
+.deba-account-dashboard .stat-icon.info { background:var(--info-bg); color:var(--info); }
+.deba-account-dashboard .stat-value { font-size:28px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+.deba-account-dashboard .stat-label { font-size:13px; color:var(--text-tertiary); }
+
+.deba-account-dashboard .card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); margin-bottom:var(--spacing-md); overflow:hidden; }
+.deba-account-dashboard .card-header { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:var(--spacing-md) var(--spacing-lg); border-bottom:1px solid var(--border); }
+.deba-account-dashboard .card-title { font-size:16px; font-weight:600; color:var(--text-primary); }
+.deba-account-dashboard .card-body { padding:var(--spacing-lg); }
+.deba-account-dashboard .card-body[style] { color: inherit; }
+.deba-account-dashboard .btn { padding:var(--spacing-sm) var(--spacing-md); border-radius:var(--radius-md); font-size:14px; font-weight:600; cursor:pointer; transition:all .15s ease; border:none; font-family:inherit; text-decoration:none; display:inline-flex; align-items:center; gap:var(--spacing-sm); white-space:nowrap; }
+.deba-account-dashboard .btn-primary { background:var(--primary); color:white; }
+.deba-account-dashboard .btn-primary:hover { background:var(--primary-dark); transform:translateY(-1px); box-shadow:var(--shadow-md); }
+.deba-account-dashboard .btn-secondary { background:var(--bg-tertiary); color:var(--text-primary); border:1px solid var(--border); }
+.deba-account-dashboard .btn-secondary:hover { background:var(--bg-hover); }
+.deba-account-dashboard .btn-danger { background:var(--danger-bg); color:var(--danger); }
+.deba-account-dashboard .btn-danger:hover { background:var(--danger); color:white; }
+.deba-account-dashboard .btn-sm { padding:4px 12px; font-size:12px; }
+.deba-account-dashboard .btn-ghost { background:transparent; color:var(--text-secondary); }
+.deba-account-dashboard .btn-ghost:hover { background:var(--bg-tertiary); color:var(--text-primary); }
+.deba-account-dashboard .btn:disabled { opacity:.55; cursor:not-allowed; transform:none; }
+
+.deba-account-dashboard .dashboard-table-scroll { width:100%; overflow:auto; }
+.deba-account-dashboard .listings-table { width:100%; min-width:760px; border-collapse:collapse; }
+.deba-account-dashboard .listings-table th { text-align:right; padding:var(--spacing-md); font-size:12px; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); }
+.deba-account-dashboard .listings-table td { padding:var(--spacing-md); border-bottom:1px solid var(--border); font-size:14px; vertical-align:middle; }
+.deba-account-dashboard .listings-table tr:last-child td { border-bottom:none; }
+.deba-account-dashboard .listings-table tr:hover td { background:var(--bg-hover); }
+.deba-account-dashboard .listing-item { display:flex; align-items:center; gap:var(--spacing-md); min-width:270px; }
+.deba-account-dashboard .listing-thumb { width:60px; height:60px; border-radius:var(--radius-md); overflow:hidden; flex-shrink:0; background:linear-gradient(135deg,var(--bg-tertiary),var(--bg-hover)); }
+.deba-account-dashboard .listing-thumb img { width:100%; height:100%; object-fit:cover; }
+.deba-account-dashboard .listing-details h4 { font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:4px; }
+.deba-account-dashboard .listing-details p { font-size:12px; color:var(--text-tertiary); }
+.deba-account-dashboard .status-badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:var(--radius-full); font-size:12px; font-weight:600; white-space:nowrap; }
+.deba-account-dashboard .status-badge.active { background:var(--success-bg); color:var(--success); }
+.deba-account-dashboard .status-badge.pending { background:var(--warning-bg); color:#946200; }
+.deba-account-dashboard .status-badge.draft { background:var(--info-bg); color:var(--info); }
+.deba-account-dashboard .status-badge.sold { background:var(--primary-bg); color:var(--primary); }
+.deba-account-dashboard .status-dot-small { width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+.deba-account-dashboard .notification-item { display:flex; gap:var(--spacing-md); padding:var(--spacing-md); border-bottom:1px solid var(--border-light); transition:background .15s ease; }
+.deba-account-dashboard .notification-item:hover { background:var(--bg-hover); }
+.deba-account-dashboard .notification-item.unread { background:var(--primary-bg); }
+.deba-account-dashboard .notification-icon { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:18px; }
+.deba-account-dashboard .notification-icon.message { background:var(--info-bg); }
+.deba-account-dashboard .notification-icon.listing { background:var(--success-bg); }
+.deba-account-dashboard .notification-icon.system { background:var(--warning-bg); }
+.deba-account-dashboard .notification-content { flex:1; min-width:0; }
+.deba-account-dashboard .notification-title { display:block; font-size:14px; font-weight:600; margin-bottom:2px; text-decoration:none; color:var(--text-primary); }
+.deba-account-dashboard .notification-text { font-size:13px; color:var(--text-secondary); margin-bottom:4px; }
+.deba-account-dashboard .notification-time { font-size:12px; color:var(--text-muted); }
+
+.deba-account-dashboard .favorites-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:var(--spacing-md); }
+.deba-account-dashboard .favorite-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; transition:all .15s ease; }
+.deba-account-dashboard .favorite-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+.deba-account-dashboard .favorite-image { width:100%; height:160px; background:linear-gradient(135deg,var(--bg-tertiary),var(--bg-hover)); }
+.deba-account-dashboard .favorite-info { padding:var(--spacing-md); }
+.deba-account-dashboard .favorite-title { font-size:14px; font-weight:600; margin-bottom:var(--spacing-sm); min-height:40px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.deba-account-dashboard .favorite-price { font-size:18px; font-weight:700; color:var(--primary); margin-bottom:var(--spacing-sm); }
+.deba-account-dashboard .favorite-meta { font-size:12px; color:var(--text-tertiary); margin-bottom:var(--spacing-sm); }
+.deba-account-dashboard .favorite-actions { display:flex; gap:var(--spacing-sm); flex-wrap:wrap; }
+
+.deba-account-dashboard .chat-container { display:grid; grid-template-columns:320px 1fr; gap:var(--spacing-md); height:calc(100vh - 200px); min-height:500px; }
+.deba-account-dashboard .chat-sidebar,.deba-account-dashboard .chat-main { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; }
+.deba-account-dashboard .chat-sidebar { display:flex; flex-direction:column; }
+.deba-account-dashboard .chat-sidebar-header { padding:var(--spacing-md); border-bottom:1px solid var(--border); }
+.deba-account-dashboard .chat-sidebar-title { font-size:16px; font-weight:600; margin-bottom:var(--spacing-md); }
+.deba-account-dashboard .chat-search { position:relative; }
+.deba-account-dashboard .chat-search input { width:100%; padding:var(--spacing-sm) var(--spacing-md) var(--spacing-sm) 40px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--bg-tertiary); color:var(--text-primary); font-size:13px; outline:none; }
+.deba-account-dashboard .chat-search svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); }
+.deba-account-dashboard .chat-tabs { display:flex; border-bottom:1px solid var(--border); }
+.deba-account-dashboard .chat-tab { flex:1; padding:var(--spacing-sm); text-align:center; font-size:13px; font-weight:500; color:var(--text-tertiary); border-bottom:2px solid transparent; }
+.deba-account-dashboard .chat-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+.deba-account-dashboard .chat-list { flex:1; overflow-y:auto; }
+.deba-account-dashboard .chat-item { width:100%; display:flex; align-items:center; gap:var(--spacing-md); padding:var(--spacing-md); cursor:pointer; transition:background .15s ease; border:0; border-bottom:1px solid var(--border-light); background:transparent; color:inherit; text-align:right; }
+.deba-account-dashboard .chat-item:hover { background:var(--bg-hover); }
+.deba-account-dashboard .chat-item.active { background:var(--primary-bg); }
+.deba-account-dashboard .chat-avatar,.deba-account-dashboard .chat-main-avatar { width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,var(--accent) 0%,var(--secondary) 100%); display:flex; align-items:center; justify-content:center; color:white; font-size:18px; font-weight:600; flex-shrink:0; overflow:hidden; }
+.deba-account-dashboard .chat-avatar img,.deba-account-dashboard .chat-main-avatar img { width:100%; height:100%; object-fit:cover; }
+.deba-account-dashboard .chat-avatar.online:after { content:''; position:absolute; bottom:2px; left:2px; width:10px; height:10px; background:var(--success); border-radius:50%; border:2px solid var(--bg-card); }
+.deba-account-dashboard .chat-avatar { position:relative; }
+.deba-account-dashboard .chat-item-info { flex:1; min-width:0; }
+.deba-account-dashboard .chat-item-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:2px; }
+.deba-account-dashboard .chat-item-name { font-size:14px; font-weight:600; color:var(--text-primary); }
+.deba-account-dashboard .chat-item-time { font-size:11px; color:var(--text-muted); white-space:nowrap; }
+.deba-account-dashboard .chat-item-preview { display:block; font-size:13px; color:var(--text-tertiary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.deba-account-dashboard .unread-badge { background:var(--primary); color:white; font-size:11px; font-weight:600; padding:2px 7px; border-radius:var(--radius-full); min-width:20px; text-align:center; }
+.deba-account-dashboard .chat-main { display:flex; flex-direction:column; }
+.deba-account-dashboard .chat-main-header { display:flex; align-items:center; gap:var(--spacing-md); padding:var(--spacing-md) var(--spacing-lg); border-bottom:1px solid var(--border); }
+.deba-account-dashboard .chat-main-avatar { width:40px; height:40px; font-size:16px; }
+.deba-account-dashboard .chat-main-info { flex:1; }
+.deba-account-dashboard .chat-main-name { font-size:15px; font-weight:600; color:var(--text-primary); }
+.deba-account-dashboard .chat-main-status { font-size:12px; color:var(--success); display:flex; align-items:center; gap:4px; }
+.deba-account-dashboard .chat-main-actions { display:flex; gap:var(--spacing-sm); }
+.deba-account-dashboard .chat-messages { flex:1; overflow-y:auto; padding:var(--spacing-lg); display:flex; flex-direction:column; gap:var(--spacing-md); background:var(--bg-primary); }
+.deba-account-dashboard .message { display:flex; gap:var(--spacing-sm); max-width:70%; }
+.deba-account-dashboard .message.sent { align-self:flex-start; }
+.deba-account-dashboard .message.received { align-self:flex-end; flex-direction:row-reverse; }
+.deba-account-dashboard .message-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--accent) 0%,var(--secondary) 100%); display:flex; align-items:center; justify-content:center; color:white; font-size:12px; font-weight:600; flex-shrink:0; }
+.deba-account-dashboard .message.received .message-avatar { background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%); }
+.deba-account-dashboard .message-content { display:flex; flex-direction:column; gap:4px; }
+.deba-account-dashboard .message-bubble { padding:var(--spacing-sm) var(--spacing-md); border-radius:var(--radius-lg); font-size:14px; line-height:1.5; }
+.deba-account-dashboard .message.sent .message-bubble { background:var(--bg-card); border:1px solid var(--border); border-top-right-radius:var(--radius-sm); }
+.deba-account-dashboard .message.received .message-bubble { background:var(--primary); color:white; border-top-left-radius:var(--radius-sm); }
+.deba-account-dashboard .message-time { font-size:11px; color:var(--text-muted); padding:0 var(--spacing-sm); }
+.deba-account-dashboard .chat-input-container { padding:var(--spacing-md) var(--spacing-lg); border-top:1px solid var(--border); background:var(--bg-card); }
+.deba-account-dashboard .chat-input-wrapper { display:flex; align-items:flex-end; gap:var(--spacing-sm); background:var(--bg-tertiary); border:1px solid var(--border); border-radius:var(--radius-lg); padding:var(--spacing-sm); }
+.deba-account-dashboard .chat-input { flex:1; border:none; background:transparent; padding:var(--spacing-sm); font-size:14px; color:var(--text-primary); font-family:inherit; outline:none; resize:none; min-height:36px; max-height:120px; }
+.deba-account-dashboard .chat-send-btn { width:40px; height:40px; border-radius:var(--radius-md); border:none; background:var(--primary); color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.deba-account-dashboard .chat-send-btn:disabled { opacity:.55; cursor:not-allowed; }
+
+.deba-account-dashboard .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:var(--spacing-2xl); text-align:center; color:var(--text-tertiary); min-height:180px; }
+.deba-account-dashboard .empty-state-icon { width:80px; height:80px; background:var(--bg-tertiary); border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:var(--spacing-md); }
+.deba-account-dashboard .empty-state h3 { font-size:18px; color:var(--text-secondary); margin:0 0 var(--spacing-sm); }
+.deba-account-dashboard .empty-state p { font-size:14px; max-width:400px; margin:0 0 var(--spacing-lg); }
+.deba-account-dashboard .deba-account-notice,.deba-account-dashboard .deba-account-error { padding:12px 16px; border-radius:var(--radius-md); background:var(--primary-bg); color:var(--text-primary); border:1px solid var(--border); margin-bottom:var(--spacing-md); }
+.deba-account-dashboard .deba-account-error { color:var(--danger); background:var(--danger-bg); }
+.deba-account-dashboard .profile-header { display:flex; align-items:center; gap:var(--spacing-lg); padding:var(--spacing-xl); background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); margin-bottom:var(--spacing-md); }
+.deba-account-dashboard .profile-avatar-large { width:100px; height:100px; border-radius:50%; background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%); display:flex; align-items:center; justify-content:center; color:white; font-size:40px; font-weight:700; position:relative; flex-shrink:0; overflow:hidden; }
+.deba-account-dashboard .profile-avatar-large img { width:100%; height:100%; object-fit:cover; }
+.deba-account-dashboard .edit-avatar { position:absolute; bottom:0; left:0; width:32px; height:32px; background:var(--bg-card); border:2px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text-secondary); }
+.deba-account-dashboard .profile-info { flex:1; min-width:0; }
+.deba-account-dashboard .profile-info h2 { font-size:24px; font-weight:700; margin:0 0 4px; }
+.deba-account-dashboard .profile-info p { color:var(--text-tertiary); font-size:14px; margin:0 0 var(--spacing-sm); }
+.deba-account-dashboard .profile-meta { display:flex; gap:var(--spacing-lg); flex-wrap:wrap; }
+.deba-account-dashboard .profile-meta-item { display:flex; align-items:center; gap:var(--spacing-sm); font-size:13px; color:var(--text-secondary); }
+.deba-account-dashboard .profile-stats { display:flex; gap:var(--spacing-lg); margin-right:auto; }
+.deba-account-dashboard .profile-stat { text-align:center; }
+.deba-account-dashboard .profile-stat-value { font-size:20px; font-weight:700; color:var(--text-primary); }
+.deba-account-dashboard .profile-stat-label { font-size:12px; color:var(--text-tertiary); }
+.deba-account-dashboard .form-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:var(--spacing-md); }
+.deba-account-dashboard .form-group { margin-bottom:var(--spacing-md); }
+.deba-account-dashboard .form-group.full-width { grid-column:span 2; }
+.deba-account-dashboard .form-label { display:block; font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:var(--spacing-sm); }
+.deba-account-dashboard .form-input,.deba-account-dashboard .form-select,.deba-account-dashboard .form-textarea { width:100%; padding:var(--spacing-sm) var(--spacing-md); border:1px solid var(--border); border-radius:var(--radius-md); background:var(--bg-secondary); color:var(--text-primary); font-size:14px; font-family:inherit; outline:none; }
+.deba-account-dashboard .form-input:focus,.deba-account-dashboard .form-select:focus,.deba-account-dashboard .form-textarea:focus { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-bg); }
+.deba-account-dashboard .form-textarea { resize:vertical; min-height:100px; }
+.deba-account-dashboard .form-hint { font-size:12px; color:var(--text-muted); margin-top:4px; }
+.deba-account-dashboard .profile-public-toggle { display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-secondary); cursor:pointer; }
+.deba-account-dashboard .dashboard-toggle-row { display:flex; justify-content:space-between; align-items:center; padding:var(--spacing-md); background:var(--bg-tertiary); border-radius:var(--radius-md); margin-bottom:var(--spacing-md); gap:20px; }
+.deba-account-dashboard .dashboard-toggle-row > div { display:flex; flex-direction:column; gap:3px; }
+.deba-account-dashboard .dashboard-toggle-row strong { font-weight:600; }
+.deba-account-dashboard .dashboard-toggle-row span { font-size:13px; color:var(--text-tertiary); }
+.deba-account-dashboard .dashboard-toggle { width:48px; height:26px; border-radius:26px; background:var(--border); position:relative; flex:0 0 auto; }
+.deba-account-dashboard .dashboard-toggle:after { content:''; position:absolute; height:20px; width:20px; right:3px; bottom:3px; background:white; border-radius:50%; transition:all .15s ease; }
+.deba-account-dashboard .dashboard-toggle.on { background:var(--primary); }
+.deba-account-dashboard .danger-card { border-color:var(--danger); }
+.deba-account-dashboard .danger-card .card-title { color:var(--danger); }
+
+.deba-account-dashboard .mobile-menu-toggle { display:none; position:fixed; bottom:22px; left:var(--spacing-md); width:48px; height:48px; border-radius:50%; background:var(--primary); color:white; border:none; cursor:pointer; z-index:60; box-shadow:var(--shadow-lg); align-items:center; justify-content:center; }
+.deba-account-dashboard :focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+
+.deba-account-dashboard .deba-location-picker { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--spacing-md); }
+.deba-account-dashboard .deba-location-picker label { display:block; }
+.deba-account-dashboard .deba-location-picker label > span { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:var(--spacing-sm); }
+.deba-account-dashboard .deba-location-picker input,
+.deba-account-dashboard .deba-location-picker select { width:100%; padding:var(--spacing-sm) var(--spacing-md); border:1px solid var(--border); border-radius:var(--radius-md); background:var(--bg-secondary); color:var(--text-primary); outline:none; }
+.deba-account-dashboard .deba-location-picker input:focus,
+.deba-account-dashboard .deba-location-picker select:focus { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-bg); }
+
+@media (max-width: 1024px) {
+  .deba-account-dashboard .sidebar { transform:translateX(100%); }
+  .deba-account-dashboard .sidebar.open { transform:translateX(0); }
+  .deba-account-dashboard .main-content { margin-right:0; max-width:100vw; }
+  .deba-account-dashboard .mobile-menu-toggle { display:flex; }
+  .deba-account-dashboard .chat-container { grid-template-columns:1fr; }
+  .deba-account-dashboard .chat-sidebar { display:none; }
+}
+@media (max-width: 900px) {
+  .deba-account-dashboard .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .deba-account-dashboard .profile-header { align-items:flex-start; }
+  .deba-account-dashboard .profile-stats { margin-right:0; }
+}
+@media (max-width: 768px) {
+  .deba-account-dashboard .main-content { padding:var(--spacing-md); }
+  .deba-account-dashboard .top-bar { align-items:flex-start; }
+  .deba-account-dashboard .top-actions { flex-shrink:0; }
+  .deba-account-dashboard .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .deba-account-dashboard .profile-header { flex-direction:column; text-align:center; }
+  .deba-account-dashboard .profile-meta { justify-content:center; }
+  .deba-account-dashboard .form-grid { grid-template-columns:1fr; }
+  .deba-account-dashboard .form-group.full-width { grid-column:span 1; }
+  .deba-account-dashboard .deba-location-picker { grid-template-columns:1fr; }
+}
+@media (max-width:480px) {
+  .deba-account-dashboard .stats-grid { grid-template-columns:1fr; }
+  .deba-account-dashboard .favorites-grid { grid-template-columns:1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .deba-account-dashboard *, .deba-account-dashboard *:before, .deba-account-dashboard *:after { animation-duration:.01ms !important; transition-duration:.01ms !important; }
+}
+
+/* Real-estate showcase */
+.deba-classified-real-estate { padding: 44px 0; background: var(--deba-bg, #fff); }
+.deba-classified-real-estate-card { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:16px; min-height:92px; padding:18px 20px; border:1px solid var(--deba-border, #E9ECEF); border-radius:14px; text-decoration:none; background:var(--deba-card,#fff); box-shadow:0 4px 18px rgba(26,43,60,.05); transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.deba-classified-real-estate-card:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(26,43,60,.09); border-color:rgba(255,107,53,.3); }
+.deba-classified-real-estate-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+.deba-classified-real-estate-icon { width:48px; height:48px; border-radius:14px; display:grid; place-items:center; background:rgba(255,107,53,.08); font-size:24px; }
+.deba-classified-real-estate-card strong { display:block; color:var(--deba-text,#1A1A1A); font-size:15px; margin-bottom:3px; }
+.deba-classified-real-estate-card > div > span { color:var(--deba-muted,#868E96); font-size:12px; }
+.deba-classified-real-estate-arrow { color:#FF6B35; font-size:18px; }
+.deba-classified-section-header > div > span { display:block; color:#FF6B35; font-size:11px; font-weight:800; letter-spacing:.12em; margin-bottom:4px; }
+.deba-classified-real-estate + * { scroll-margin-top:120px; }
+
+@media (max-width: 900px) { .deba-classified-real-estate-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width: 560px) { .deba-classified-real-estate-grid { grid-template-columns:1fr; } }
+
+/* Location picker shared on sale/profile surfaces */
+.deba-location-picker { display:grid; gap:16px; grid-template-columns:repeat(3,minmax(0,1fr)); }
+.deba-location-picker label { display:block; }
+.deba-location-picker label > span { display:flex; align-items:center; gap:6px; margin-bottom:7px; font-size:13px; font-weight:700; color:inherit; }
+.deba-location-picker select,.deba-location-picker input { width:100%; min-height:44px; padding:10px 12px; border:1px solid var(--deba-border,#E9ECEF); border-radius:10px; background:var(--deba-card,#fff); color:inherit; }
+@media (max-width: 800px) { .deba-location-picker { grid-template-columns:1fr; } }
