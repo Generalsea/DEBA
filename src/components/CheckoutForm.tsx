@@ -9,7 +9,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type DeliveryMethod = 'pickup' | 'seller_delivery' | 'platform_delivery'
 
@@ -64,6 +64,21 @@ export default function CheckoutForm({
   const paymentIdempotencyKeyRef = useRef<string | null>(null)
 
   const requiresAddress = deliveryMethod !== 'pickup'
+
+  useEffect(() => {
+    if (!requiresAddress) return
+    let active = true
+    fetch('/api/location', { cache: 'no-store' })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (!active || !data?.location) return
+        setDistrict((current) => current || data.location.district || '')
+        setCity((current) => current || data.location.city || '')
+        setGovernorate((current) => current || data.location.governorate || '')
+      })
+      .catch(() => undefined)
+    return () => { active = false }
+  }, [requiresAddress])
 
   async function submitOrder(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
