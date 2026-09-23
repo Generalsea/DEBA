@@ -84,7 +84,7 @@ function deliveryLabel(method: ProductCardItem['deliveryMethod']) {
 export default function ProductCard({ item, priority = false }: ProductCardProps) {
   const location = locationText(item)
   const condition =
-    (item.conditionGrade && CONDITION_LABELS[item.conditionGrade]) || 'حالة جيدة'
+    (item.conditionGrade && CONDITION_LABELS[item.conditionGrade]) || 'غير محددة'
   const unavailable = (item.quantityAvailable ?? 1) < 1
   const lowStock = !unavailable && Boolean(item.isLowStock)
   const sellerName = item.sellerName?.trim() || null
