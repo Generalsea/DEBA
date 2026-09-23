@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Header from '@/components/Header'
 import AdminModeration from '@/components/AdminModeration'
 import AdminAnalytics from '@/components/AdminAnalytics'
+import AdminCampaigns from '@/components/AdminCampaigns'
 import { createClient } from '@/utils/supabase/server'
 
 export default async function AdminPage() {
@@ -27,6 +28,7 @@ export default async function AdminPage() {
       <main className="deba-admin-page" dir="rtl">
         <AdminAnalytics />
         <AdminModeration />
+        {role.role === 'admin' ? <AdminCampaigns /> : null}
       </main>
     </>
   )
