@@ -38,6 +38,21 @@ test('database hardening migration protects seller verification review fields', 
   assert.match(source, /private\.secure_seller_verification_write\(\)/)
 })
 
+test('paid payment is required before an order can be completed', async () => {
+  const migration = await read(
+    'supabase/migrations/20260923132140_require_paid_order_completion.sql',
+  )
+  const actions = await read('src/components/OrderActions.tsx')
+  const route = await read('src/app/api/orders/[id]/status/route.ts')
+
+  assert.match(migration, /new\.status = 'completed'/)
+  assert.match(migration, /new\.payment_status <> 'paid'/)
+  assert.match(migration, /Paid payment is required before order completion/)
+  assert.match(actions, /orderStatus === 'ready'/)
+  assert.match(actions, /paymentStatus === 'paid'/)
+  assert.match(route, /paid payment is required/)
+})
+
 test('CI uses npm ci when the repository lockfile is present', async () => {
   const source = await read('.github/workflows/ci.yml')
   assert.match(source, /npm ci --no-audit --no-fund/)

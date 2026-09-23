@@ -14,6 +14,13 @@ function clean(value: unknown, max: number) {
 function mapError(message: string) {
   const value = message.toLowerCase()
 
+  if (
+    value.includes('paid payment is required') ||
+    value.includes('delivery orders can only be completed')
+  ) {
+    return { status: 409, error: 'لا يمكن إكمال الطلب قبل استيفاء الدفع والتسليم المطلوبين.' }
+  }
+
   if (value.includes('not allowed') || value.includes('cannot') || value.includes('required')) {
     return { status: 403, error: 'لا تملك صلاحية تنفيذ هذه العملية.' }
   }
