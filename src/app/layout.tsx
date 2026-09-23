@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import './future-marketplace.css'
+import './future-marketplace-overrides.css'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'http://localhost:3000').replace(/\/$/, '')
 
