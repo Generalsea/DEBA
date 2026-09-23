@@ -321,12 +321,18 @@ export default function Header({
 
         <div className={'deba-category-bar' + (menuOpen ? ' is-open' : '')}>
           <div className="deba-category-inner">
-            <Link href="/" className="deba-category-all">
+            <button
+              type="button"
+              className="deba-category-all"
+              onClick={() => setMenuOpen((open) => !open)}
+              aria-expanded={menuOpen}
+              aria-controls="deba-mega-menu"
+            >
               <Menu size={16} />
               تصفح جميع الأقسام
-            </Link>
+            </button>
 
-            {categories.map((item) => (
+            {categories.slice(0, 9).map((item) => (
               <Link
                 key={item.id}
                 href={'/?category=' + encodeURIComponent(item.slug)}
@@ -335,6 +341,32 @@ export default function Header({
                 {item.nameAr}
               </Link>
             ))}
+
+            {menuOpen ? (
+              <div id="deba-mega-menu" className="deba-mega-menu" role="dialog" aria-label="كل أقسام DEBA">
+                <div className="deba-mega-menu-head">
+                  <div>
+                    <span>DEBA DEPARTMENTS</span>
+                    <strong>اختر القسم الذي تريد استكشافه</strong>
+                  </div>
+                  <Link href="/?category=all#featured" onClick={() => setMenuOpen(false)}>
+                    كل المنتجات
+                  </Link>
+                </div>
+                <div className="deba-mega-grid">
+                  {categories.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={'/?category=' + encodeURIComponent(item.slug) + '#featured'}
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <span>{item.nameAr}</span>
+                      <small>تصفح المنتجات</small>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </header>
