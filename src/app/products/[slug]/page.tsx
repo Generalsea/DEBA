@@ -22,6 +22,10 @@ import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGa
 import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components/ProductDetailTabs'
 import { createClient } from '@/utils/supabase/server'
 
+// Next.js 16 currently has a non-ASCII dynamic-route cache-tag issue.
+// Product slugs may contain Arabic text, so this route must stay fully dynamic.
+export const dynamic = 'force-dynamic'
+
 const BUCKET = 'deba-product-media'
 
 type RouteParams = {
@@ -119,6 +123,14 @@ function formatMoney(value: number | null, currency: string) {
   )
 }
 
+function normalizeRouteSlug(value: string) {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
 function getImageUrl(
   supabase: Awaited<ReturnType<typeof createClient>>,
   storagePath: string | null,
@@ -185,11 +197,12 @@ function formatPublishedDate(value: string | null) {
 
 async function getProduct(slug: string) {
   const supabase = await createClient()
+  const normalizedSlug = normalizeRouteSlug(slug)
 
   const { data, error } = await supabase
     .from('products')
     .select(SELECT)
-    .eq('slug', slug)
+    .eq('slug', normalizedSlug)
     .eq('status', 'published')
     .eq('moderation_status', 'approved')
     .eq('listing_type', 'sale')
@@ -297,11 +310,12 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
+  const normalizedSlug = normalizeRouteSlug(slug)
   const supabase = await createClient()
   const { data } = await supabase
     .from('products')
     .select('title,description')
-    .eq('slug', slug)
+    .eq('slug', normalizedSlug)
     .eq('status', 'published')
     .eq('moderation_status', 'approved')
     .eq('listing_type', 'sale')
