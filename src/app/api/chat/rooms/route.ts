@@ -149,6 +149,10 @@ export async function GET() {
     const productMap = new Map(
       (products || []).map((product) => {
         const category = product.category
+        const categoryRecord =
+          category && typeof category === 'object'
+            ? (category as Record<string, unknown>)
+            : null
         const image = productImageMap.get(product.id)
         const storagePath = typeof image?.storage_path === 'string' ? image.storage_path : null
         const imageUrl = storagePath
