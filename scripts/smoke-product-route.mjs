@@ -40,6 +40,38 @@ if (!product) {
   throw new Error('Smoke-test product not found: ' + requestedSlug)
 }
 
+const debugUrl =
+  SITE_URL.replace(/\/$/, '') +
+  '/api/debug/product?slug=' +
+  encodeURIComponent(product.slug)
+
+const debugResponse = await fetch(debugUrl, {
+  signal: AbortSignal.timeout(15_000),
+})
+const debugBody = await debugResponse.text()
+
+console.log('SERVER DEBUG:', debugBody)
+
+if (!debugResponse.ok) {
+  throw new Error('Server debug route failed with HTTP ' + debugResponse.status)
+}
+
+const debug = JSON.parse(debugBody)
+
+if (debug.simple?.id !== product.id) {
+  throw new Error(
+    'Server simple query mismatch: ' +
+      JSON.stringify({ expected: product.id, actual: debug.simple?.id ?? null }),
+  )
+}
+
+if (debug.exact?.id !== product.id) {
+  throw new Error(
+    'Server exact query mismatch: ' +
+      JSON.stringify({ expected: product.id, actual: debug.exact?.id ?? null }),
+  )
+}
+
 const encodedSlug = encodeURIComponent(product.slug)
 const url = SITE_URL.replace(/\/$/, '') + '/products/' + encodedSlug
 const response = await fetch(url, {
