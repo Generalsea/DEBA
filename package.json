@@ -7,7 +7,8 @@
     "build": "next build",
     "typecheck": "tsc --noEmit",
     "start": "next start",
-    "seed:demo-catalog-images": "node scripts/seed-demo-catalog-images.mjs"
+    "seed:demo-catalog-images": "node scripts/seed-demo-catalog-images.mjs",
+    "catalog:seed": "node scripts/seed-demo-catalog.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
@@ -27,6 +28,7 @@
     "tailwindcss": "4.3.3"
   },
   "engines": {
-    "node": ">=22.14.0"
+    "node": ">=22.14.0",
+    "npm": "10.x"
   }
 }
