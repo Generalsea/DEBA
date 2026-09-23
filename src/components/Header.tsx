@@ -9,6 +9,8 @@ import {
   MapPin,
   MessageCircle,
   Menu,
+  Moon,
+  Sun,
   Plus,
   Search,
   ShoppingCart,
@@ -31,6 +33,7 @@ export type HeaderCategory = {
 }
 
 type HeaderProps = {
+  variant?: 'commerce' | 'classified'
   categories?: HeaderCategory[]
   initialSearch?: string
   initialCategory?: string
@@ -68,6 +71,7 @@ function readRecentSearches() {
 }
 
 export default function Header({
+  variant = 'commerce',
   categories = [],
   initialSearch = '',
   initialCategory = 'all',
@@ -88,10 +92,17 @@ export default function Header({
   const [identity, setIdentity] = useState<HeaderIdentity | null>(null)
   const supabase = useMemo(() => createClient(), [])
   const cart = useCartStore()
+  const [classifiedTheme, setClassifiedTheme] = useState<'light' | 'dark'>('light')
 
   useEffect(() => {
     setLiveFavoriteCount(favoriteCount)
   }, [favoriteCount])
+
+  useEffect(() => {
+    if (variant !== 'classified') return
+    const current = document.documentElement.dataset.theme
+    if (current === 'light' || current === 'dark') setClassifiedTheme(current)
+  }, [variant])
 
   useEffect(() => {
     setQuery(initialSearch)
@@ -309,6 +320,140 @@ export default function Header({
   const visibleLocation = [location?.district, location?.city, location?.governorate]
     .filter(Boolean)
     .join('، ')
+
+  const toggleClassifiedTheme = () => {
+    const nextTheme = classifiedTheme === 'dark' ? 'light' : 'dark'
+    document.documentElement.dataset.theme = nextTheme
+    document.documentElement.style.colorScheme = nextTheme
+    try {
+      window.localStorage.setItem('deba-theme', nextTheme)
+    } catch {}
+    setClassifiedTheme(nextTheme)
+  }
+
+  if (variant === 'classified') {
+    return (
+      <>
+        <header className="deba-classified-site-header">
+          <div className="deba-classified-utility-header">
+            <div className="deba-classified-container deba-classified-utility-inner">
+              <div className="deba-classified-utility-location">
+                <MapPin size={15} aria-hidden="true" />
+                <span>التسوق في مصر</span>
+                <strong>· {visibleLocation || [identity?.city, identity?.governorate].filter(Boolean).join('، ') || 'مصر'}</strong>
+              </div>
+              <nav className="deba-classified-utility-links" aria-label="روابط مساعدة">
+                <Link href="/support">المساعدة</Link>
+                <Link href={sellHref}>نشر إعلان</Link>
+                <Link href="/legal">من نحن</Link>
+              </nav>
+            </div>
+          </div>
+
+          <div className="deba-classified-main-header">
+            <div className="deba-classified-container deba-classified-header-content">
+              <Link href="/" className="deba-classified-logo-section" aria-label="DEBA - الرئيسية">
+                <span className="deba-classified-logo">DEBA</span>
+                <span className="deba-classified-logo-tagline">سوق الإعلانات والبيع المباشر في مصر</span>
+              </Link>
+
+              <div className="deba-classified-search-section">
+                <form className="deba-classified-search-container" onSubmit={submitSearch} role="search">
+                  <input
+                    type="search"
+                    className="deba-classified-search-input"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="ابحث عن إعلان، منتج، أو بائع..."
+                    aria-label="البحث في DEBA"
+                    autoComplete="off"
+                  />
+                  <select
+                    className="deba-classified-search-category"
+                    value={category}
+                    onChange={(event) => setCategory(event.target.value)}
+                    aria-label="اختيار القسم"
+                  >
+                    <option value="all">جميع الأقسام</option>
+                    {categories.map((item) => (
+                      <option key={item.id} value={item.slug}>
+                        {item.nameAr}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="submit" className="deba-classified-search-button" aria-label="بحث">
+                    <Search size={20} aria-hidden="true" />
+                  </button>
+                </form>
+              </div>
+
+              <div className="deba-classified-header-actions">
+                <Link href={accountHref} className="deba-classified-action-btn">
+                  <UserRound size={22} aria-hidden="true" />
+                  <span>حسابي</span>
+                </Link>
+                <Link href={favoritesHref} className="deba-classified-action-btn">
+                  <span className="deba-classified-action-icon-with-badge">
+                    <Heart size={22} aria-hidden="true" />
+                    {liveFavoriteCount > 0 ? <em>{badge(liveFavoriteCount)}</em> : null}
+                  </span>
+                  <span>المفضلة</span>
+                </Link>
+                <Link href="/chat" className="deba-classified-action-btn">
+                  <MessageCircle size={22} aria-hidden="true" />
+                  <span>الرسائل</span>
+                </Link>
+                <Link href={sellHref} className="deba-classified-publish-btn">
+                  <Plus size={17} aria-hidden="true" />
+                  + نشر إعلان
+                </Link>
+                <button
+                  type="button"
+                  className="deba-classified-theme-toggle"
+                  onClick={toggleClassifiedTheme}
+                  aria-label={classifiedTheme === 'dark' ? 'تبديل إلى الوضع الفاتح' : 'تبديل إلى الوضع المظلم'}
+                  title={classifiedTheme === 'dark' ? 'الوضع الفاتح' : 'الوضع المظلم'}
+                >
+                  {classifiedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <nav className="deba-classified-category-nav" aria-label="الأقسام الرئيسية">
+            <div className="deba-classified-container">
+              <ul className="deba-classified-category-list">
+                <li>
+                  <Link href="/" className={'deba-classified-category-link' + ((!initialCategory || initialCategory === 'all') ? ' active' : '')}>
+                    جميع الأقسام
+                  </Link>
+                </li>
+                {categories.slice(0, 10).map((item) => (
+                  <li key={item.id}>
+                    <Link
+                      href={'/?category=' + encodeURIComponent(item.slug)}
+                      className={'deba-classified-category-link' + (initialCategory === item.slug ? ' active' : '')}
+                    >
+                      {item.nameAr}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
+        </header>
+
+        {promotions.length ? <HeaderReelsRail items={promotions} /> : null}
+
+        <MobileNavigation
+          variant="classified"
+          categories={categories}
+          favoriteCount={liveFavoriteCount}
+          authenticated={authState === 'authenticated'}
+        />
+      </>
+    )
+  }
 
   return (
     <>
