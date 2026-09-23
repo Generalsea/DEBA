@@ -32,7 +32,30 @@ export async function POST(request: Request) {
       if (message.includes('Authenticated buyer is required')) {
         return NextResponse.json({ error: 'يجب تسجيل الدخول لبدء المحادثة.' }, { status: 401 })
       }
-      return NextResponse.json({ error: 'تعذر فتح المحادثة الآن.' }, { status: 400 })
+
+      console.error('DEBA chat room creation RPC error', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      })
+
+      return NextResponse.json(
+        {
+          error: 'تعذر فتح المحادثة الآن.',
+          ...(process.env.NODE_ENV !== 'production'
+            ? {
+                debug: {
+                  code: error.code || null,
+                  message: error.message || null,
+                  details: error.details || null,
+                  hint: error.hint || null,
+                },
+              }
+            : {}),
+        },
+        { status: 400 },
+      )
     }
 
     return NextResponse.json({ room: data })
