@@ -6,6 +6,7 @@ import {
   BadgeCheck,
   MapPin,
   PackageCheck,
+  Star,
   Truck,
 } from 'lucide-react'
 import FavoriteButton from '@/components/FavoriteButton'
@@ -34,6 +35,8 @@ export type ProductCardItem = {
   quantityAvailable?: number
   isLowStock?: boolean
   deliveryMethod?: CartProduct['deliveryMethod'] | null
+  ratingValue?: number | null
+  ratingCount?: number
 }
 
 type ProductCardProps = {
@@ -185,6 +188,17 @@ export default function ProductCard({ item, priority = false }: ProductCardProps
               ? item.description.slice(0, 92) + '…'
               : item.description}
           </p>
+        ) : null}
+
+        {item.ratingValue !== null && item.ratingValue !== undefined && (item.ratingCount ?? 0) > 0 ? (
+          <div
+            className="deba-product-rating"
+            aria-label={item.ratingValue + ' من 5، ' + item.ratingCount + ' تقييم'}
+          >
+            <Star size={13} fill="currentColor" aria-hidden="true" />
+            <strong>{item.ratingValue.toLocaleString('ar-EG', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</strong>
+            <span>({(item.ratingCount ?? 0).toLocaleString('ar-EG')})</span>
+          </div>
         ) : null}
 
         <div className="deba-product-price">
