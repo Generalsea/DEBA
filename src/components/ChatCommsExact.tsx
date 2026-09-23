@@ -15,6 +15,20 @@ type Product = {
   imageUrl?: string | null
 }
 
+type Viewer = {
+  id: string
+  display_name?: string | null
+  username?: string | null
+  avatar_url?: string | null
+  account_type?: string | null
+}
+
+type RoomsResponse = {
+  viewer?: Viewer | null
+  rooms?: Room[]
+  error?: string
+}
+
 type Room = {
   id: string
   product_id: string | null
@@ -110,6 +124,7 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
 
     const frameWindow = () => frame.contentWindow as (Window & {
       DEBAComms?: {
+        setAccount?: (viewer: Viewer) => void
         setChats?: (chats: LiveChat[]) => void
         setStats?: (stats: { conversations: number; activeOffers: number; responseRate: string }) => void
         setRoom?: (room: Room) => void
@@ -134,9 +149,9 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
 
     const loadRooms = async () => {
       const response = await fetch('/api/chat/rooms', { cache: 'no-store' })
-      const data = await response.json() as { rooms?: Room[]; error?: string }
+      const data = await response.json() as RoomsResponse
       if (!response.ok) throw new Error(data.error || 'تعذر تحميل المحادثات.')
-      return data.rooms || []
+      return data
     }
 
     const mapChats = (rooms: Room[]) => rooms.map((room, index): LiveChat => {
@@ -162,6 +177,11 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         active: room.id === roomIdRef.current,
       }
     })
+
+    const renderAccount = (viewer: Viewer | null | undefined) => {
+      const bridge = frameWindow()?.DEBAComms
+      if (viewer) bridge?.setAccount?.(viewer)
+    }
 
     const renderRooms = (rooms: Room[]) => {
       roomsRef.current = rooms
@@ -206,7 +226,9 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
       if (refreshInFlightRef.current || disposed) return
       refreshInFlightRef.current = true
       try {
-        const rooms = await loadRooms()
+        const data = await loadRooms()
+        const rooms = data.rooms || []
+        renderAccount(data.viewer)
         renderRooms(rooms)
 
         if (roomIdRef.current && rooms.some((room) => room.id === roomIdRef.current)) {
@@ -435,6 +457,11 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
       if (!win || !bridge || disposed) return
 
       bridge.onOpenChat = openLiveRoom
+      bridge.onProductOpen = () => {
+        const room = roomIdRef.current ? roomsRef.current.find((item) => item.id === roomIdRef.current) : null
+        const slug = room?.product?.slug
+        window.location.href = slug ? '/products/' + encodeURIComponent(slug) : '/'
+      }
       bridge.onSend = sendMessage
       bridge.onAttach = (kind) => {
         const input = frame.contentDocument?.getElementById('attachmentInput') as HTMLInputElement | null
