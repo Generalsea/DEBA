@@ -2,6 +2,7 @@
 
 import {
   ArrowLeft,
+  ArrowRight,
   Check,
   Loader2,
   MessageCircle,
@@ -218,6 +219,9 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
         {selectedRoom ? (
           <>
             <header className="deba-chat-main-head">
+              <button type="button" className="deba-chat-mobile-back" onClick={() => setSelectedRoomId(null)} aria-label="العودة إلى المحادثات">
+                <ArrowRight size={17} />
+              </button>
               <div className="deba-chat-main-person">
                 <span className="deba-chat-avatar large">
                   {selectedRoom.counterparty?.avatar_url ? (
