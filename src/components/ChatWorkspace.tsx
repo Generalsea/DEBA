@@ -221,6 +221,7 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
   const [toast, setToast] = useState('')
   const [contextMenu, setContextMenu] = useState<{ messageId: string; x: number; y: number } | null>(null)
   const [refreshToken, setRefreshToken] = useState(0)
+  const [demoReply, setDemoReply] = useState<string | null>(null)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const toastTimer = useRef<number | null>(null)
 
@@ -230,7 +231,8 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
   )
 
   const demoMode = process.env.NODE_ENV !== 'production'
-  const showDemoConversation = demoMode && selectedRoom?.product?.title === 'شليور لاسلكي 18V — تجربة DEBA' && messages.length === 0
+  const preserveDemoConversation =
+    demoMode && selectedRoom?.product?.title === 'شليور لاسلكي 18V — تجربة DEBA'
 
   const mergedChats = useMemo(() => {
     const live = rooms.map((room): DemoChat & { roomId: string; live: true } => {
@@ -380,6 +382,15 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
   }, [initialProduct, refreshToken])
 
   useEffect(() => {
+    function dismissContextMenu() {
+      setContextMenu(null)
+    }
+
+    window.addEventListener('click', dismissContextMenu)
+    return () => window.removeEventListener('click', dismissContextMenu)
+  }, [])
+
+  useEffect(() => {
     if (!selectedRoomId) return
     const interval = window.setInterval(() => void openRoom(selectedRoomId), 5000)
     return () => window.clearInterval(interval)
@@ -416,6 +427,19 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
       setDraft('')
       resizeInput()
       showToast('تم إرسال الرسالة')
+
+      if (preserveDemoConversation && demoMode) {
+        const replies = [
+          'تمام، شكرًا لك! 👍',
+          'ممتاز، سنتفق على التفاصيل',
+          'حسنًا، سأعود لك خلال دقائق',
+          'إن شاء الله، تمام!',
+        ]
+        window.setTimeout(() => {
+          setDemoReply(replies[Math.floor(Math.random() * replies.length)])
+        }, 2500)
+      }
+
       requestAnimationFrame(() => {
         document.getElementById('messagesArea')?.scrollTo({ top: 999999, behavior: 'smooth' })
       })
@@ -617,9 +641,9 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
                 </div>
               </div>
 
-              {loadingMessages && !showDemoConversation ? (
+              {loadingMessages && !preserveDemoConversation ? (
                 <div className="deba-comms-empty-state">جاري تحميل الرسائل...</div>
-              ) : showDemoConversation ? (
+              ) : preserveDemoConversation ? (
                 DEMO_MESSAGES.map((message, index) => {
                   const mine = message.from === 'mine'
                   return (
@@ -632,7 +656,15 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
                       </div>
                       <div className="message-content">
                         {message.kind === 'text' ? (
-                          <div className="message-bubble">{message.body}</div>
+                          <div
+                      className="message-bubble"
+                      onContextMenu={(event) => {
+                        event.preventDefault()
+                        setContextMenu({ messageId: message.id, x: event.clientX, y: event.clientY })
+                      }}
+                    >
+                      {message.body}
+                    </div>
                         ) : null}
 
                         {message.kind === 'product' ? (
@@ -723,6 +755,24 @@ export default function ChatWorkspace({ initialProduct }: { initialProduct?: str
                   <span>اكتب أول رسالة لبدء التفاوض داخل DEBA.</span>
                 </div>
               )}
+
+              {demoReply ? (
+                <div className="message sent">
+                  <div className="message-avatar">S</div>
+                  <div className="message-content">
+                    <div className="message-bubble">{demoReply}</div>
+                    <div className="message-meta">
+                      <span>{formatTime(new Date().toISOString())}</span>
+                      <span className="read-receipt">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                          <polyline points="16 6 7 17 2 12" transform="translate(4, 0)" />
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
 
               <div className="message received" id="typingMsg">
                 <div className="message-avatar">أ</div>
