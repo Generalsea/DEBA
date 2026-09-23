@@ -105,16 +105,20 @@ const CONDITION_LABELS: Record<string, string> = {
   for_parts: 'للقطع / الإصلاح',
 }
 
-const CATEGORY_PRESENTATION: { slug: string; icon: LucideIcon; label: string }[] = [
-  { slug: 'electronics', icon: Smartphone, label: 'إلكترونيات' },
-  { slug: 'furniture-home', icon: Sofa, label: 'أثاث' },
-  { slug: 'home-appliances', icon: Plug, label: 'أجهزة منزلية' },
-  { slug: 'fashion', icon: Tag, label: 'أزياء' },
-  { slug: 'books-education', icon: BookOpen, label: 'كتب وتعليم' },
-  { slug: 'tools-equipment', icon: Wrench, label: 'أدوات ومعدات' },
-  { slug: 'collectibles-antiques', icon: Palette, label: 'تحف ومقتنيات' },
-  { slug: 'other', icon: Layers3, label: 'أخرى' },
-]
+const CATEGORY_ICON_BY_SLUG: Record<string, LucideIcon> = {
+  electronics: Smartphone,
+  'home-appliances': Plug,
+  'furniture-home': Sofa,
+  fashion: Tag,
+  'books-education': BookOpen,
+  'toys-hobbies': Sparkles,
+  'vehicles-parts': Truck,
+  'tools-equipment': Wrench,
+  'collectibles-antiques': Palette,
+  'baby-kids': HeartHandshake,
+  'sports-fitness': ShoppingBag,
+  other: Layers3,
+}
 
 function firstParam(value: SearchParamValue) {
   return Array.isArray(value) ? value[0] : value
@@ -418,17 +422,20 @@ export default async function HomePage({
     sort: safeSort,
   })
 
-  const categoryMap = new Map(data.categories.map((item) => [item.slug, item]))
-  const presentationCategories = CATEGORY_PRESENTATION.map((presentation) => ({
-    ...presentation,
-    row: categoryMap.get(presentation.slug) || {
-      id: 'static-' + presentation.slug,
-      name_ar: presentation.label,
-      name_en: null,
-      slug: presentation.slug,
-      sort_order: 0,
-    },
+  const presentationCategories = data.categories.map((row) => ({
+    slug: row.slug,
+    icon: CATEGORY_ICON_BY_SLUG[row.slug] || Layers3,
+    label: row.name_ar,
+    row,
   }))
+
+  const departmentSections = presentationCategories
+    .map((category) => ({
+      ...category,
+      products: data.products.filter((product) => product.category_id === category.row.id).slice(0, 4),
+    }))
+    .filter((section) => section.products.length > 0)
+    .slice(0, 4)
 
   const heroProducts = data.products.slice(0, 3)
   const hasResultsFilter = Boolean(
@@ -558,7 +565,7 @@ export default async function HomePage({
               </div>
 
               <div className="products-grid">
-                {data.products.slice(0, 4).map((product, index) => {
+                {data.products.slice(0, 8).map((product, index) => {
                   const image = data.imageByProduct.get(product.id)
                   const seller = product.owner_id ? data.profileById.get(product.owner_id) : null
 
@@ -778,6 +785,62 @@ export default async function HomePage({
             )}
           </div>
         </section>
+
+        {departmentSections.map((section) => (
+          <section className="fm-section fm-section-muted" key={section.row.id}>
+            <div className="fm-shell">
+              <div className="fm-section-heading">
+                <div className="fm-heading-copy">
+                  <span className="fm-section-kicker">SHOP BY DEPARTMENT</span>
+                  <h2 className="fm-section-title">{section.label}</h2>
+                  <p className="fm-section-subtitle">منتجات منشورة في هذا القسم من كتالوج DEBA الحالي.</p>
+                </div>
+                <Link
+                  href={'/?category=' + encodeURIComponent(section.row.slug) + '#featured'}
+                  className="fm-section-link"
+                >
+                  عرض القسم <ArrowLeft size={15} aria-hidden="true" />
+                </Link>
+              </div>
+
+              <div className="products-grid">
+                {section.products.map((product, index) => {
+                  const image = data.imageByProduct.get(product.id)
+                  const seller = product.owner_id ? data.profileById.get(product.owner_id) : null
+                  const item: ProductCardItem = {
+                    id: product.id,
+                    slug: product.slug,
+                    title: product.title,
+                    description: product.description,
+                    listingType: 'sale',
+                    price: normalizePrice(product.price),
+                    currency: product.currency || 'EGP',
+                    conditionGrade: product.condition_grade,
+                    city: product.city,
+                    governorate: product.governorate,
+                    categoryName: section.label,
+                    imageUrl: getImageUrl(image?.storage_path || null),
+                    imageAlt: image?.alt_text?.trim() || product.title,
+                    sellerId: product.owner_id,
+                    sellerName: seller?.display_name || seller?.username || 'عضو DEBA',
+                    sellerAvatar:
+                      seller?.avatar_url && /^https?:\/\//i.test(seller.avatar_url)
+                        ? seller.avatar_url
+                        : null,
+                    sellerVerified: false,
+                    quantityAvailable: product.quantity,
+                    isLowStock: product.quantity > 0 && product.quantity <= 3,
+                    deliveryMethod: product.delivery_method,
+                    ratingValue: data.ratingByProduct.get(product.id)?.value ?? null,
+                    ratingCount: data.ratingByProduct.get(product.id)?.count ?? 0,
+                  }
+
+                  return <ProductCard key={product.id} item={item} priority={index === 0} />
+                })}
+              </div>
+            </div>
+          </section>
+        ))}
 
         <section className="fm-trust" id="trust">
           <div className="fm-shell">
