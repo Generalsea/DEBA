@@ -202,6 +202,12 @@ export async function GET() {
     const profileMap = new Map((profiles || []).map((profile) => [profile.id, profile]))
     const userId = userData.user.id
 
+    const { data: viewerProfile } = await supabase
+      .from('profiles')
+      .select('id,display_name,username,avatar_url,account_type')
+      .eq('id', userId)
+      .maybeSingle()
+
     const lastReadByRoom = new Map(
       (participants || []).map((row) => [row.room_id, row.last_read_at]),
     )
@@ -254,6 +260,13 @@ export async function GET() {
     }
 
     return NextResponse.json({
+      viewer: viewerProfile || {
+        id: userId,
+        display_name: userData.user.email?.split('@')[0] || 'عضو DEBA',
+        username: null,
+        avatar_url: null,
+        account_type: null,
+      },
       rooms: (rooms || []).map((room) => {
         const counterpartId = (roomPeople || []).find(
           (person) => person.room_id === room.id && person.user_id !== userId,
