@@ -50,6 +50,13 @@ export async function POST(request: Request) {
                   message: error.message || null,
                   details: error.details || null,
                   hint: error.hint || null,
+                  supabaseHost: (() => {
+                    try {
+                      return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://gkwpjtbrecoesxyoybto.supabase.co').host
+                    } catch {
+                      return 'invalid-supabase-url'
+                    }
+                  })(),
                 },
               }
             : {}),
