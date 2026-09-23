@@ -1,0 +1,93 @@
+/* DEBA visual foundation — additive tokens only. */
+:root {
+  --deba-orange: #FF6B35;
+  --deba-orange-hover: #E55A2B;
+  --deba-orange-light: #FFF5F0;
+  --deba-blue: #004E89;
+  --deba-blue-dark: #003D6B;
+  --deba-blue-light: #E6F0FA;
+
+  --deba-success: #10B981;
+  --deba-success-bg: #ECFDF5;
+  --deba-warning: #F59E0B;
+  --deba-warning-bg: #FEF3C7;
+  --deba-danger: #EF4444;
+  --deba-danger-bg: #FEE2E2;
+  --deba-info: #3B82F6;
+  --deba-info-bg: #DBEAFE;
+
+  --deba-gray-50: #F9FAFB;
+  --deba-gray-100: #F3F4F6;
+  --deba-gray-200: #E5E7EB;
+  --deba-gray-300: #D1D5DB;
+  --deba-gray-400: #9CA3AF;
+  --deba-gray-500: #6B7280;
+  --deba-gray-600: #4B5563;
+  --deba-gray-700: #374151;
+  --deba-gray-800: #1F2937;
+  --deba-gray-900: #111827;
+
+  --deba-space-1: 0.25rem;
+  --deba-space-2: 0.5rem;
+  --deba-space-3: 0.75rem;
+  --deba-space-4: 1rem;
+  --deba-space-5: 1.25rem;
+  --deba-space-6: 1.5rem;
+  --deba-space-8: 2rem;
+  --deba-space-10: 2.5rem;
+  --deba-space-12: 3rem;
+  --deba-space-16: 4rem;
+
+  --deba-radius-sm: 6px;
+  --deba-radius-md: 8px;
+  --deba-radius-lg: 12px;
+  --deba-radius-xl: 16px;
+  --deba-radius-2xl: 20px;
+  --deba-radius-full: 9999px;
+
+  --deba-shadow-xs: 0 1px 2px rgba(0, 0, 0, .04);
+  --deba-shadow-sm: 0 2px 8px rgba(0, 0, 0, .06);
+  --deba-shadow-md: 0 4px 16px rgba(0, 0, 0, .08);
+  --deba-shadow-lg: 0 10px 30px rgba(0, 0, 0, .12);
+
+  --deba-text-xs: .75rem;
+  --deba-text-sm: .875rem;
+  --deba-text-base: 1rem;
+  --deba-text-lg: 1.125rem;
+  --deba-text-xl: 1.25rem;
+  --deba-text-2xl: 1.5rem;
+  --deba-text-3xl: 1.875rem;
+
+  --deba-font-normal: 400;
+  --deba-font-medium: 500;
+  --deba-font-semibold: 600;
+  --deba-font-bold: 700;
+  --deba-font-extrabold: 800;
+
+  --deba-transition-fast: 150ms ease;
+  --deba-transition-base: 250ms ease;
+
+  --deba-z-dropdown: 100;
+  --deba-z-sticky: 200;
+  --deba-z-header: 300;
+  --deba-z-modal: 400;
+
+  --deba-container-max: 1280px;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
