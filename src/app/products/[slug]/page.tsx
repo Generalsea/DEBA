@@ -363,6 +363,13 @@ export default async function ProductDetailPage({
 
   if (!data) notFound()
 
+  return (
+    <main data-deba-route-probe="product-found" dir="rtl">
+      <h1>{data.product.title}</h1>
+      <p>{data.product.id}</p>
+    </main>
+  )
+
   const { product } = data
   const images: ProductGalleryImage[] = [...(product.images || [])]
     .sort(
