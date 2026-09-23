@@ -561,7 +561,7 @@ export default function AccountDashboard({ account, initialSection }: Props) {
                 <div className="favorites-grid">
                   {account.favorites.map((item) => (
                     <article className="favorite-card" key={item.productId}>
-                      <div className="favorite-image" />
+                      <div className="favorite-image">{item.imageUrl ? <img src={item.imageUrl} alt="" /> : null}</div>
                       <div className="favorite-info">
                         <h4 className="favorite-title">{item.title}</h4>
                         <div className="favorite-price">{formatMoney(item.price, item.currency)}</div>
