@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Header, { type HeaderCategory } from '@/components/Header'
-import ProfileDashboard, {
+import AccountDashboard from '@/components/AccountDashboard'
+import {
   type ProfileAccountData,
   type ProfileOrder,
   type ProfileProduct,
@@ -120,6 +121,8 @@ export default async function ProfilePage({
     pendingSellerProductCountResult,
     favoritesResult,
     favoriteCountResult,
+    chatParticipantsResult,
+    notificationsResult,
   ] = await Promise.all([
     supabase
       .from('profiles')
@@ -187,6 +190,16 @@ export default async function ProfilePage({
       .from('favorites')
       .select('product_id', { count: 'exact', head: true })
       .eq('user_id', userId),
+    supabase
+      .from('chat_participants')
+      .select('room_id,last_read_at')
+      .eq('user_id', userId),
+    supabase
+      .from('notifications')
+      .select('id,type,title,body,href,read_at,created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20),
   ])
 
   if (profileResult.error) {
@@ -204,6 +217,34 @@ export default async function ProfilePage({
   const sellerOrders = (sellerOrdersResult.data || []) as OrderRow[]
   const sellerProducts = (sellerProductsResult.data || []) as ProductRow[]
   const favorites = (favoritesResult.data || []) as FavoriteRow[]
+  const chatParticipants = (chatParticipantsResult.data || []) as Array<{ room_id: string; last_read_at: string | null }>
+  const chatRoomIds = chatParticipants.map((item) => item.room_id)
+  const notifications = (notificationsResult.data || []).map((item) => ({
+    id: item.id,
+    type: item.type,
+    title: item.title,
+    body: item.body,
+    href: item.href,
+    readAt: item.read_at,
+    createdAt: item.created_at,
+  }))
+  let unreadMessages = 0
+  if (chatRoomIds.length) {
+    const { data: unreadRows } = await supabase
+      .from('messages')
+      .select('room_id,sender_id,created_at')
+      .in('room_id', chatRoomIds)
+      .neq('sender_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(500)
+
+    for (const message of unreadRows || []) {
+      const lastReadAt = chatParticipants.find((item) => item.room_id === message.room_id)?.last_read_at
+      if (!lastReadAt || new Date(message.created_at).getTime() > new Date(lastReadAt).getTime()) {
+        unreadMessages += 1
+      }
+    }
+  }
   const privateProfile = (privateResult.data || null) as PrivateRow | null
 
   const allOrderProductIds = Array.from(
@@ -340,6 +381,8 @@ export default async function ProfilePage({
     sellerOrders: sellerOrders.map(serializeOrder),
     sellerProducts: serializedProducts,
     favorites: serializedFavorites,
+    unreadMessages,
+    notifications,
   }
 
   const requestedTab = (await searchParams)?.tab || 'overview'
@@ -357,7 +400,7 @@ export default async function ProfilePage({
         favoriteCount={favorites.length}
       />
       <main className="deba-profile-page" dir="rtl">
-        <ProfileDashboard account={account} initialTab={requestedTab} />
+        <AccountDashboard account={account} initialSection={requestedTab === 'overview' ? 'dashboard' : requestedTab} />
       </main>
     </>
   )
