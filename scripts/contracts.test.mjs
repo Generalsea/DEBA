@@ -28,7 +28,7 @@ test('seller listing starts as a draft and uses structured contract v1', async (
 })
 
 test('database hardening migration protects seller verification review fields', async () => {
-  const source = await read('supabase/migrations/20260923150000_harden_seller_verification_writes.sql')
+  const source = await read('supabase/migrations/20260923130427_harden_seller_verification_writes.sql')
 
   for (const field of ['status', 'reviewed_at', 'reviewed_by', 'review_note', 'expires_at']) {
     assert.match(source, new RegExp('new\\.' + field + '\\s+is distinct from old\\.' + field))
