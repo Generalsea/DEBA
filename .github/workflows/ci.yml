@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 15
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://gkwpjtbrecoesxyoybto.supabase.co
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_jKwUxJFLIjftocgmbwD4CA_2S-Is3y
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_jKwUxJFLIjftocgmbwD4CA_2S-Is3y0
       NEXT_PUBLIC_SITE_URL: https://ci.invalid
     steps:
       - name: Checkout
@@ -65,7 +65,6 @@ jobs:
         shell: bash
         run: |
           nohup npm run start -- -p 3100 > /tmp/deba-next.log 2>&1 &
-          echo $! > /tmp/deba-next.pid
           for i in {1..30}; do
             if curl -fsS http://127.0.0.1:3100/ >/dev/null; then
               exit 0
