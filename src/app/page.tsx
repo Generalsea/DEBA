@@ -21,7 +21,6 @@ import {
   Users,
   Wrench,
 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import Header from '@/components/Header'
 import ClassifiedFilterBar from '@/components/ClassifiedFilterBar'
 import ClassifiedListingCard, { type ClassifiedListingItem } from '@/components/ClassifiedListingCard'
@@ -103,21 +102,6 @@ const CONDITION_LABELS: Record<string, string> = {
   fair: 'مستعمل',
   poor: 'يحتاج عناية',
   for_parts: 'للقطع / الإصلاح',
-}
-
-const CATEGORY_ICON_BY_SLUG: Record<string, LucideIcon> = {
-  electronics: Smartphone,
-  'home-appliances': Smartphone,
-  'furniture-home': Sofa,
-  fashion: Tag,
-  'books-education': BookOpen,
-  'toys-hobbies': Palette,
-  'vehicles-parts': Car,
-  'tools-equipment': Wrench,
-  'collectibles-antiques': Palette,
-  'baby-kids': HeartHandshake,
-  'sports-fitness': Heart,
-  other: Layers3,
 }
 
 const CATEGORY_EMOJI_BY_SLUG: Record<string, string> = {
@@ -591,7 +575,7 @@ function SearchResults({
         <div className="deba-classified-search-heading">
           <span>نتائج البحث</span>
           <h1>{q ? 'الإعلانات المطابقة لـ «' + q + '»' : 'تصفية الإعلانات'}</h1>
-          <p>{data.stats.products.toLocaleString('ar-EG')} إعلانًا نشطًا متاحًا للتصفح.</p>
+          <p>{data.products.length.toLocaleString('ar-EG')} إعلانًا مطابقًا متاحًا للتصفح.</p>
         </div>
 
         <div className="deba-classified-results-grid">
