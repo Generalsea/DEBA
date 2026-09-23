@@ -4,6 +4,7 @@ import {
   ChevronDown,
   Heart,
   LoaderCircle,
+  MapPin,
   Menu,
   Plus,
   Search,
@@ -75,7 +76,7 @@ export default function Header({
     const loadIdentity = async (userId: string) => {
       const { data } = await supabase
         .from('profiles')
-        .select('username,display_name,avatar_url')
+        .select('username,display_name,avatar_url,city,governorate')
         .eq('id', userId)
         .maybeSingle()
 
@@ -90,6 +91,8 @@ export default function Header({
         username: data.username,
         displayName: data.display_name,
         avatarUrl,
+        city: data.city,
+        governorate: data.governorate,
       })
     }
 
@@ -149,6 +152,21 @@ export default function Header({
   return (
     <>
       <header className="deba-site-header">
+        <div className="deba-utility-bar">
+          <div className="deba-utility-inner">
+            <span className="deba-utility-location">
+              <MapPin size={14} aria-hidden="true" />
+              <span>التسوق في مصر</span>
+              {identity?.city || identity?.governorate ? (
+                <strong> · {identity.city || identity.governorate}</strong>
+              ) : null}
+            </span>
+            <div className="deba-utility-links">
+              <Link href="/support">مركز المساعدة</Link>
+              <Link href="/sell">بع على DEBA</Link>
+            </div>
+          </div>
+        </div>
         <div className="deba-header-main">
           <div className="deba-header-inner">
             <button
