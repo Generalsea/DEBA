@@ -299,6 +299,26 @@ export default function Header({
           </div>
         </div>
 
+        <form action="/" method="get" className="deba-mobile-search" role="search">
+          <div className="deba-mobile-search-wrap">
+            <Search size={18} aria-hidden="true" />
+            <input
+              name="q"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              type="search"
+              inputMode="search"
+              autoComplete="off"
+              placeholder="ابحث في DEBA..."
+              aria-label="البحث في DEBA"
+            />
+            <input type="hidden" name="category" value={category} />
+            <button type="submit" aria-label="بحث">
+              <Search size={18} aria-hidden="true" />
+            </button>
+          </div>
+        </form>
+
         <div className={'deba-category-bar' + (menuOpen ? ' is-open' : '')}>
           <div className="deba-category-inner">
             <Link href="/" className="deba-category-all">
