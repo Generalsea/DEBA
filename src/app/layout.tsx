@@ -64,9 +64,11 @@ export default function RootLayout({
       </head>
       <body>
         {children}
-        <Script id="deba-theme-bootstrap" strategy="beforeInteractive">
-          {themeBootstrap}
-        </Script>
+        <Script
+          id="deba-theme-bootstrap"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: themeBootstrap }}
+        />
       </body>
     </html>
   )
