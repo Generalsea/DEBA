@@ -58,3 +58,19 @@ test('CI uses npm ci when the repository lockfile is present', async () => {
   assert.match(source, /npm ci --no-audit --no-fund/)
   assert.match(source, /package-lock\.json/)
 })
+test('header advertising rail is data-driven, 9:16, and isolated from persistence', async () => {
+  const migration = await read(
+    'supabase/migrations/20260923141939_create_header_ad_promotions.sql',
+  )
+  const rail = await read('src/components/HeaderReelsRail.tsx')
+  const page = await read('src/app/page.tsx')
+
+  assert.match(migration, /media_type text not null check \(media_type in \('image', 'video'\)\)/)
+  assert.match(migration, /create policy "Public can read active header ads"/)
+  assert.match(migration, /starts_at is null or starts_at <= now\(\)/)
+  assert.match(rail, /aspect-ratio: 9 \/ 16/)
+  assert.match(rail, /muted/)
+  assert.match(rail, /playsInline/)
+  assert.match(page, /from\('header_ad_promotions'\)/)
+  assert.match(page, /isSafeMediaUrl/)
+})
