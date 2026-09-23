@@ -8169,3 +8169,643 @@ html[data-theme="dark"] .brand-side {
     font-size: 12px;
   }
 }
+
+
+/* =========================================================
+   DEBA EXPERIENCE HARDENING — live marketplace pulse
+   ========================================================= */
+
+.deba-market-pulse {
+  padding: 18px 0 26px;
+  background:
+    radial-gradient(circle at 10% 0%, var(--deba-brand-soft), transparent 34%),
+    var(--deba-bg);
+}
+
+.deba-market-pulse-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.deba-market-pulse-head > div {
+  min-width: 0;
+}
+
+.deba-market-pulse-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border: 1px solid var(--deba-border);
+  border-radius: 999px;
+  background: var(--deba-surface);
+  color: var(--deba-brand);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.deba-market-pulse h1 {
+  margin: 7px 0 2px;
+  color: var(--deba-text);
+  font-size: clamp(22px, 3vw, 31px);
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.deba-market-pulse-head p {
+  margin: 0;
+  color: var(--deba-text-2);
+  font-size: 11.5px;
+}
+
+.deba-market-pulse-link {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding-inline: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--deba-border-strong);
+  border-radius: 10px;
+  background: var(--deba-surface);
+  color: var(--deba-text);
+  font-size: 10.5px;
+  font-weight: 900;
+}
+
+.deba-market-pulse-link:hover {
+  border-color: var(--deba-brand);
+  color: var(--deba-brand);
+}
+
+.deba-market-pulse-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(180px, 215px);
+  gap: 11px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding: 3px 2px 8px;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+
+.deba-market-pulse-track::-webkit-scrollbar {
+  height: 5px;
+}
+
+.deba-market-pulse-card {
+  min-width: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--deba-border);
+  border-radius: 14px;
+  background: var(--deba-surface);
+  box-shadow: var(--deba-shadow-sm);
+  scroll-snap-align: start;
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.deba-market-pulse-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--deba-border-strong);
+  box-shadow: var(--deba-shadow-md);
+}
+
+.deba-market-pulse-media {
+  position: relative;
+  min-width: 0;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--deba-surface-2);
+}
+
+.deba-market-pulse-media img {
+  object-fit: cover;
+  transition: transform .25s ease;
+}
+
+.deba-market-pulse-card:hover .deba-market-pulse-media img {
+  transform: scale(1.035);
+}
+
+.deba-market-pulse-new {
+  position: absolute;
+  inset-inline-start: 6px;
+  top: 6px;
+  min-height: 19px;
+  padding-inline: 6px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--deba-brand);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.deba-market-pulse-copy {
+  min-width: 0;
+  align-content: center;
+  display: grid;
+  gap: 4px;
+}
+
+.deba-market-pulse-copy > span {
+  color: var(--deba-text-3);
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.deba-market-pulse-copy strong {
+  min-width: 0;
+  color: var(--deba-text);
+  font-size: 10.5px;
+  line-height: 1.55;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.deba-market-pulse-copy b {
+  color: var(--deba-brand);
+  font-size: 11.5px;
+  font-weight: 900;
+}
+
+.deba-market-pulse-empty {
+  min-height: 76px;
+  padding: 10px 13px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px dashed var(--deba-border-strong);
+  border-radius: 14px;
+  background: var(--deba-surface);
+  color: var(--deba-text-2);
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.deba-market-pulse-empty svg {
+  color: var(--deba-brand);
+}
+
+.deba-market-pulse-empty a {
+  margin-inline-start: auto;
+  color: var(--deba-brand);
+}
+
+/* Live favorite micro-interactions */
+.deba-favorite-button {
+  position: relative;
+  transition: transform .14s ease, color .14s ease, background .14s ease, border-color .14s ease;
+}
+
+.deba-favorite-button:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.03);
+}
+
+.deba-favorite-button.is-favorite {
+  animation: deba-favorite-pop .24s ease-out;
+}
+
+.deba-favorite-button.is-loading {
+  opacity: .72;
+  cursor: progress;
+}
+
+.deba-favorite-button.has-error {
+  color: var(--deba-red) !important;
+}
+
+@keyframes deba-favorite-pop {
+  0% { transform: scale(.88); }
+  65% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+/* Search / mega-menu dismissal must remain layered and inside their parents */
+.deba-search-panel,
+.deba-mega-menu {
+  isolation: isolate;
+}
+
+/* Seller store shell */
+.deba-store-page {
+  width: min(var(--deba-container), calc(100% - 40px));
+  margin-inline: auto;
+  padding: 24px 0 76px;
+}
+
+.deba-store-hero {
+  overflow: hidden;
+  position: relative;
+  padding: clamp(22px, 4vw, 36px);
+  border: 1px solid var(--deba-border);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 12% 12%, var(--deba-brand-soft), transparent 31%),
+    var(--deba-surface);
+  box-shadow: var(--deba-shadow-md);
+}
+
+.deba-store-hero::after {
+  content: '';
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  inset-inline-end: -70px;
+  bottom: -110px;
+  border: 1px solid var(--deba-border);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.deba-store-kicker {
+  color: var(--deba-brand);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.deba-store-hero h1 {
+  max-width: 18ch;
+  margin: 7px 0 5px;
+  color: var(--deba-text);
+  font-size: clamp(26px, 5vw, 42px);
+  line-height: 1.12;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.deba-store-hero p {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--deba-text-2);
+  font-size: 12px;
+}
+
+.deba-store-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.deba-store-meta span {
+  min-height: 28px;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--deba-border);
+  border-radius: 999px;
+  background: var(--deba-surface-2);
+  color: var(--deba-text-2);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+/* App-like mobile shell */
+@media (max-width: 760px) {
+  html, body {
+    overflow-x: hidden;
+  }
+
+  body {
+    padding-bottom: 76px;
+  }
+
+  .deba-header-container,
+  .deba-page-container,
+  .deba-detail-page,
+  .deba-cart-page,
+  .deba-checkout-v2-page,
+  .deba-order-page,
+  .deba-sell-page,
+  .deba-legal-shell,
+  .deba-support-center,
+  .deba-admin-shell,
+  .deba-store-page {
+    width: min(100% - 24px, var(--deba-container));
+  }
+
+  .deba-utility-bar {
+    min-height: 30px;
+  }
+
+  .deba-utility-inner {
+    min-height: 30px;
+  }
+
+  .deba-utility-links {
+    display: none;
+  }
+
+  .deba-utility-location {
+    font-size: 10px;
+    gap: 6px;
+  }
+
+  .deba-header-inner {
+    min-height: auto;
+    padding: 8px 0 10px;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .deba-mobile-trigger {
+    width: 38px;
+    height: 38px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid var(--deba-border);
+    border-radius: 10px;
+    background: var(--deba-surface);
+    color: var(--deba-text);
+  }
+
+  .deba-brand {
+    min-width: 0;
+    justify-self: stretch;
+  }
+
+  .deba-brand-mark {
+    width: 39px;
+    height: 39px;
+    border-radius: 11px;
+    font-size: 19px;
+  }
+
+  .deba-brand-copy strong {
+    font-size: 18px;
+  }
+
+  .deba-brand-copy small {
+    font-size: 8px;
+  }
+
+  .deba-search-wrap {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .deba-search {
+    min-height: 44px;
+    border-radius: 11px;
+  }
+
+  .deba-search-category {
+    min-width: 96px;
+    padding-inline: 9px;
+  }
+
+  .deba-search-category select {
+    font-size: 10px;
+  }
+
+  .deba-search > input {
+    padding-inline: 10px;
+    font-size: 12px;
+  }
+
+  .deba-search-panel {
+    top: calc(100% + 5px);
+    border-radius: 13px;
+    max-height: min(64vh, 440px);
+    overflow-y: auto;
+  }
+
+  .deba-header-actions {
+    display: none;
+  }
+
+  .deba-category-bar {
+    display: none;
+  }
+
+  .deba-market-pulse {
+    padding: 14px 0 20px;
+  }
+
+  .deba-market-pulse-head {
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+
+  .deba-market-pulse h1 {
+    font-size: 23px;
+  }
+
+  .deba-market-pulse-head p {
+    max-width: 36ch;
+    font-size: 10px;
+  }
+
+  .deba-market-pulse-link {
+    min-height: 34px;
+    padding-inline: 9px;
+    font-size: 9px;
+  }
+
+  .deba-market-pulse-track {
+    grid-auto-columns: minmax(76vw, 82vw);
+    gap: 9px;
+    margin-inline: -6px;
+    padding-inline: 6px 12px;
+    scrollbar-width: none;
+  }
+
+  .deba-market-pulse-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .deba-market-pulse-card {
+    grid-template-columns: 96px minmax(0, 1fr);
+    padding: 8px;
+    border-radius: 13px;
+  }
+
+  .deba-product-grid,
+  .fm-results-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 9px !important;
+  }
+
+  .deba-market-card {
+    min-width: 0;
+    border-radius: 13px;
+  }
+
+  .deba-market-card-title {
+    min-height: auto !important;
+    font-size: 11px !important;
+  }
+
+  .deba-market-card-description,
+  .deba-market-card-seller,
+  .deba-market-card-delivery {
+    font-size: 8.5px !important;
+  }
+
+  .deba-market-card-price strong {
+    font-size: 12px !important;
+  }
+
+  .deba-market-card-actions .deba-product-cart-button,
+  .deba-market-card-actions .deba-product-action {
+    min-height: 37px !important;
+    font-size: 9px !important;
+    width: 100%;
+  }
+
+  .deba-detail-layout,
+  .deba-checkout-v2-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .deba-detail-page {
+    padding-bottom: 28px;
+  }
+
+  .deba-detail-info h1 {
+    font-size: 22px !important;
+    line-height: 1.35 !important;
+  }
+
+  .deba-purchase-actions {
+    position: sticky;
+    bottom: 76px;
+    z-index: 30;
+    margin-inline: -6px;
+    padding: 8px;
+    border: 1px solid var(--deba-border);
+    border-radius: 13px;
+    background: color-mix(in srgb, var(--deba-surface) 93%, transparent);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--deba-shadow-lg);
+  }
+
+  .deba-purchase-primary,
+  .deba-purchase-actions .deba-cart-add-button {
+    min-height: 46px !important;
+  }
+
+  .deba-checkout-v2-sidebar {
+    order: -1;
+  }
+
+  .deba-checkout-v2-page {
+    padding-bottom: 96px;
+  }
+
+  .deba-checkout-v2-actions {
+    position: sticky;
+    bottom: 76px;
+    z-index: 25;
+    margin-inline: -6px;
+    padding: 8px;
+    border: 1px solid var(--deba-border);
+    border-radius: 13px;
+    background: color-mix(in srgb, var(--deba-surface) 94%, transparent);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--deba-shadow-lg);
+  }
+
+  .deba-cart-item {
+    grid-template-columns: 70px minmax(0,1fr);
+    gap: 9px;
+  }
+
+  .deba-cart-item-actions {
+    grid-column: 1 / -1;
+  }
+
+  .deba-store-hero {
+    border-radius: 17px;
+    padding: 20px;
+  }
+
+  .deba-store-hero h1 {
+    max-width: none;
+    font-size: 29px;
+  }
+
+  .deba-mobile-nav {
+    position: fixed !important;
+    inset-inline: 8px;
+    bottom: 8px;
+    z-index: 200;
+    width: auto !important;
+    min-height: 62px;
+    padding: 5px;
+    border: 1px solid var(--deba-border) !important;
+    border-radius: 17px !important;
+    background: color-mix(in srgb, var(--deba-surface) 94%, transparent) !important;
+    backdrop-filter: blur(16px);
+    box-shadow: var(--deba-shadow-lg) !important;
+  }
+
+  .deba-mobile-nav-item {
+    min-height: 50px !important;
+    border-radius: 12px !important;
+  }
+
+  .deba-mobile-nav-item span {
+    width: 24px;
+    height: 24px;
+  }
+
+  .deba-mobile-nav-item strong {
+    font-size: 8px !important;
+  }
+
+  .deba-mobile-nav-item:active {
+    transform: scale(.96);
+  }
+
+  .deba-mobile-category-panel {
+    position: fixed !important;
+    inset-inline: 8px;
+    bottom: 76px;
+    max-height: 62vh;
+    overflow-y: auto;
+    border: 1px solid var(--deba-border) !important;
+    border-radius: 17px !important;
+    background: var(--deba-surface) !important;
+    box-shadow: var(--deba-shadow-lg) !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .deba-market-pulse-head {
+    display: grid;
+    gap: 7px;
+  }
+
+  .deba-market-pulse-track {
+    grid-auto-columns: 88vw;
+  }
+
+  .deba-product-grid,
+  .fm-results-grid {
+    gap: 7px !important;
+  }
+
+  .deba-market-card-body {
+    padding: 8px !important;
+  }
+
+  .deba-market-card-title {
+    font-size: 10.5px !important;
+  }
+}
