@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 }
 
 const BUCKET = 'deba-product-media'
-const PRODUCT_LIMIT = 6
+const PRODUCT_LIMIT = 24
 
 type SearchParamValue = string | string[] | undefined
 
