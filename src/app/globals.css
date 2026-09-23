@@ -7873,3 +7873,299 @@ html[data-theme="dark"] .brand-side {
     text-align: end;
   }
 }
+
+/* =========================================================
+   READABILITY / OVERFLOW HARDENING
+   No critical marketplace copy is allowed to collapse into
+   sub-10px typography or unconstrained flex/grid children.
+   ========================================================= */
+
+.deba-marketplace h1,
+.deba-marketplace h2,
+.deba-marketplace h3,
+.deba-detail-page h1,
+.deba-detail-page h2,
+.deba-detail-page h3,
+.deba-cart-page h1,
+.deba-cart-page h2,
+.deba-cart-page h3,
+.deba-checkout-v2-page h1,
+.deba-checkout-v2-page h2,
+.deba-checkout-v2-page h3,
+.deba-order-page h1,
+.deba-order-page h2,
+.deba-order-page h3,
+.deba-sell-page h1,
+.deba-sell-page h2,
+.deba-sell-page h3,
+.deba-profile-page h1,
+.deba-profile-page h2,
+.deba-profile-page h3,
+.deba-support-page h1,
+.deba-support-page h2,
+.deba-support-page h3,
+.deba-legal-page h1,
+.deba-legal-page h2,
+.deba-legal-page h3,
+.deba-admin-page h1,
+.deba-admin-page h2,
+.deba-admin-page h3 {
+  overflow-wrap: anywhere;
+}
+
+.deba-market-card-title {
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.deba-market-card-category,
+.deba-market-card-seller,
+.deba-market-card-delivery,
+.deba-market-card-description {
+  font-size: 11px;
+}
+
+.deba-market-card-price > span {
+  font-size: 10px;
+}
+
+.deba-market-card-price strong {
+  font-size: 20px;
+}
+
+.deba-market-card-seller-avatar {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+  font-size: 10px;
+}
+
+.deba-detail-page {
+  font-size: 14px;
+}
+
+.deba-detail-info > h1 {
+  font-size: clamp(26px, 3.5vw, 38px);
+  line-height: 1.38;
+}
+
+.deba-detail-price-row strong {
+  font-size: 29px;
+}
+
+.deba-detail-section > p,
+.deba-detail-spec-table > div > div strong,
+.deba-detail-data-row > strong {
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.deba-detail-section-title,
+.deba-spec-card > div > strong {
+  font-size: 13px;
+}
+
+.deba-detail-location,
+.deba-seller-copy p,
+.deba-seller-copy small {
+  font-size: 12px;
+}
+
+.deba-cart-item-title-row h2,
+.deba-cart-item-title-row > a {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.deba-cart-item-meta,
+.deba-cart-item-footer,
+.deba-cart-unavailable-note,
+.deba-cart-stock-warning {
+  font-size: 11px;
+}
+
+.deba-checkout-section-head h2,
+.deba-checkout-sidebar-card h2,
+.deba-checkout-address-card strong,
+.deba-delivery-options strong,
+.deba-payment-method strong {
+  font-size: 13px;
+}
+
+.deba-checkout-section-head p,
+.deba-checkout-address-card small,
+.deba-delivery-options small,
+.deba-payment-method small,
+.deba-checkout-error {
+  font-size: 10.5px;
+}
+
+.deba-checkout-grid label > span,
+.deba-review-notes > span,
+.deba-checkout-sidebar-item span,
+.deba-checkout-sidebar-item strong,
+.deba-review-group-head strong,
+.deba-review-item strong,
+.deba-review-item span,
+.deba-review-item > b {
+  font-size: 11px;
+}
+
+.deba-sell-section-head h2,
+.deba-profile-content-head h2,
+.deba-order-panel-head h2,
+.deba-support-form h2,
+.deba-support-section-head h2 {
+  font-size: 16px;
+}
+
+.deba-sell-section-head p,
+.deba-sell-grid label > span,
+.deba-sell-spec-grid label > span,
+.deba-sell-grid input,
+.deba-sell-grid select,
+.deba-sell-grid textarea,
+.deba-sell-spec-grid input,
+.deba-sell-spec-grid select {
+  font-size: 11px;
+}
+
+.deba-profile-identity-copy h1 {
+  font-size: 25px;
+}
+
+.deba-profile-role-row > span,
+.deba-profile-contact-line,
+.deba-profile-form input,
+.deba-profile-form select,
+.deba-profile-form textarea,
+.deba-profile-sidebar-section a,
+.deba-profile-sidebar-section button,
+.deba-profile-order-title-row strong,
+.deba-profile-order-meta,
+.deba-profile-product-copy strong {
+  font-size: 11px;
+}
+
+.deba-order-panel-head h2,
+.deba-order-actions-panel h2,
+.deba-order-item strong,
+.deba-order-list-row strong {
+  font-size: 13px;
+}
+
+.deba-order-item span,
+.deba-order-list-row span,
+.deba-order-timeline-item strong,
+.deba-order-timeline-item span,
+.deba-order-timeline-item small {
+  font-size: 10.5px;
+}
+
+.deba-support-form-grid input,
+.deba-support-form-grid select,
+.deba-support-form-grid textarea,
+.deba-support-message strong,
+.deba-support-message p,
+.deba-support-reply textarea {
+  font-size: 11px;
+}
+
+.deba-legal-card-head h2 {
+  font-size: 16px;
+}
+
+.deba-legal-copy p,
+.deba-legal-note p {
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.deba-admin-card-main strong,
+.deba-admin-card-actions button,
+.deba-admin-tabs button {
+  font-size: 10.5px;
+}
+
+.deba-admin-card-main span,
+.deba-admin-footnote,
+.deba-analytics-grid span {
+  font-size: 10px;
+}
+
+.deba-analytics-grid strong {
+  font-size: 16px;
+}
+
+.form-title {
+  font-size: 30px;
+  line-height: 1.35;
+}
+
+.form-subtitle,
+.form-label,
+.form-input,
+.terms-text,
+.field-error,
+.forgot-link,
+.remember-me {
+  font-size: 11px;
+}
+
+.submit-btn,
+.google-btn,
+.auth-tab {
+  font-size: 12px;
+}
+
+.deba-marketplace .fm-section-head h2 {
+  font-size: 24px;
+}
+
+.deba-marketplace .fm-section-head p {
+  font-size: 12px;
+}
+
+.deba-marketplace .fm-category-card strong {
+  font-size: 12px;
+}
+
+.deba-marketplace .fm-btn {
+  font-size: 13px;
+}
+
+.deba-marketplace .fm-hero-copy > p {
+  font-size: 15px;
+}
+
+@media (max-width: 760px) {
+  .deba-marketplace .fm-category-card strong {
+    font-size: 10.5px;
+  }
+
+  .deba-market-card-title {
+    font-size: 12px;
+  }
+
+  .deba-market-card-category,
+  .deba-market-card-seller,
+  .deba-market-card-delivery {
+    font-size: 10px;
+  }
+
+  .deba-market-card-price strong {
+    font-size: 17px;
+  }
+
+  .deba-detail-info > h1 {
+    font-size: 25px;
+  }
+
+  .deba-profile-identity-copy h1 {
+    font-size: 20px;
+  }
+
+  .deba-marketplace .fm-hero-copy > p {
+    font-size: 12px;
+  }
+}
