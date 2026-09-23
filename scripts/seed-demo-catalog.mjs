@@ -24,32 +24,6 @@ const supabase = createClient(url, serviceKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 })
 
-type Category = {
-  id: string
-  slug: string
-  name_ar: string
-}
-
-type AttributeDefinition = {
-  key: string
-  label_ar: string
-  data_type: string
-  unit: string | null
-  is_required: boolean
-  sort_order: number
-}
-
-type ProductSeed = {
-  categorySlug: string
-  title: string
-  price: number
-  condition: string
-  city: string
-  governorate: string
-  district: string
-  deliveryMethod: 'pickup' | 'seller_delivery' | 'platform_delivery' | 'both'
-}
-
 const CITY_POOL = [
   ['مدينة نصر', 'القاهرة', 'مدينة نصر'],
   ['المعادي', 'القاهرة', 'المعادي'],
@@ -63,11 +37,7 @@ const CITY_POOL = [
   ['الزقازيق', 'الشرقية', 'الزقازيق'],
 ]
 
-const CATEGORY_FIXTURES: Array<{
-  slug: string
-  basePrice: number
-  titles: string[]
-}> = [
+const CATEGORY_FIXTURES = [
   {
     slug: 'electronics',
     basePrice: 5500,
@@ -250,7 +220,7 @@ const CATEGORY_FIXTURES: Array<{
   },
 ]
 
-function slugify(value: string) {
+function slugify(value) {
   return (
     value
       .toLowerCase()
@@ -260,12 +230,7 @@ function slugify(value: string) {
   )
 }
 
-function svgForProduct(
-  title: string,
-  category: string,
-  accent: string,
-  index: number,
-) {
+function svgForProduct(title, category, accent, index) {
   const x = 800 + index * 22
 
   return [
@@ -290,13 +255,13 @@ function svgForProduct(
   ].join('')
 }
 
-function specificationValue(definition: AttributeDefinition, product: ProductSeed) {
+function specificationValue(definition, product) {
   const key = definition.key.toLowerCase()
 
   if (definition.data_type === 'boolean') return 'true'
   if (definition.data_type === 'number') return '1'
 
-  const values: Record<string, string> = {
+  const values = {
     brand: 'DEBA Demo',
     model: product.title,
     model_number: 'DEBA-DEMO-01',
@@ -323,7 +288,7 @@ async function loadCategories() {
     .order('sort_order', { ascending: true })
 
   if (error) throw error
-  return (data || []) as Category[]
+  return data || []
 }
 
 async function loadDefinitions() {
@@ -334,10 +299,10 @@ async function loadDefinitions() {
     .order('sort_order', { ascending: true })
 
   if (error) throw error
-  return data as Array<AttributeDefinition & { category_id: string }>
+  return data
 }
 
-async function ensureProduct(seed: ProductSeed, category: Category, definitions: AttributeDefinition[]) {
+async function ensureProduct(seed, category, definitions)
   const slug = slugify(seed.title)
   const cityText = seed.city
   const description =
@@ -346,7 +311,7 @@ async function ensureProduct(seed: ProductSeed, category: Category, definitions:
     'تم تجهيز بيانات الحالة والموقع والاستلام والمواصفات الأساسية لتجربة واجهة السوق بصورة واقعية، ' +
     'مع توضيح أن السعر والبيانات الوصفية والصور الحالية هي بيانات Demo قابلة للاستبدال لاحقًا ببيانات حقيقية.'
 
-  const specifications: Record<string, string> = {}
+  const specifications = {}
   for (const definition of definitions) {
     specifications[definition.key] = specificationValue(definition, seed)
   }
@@ -490,15 +455,15 @@ async function main() {
   const categoryBySlug = new Map(categories.map((category) => [category.slug, category]))
 
   const definitions = await loadDefinitions()
-  const definitionsByCategory = new Map<string, AttributeDefinition[]>()
+  const definitionsByCategory = new Map()
 
-  for (const definition of definitions as Array<AttributeDefinition & { category_id: string }>) {
+  for (const definition of definitions) {
     const current = definitionsByCategory.get(definition.category_id) || []
     current.push(definition)
     definitionsByCategory.set(definition.category_id, current)
   }
 
-  const seeds: ProductSeed[] = []
+  const seeds = []
   for (let categoryIndex = 0; categoryIndex < CATEGORY_FIXTURES.length; categoryIndex += 1) {
     const fixture = CATEGORY_FIXTURES[categoryIndex]
     for (let index = 0; index < fixture.titles.length; index += 1) {
