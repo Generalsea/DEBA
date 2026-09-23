@@ -141,6 +141,7 @@
   .account-avatar .account-online-dot { position: absolute; bottom: 0; left: 0; width: 9px; height: 9px; background: var(--success); border: 2px solid var(--bg-elevated); border-radius: 50%; }
   .account-meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .account-name { font-size: 12.5px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .account-username { font-size: 10px; color: var(--text-tertiary); direction: ltr; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .account-status { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--success); font-weight: 700; }
   .account-status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
   .brand-home-link { display: inline-flex; }
@@ -356,6 +357,7 @@
           </div>
           <div class="account-meta">
             <div class="account-name" id="accountName">حسابي</div>
+            <div class="account-username" id="accountUsername">@deba</div>
             <div class="account-status"><span class="account-status-dot"></span><span>نشط الآن</span></div>
           </div>
         </a>
@@ -688,6 +690,34 @@
   let currentTab = 'all';
 
   window.DEBAComms = window.DEBAComms || {};
+  window.DEBAComms.setAccount = function(viewer) {
+    if (!viewer) return;
+
+    const displayName = viewer.display_name || 'حسابي';
+    const username = viewer.username ? '@' + viewer.username : '@' + displayName.replace(/\\s+/g, '').slice(0, 30);
+
+    const nameNode = document.getElementById('accountName');
+    const usernameNode = document.getElementById('accountUsername');
+    const initialsNode = document.getElementById('accountInitials');
+    const avatar = document.getElementById('accountAvatar');
+
+    if (nameNode) nameNode.textContent = displayName;
+    if (usernameNode) usernameNode.textContent = username;
+    if (initialsNode) initialsNode.textContent = displayName.trim().slice(0, 2) || 'أ';
+
+    if (avatar) {
+      const existing = avatar.querySelector('img');
+      if (viewer.avatar_url) {
+        const image = existing || document.createElement('img');
+        image.src = viewer.avatar_url;
+        image.alt = '';
+        if (!existing) avatar.prepend(image);
+      } else if (existing) {
+        existing.remove();
+      }
+    }
+  };
+
   window.DEBAComms.setChats = function(nextChats) {
     chats.splice(0, chats.length, ...nextChats);
     const hasActive = chats.some(c => c.active);
