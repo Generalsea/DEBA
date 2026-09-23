@@ -1,6 +1,29 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import HomeAuthActions from '@/components/HomeAuthActions'
+import type { LucideIcon } from 'lucide-react'
+import {
+  BookOpen,
+  Cpu,
+  Dumbbell,
+  Gamepad2,
+  Layers3,
+  Palette,
+  Plug,
+  Smartphone,
+  Sofa,
+  Wrench,
+  ShieldCheck,
+  CheckCircle2,
+  Truck,
+  CreditCard,
+  Compass,
+  PackageCheck,
+  Tag,
+  TrendingUp,
+} from 'lucide-react'
+import Header from '@/components/Header'
+import ProductCard, { type ProductCardItem } from '@/components/ProductCard'
+import type { HeaderPromo } from '@/components/HeaderReelsRail'
 import { createClient } from '@/utils/supabase/server'
 
 export const metadata: Metadata = {
@@ -75,14 +98,15 @@ const CONDITION_LABELS: Record<string, string> = {
   for_parts: 'للقطع / الإصلاح',
 }
 
-const CATEGORY_PRESENTATION: { slug: string; icon: string; label: string }[] = [
-  { slug: 'electronics', icon: '📱', label: 'إلكترونيات' },
-  { slug: 'furniture-home', icon: '🛋️', label: 'أثاث' },
-  { slug: 'home-appliances', icon: '🔌', label: 'أجهزة منزلية' },
-  { slug: 'fashion', icon: '👕', label: 'ملابس' },
-  { slug: 'books-education', icon: '📚', label: 'كتب' },
-  { slug: 'tools-equipment', icon: '🔧', label: 'أدوات' },
-  { slug: 'collectibles-antiques', icon: '🎨', label: 'تحف' },
+const CATEGORY_PRESENTATION: { slug: string; icon: LucideIcon; label: string }[] = [
+  { slug: 'electronics', icon: Smartphone, label: 'إلكترونيات' },
+  { slug: 'furniture-home', icon: Sofa, label: 'أثاث' },
+  { slug: 'home-appliances', icon: Plug, label: 'أجهزة منزلية' },
+  { slug: 'fashion', icon: Layers3, label: 'ملابس' },
+  { slug: 'books-education', icon: BookOpen, label: 'كتب' },
+  { slug: 'tools-equipment', icon: Wrench, label: 'أدوات' },
+  { slug: 'collectibles-antiques', icon: Palette, label: 'تحف' },
+  { slug: 'other', icon: Layers3, label: 'أخرى' },
 ]
 
 function firstParam(value: SearchParamValue) {
@@ -206,6 +230,7 @@ async function loadHomeData(filters: SearchFilters) {
     productCountResponse,
     membersCountResponse,
     sellerCountResponse,
+    headerAdsResponse,
   ] = await Promise.all([
     supabase
       .from('categories')
@@ -229,6 +254,12 @@ async function loadHomeData(filters: SearchFilters) {
       .select('id', { count: 'exact', head: true })
       .eq('is_public', true)
       .eq('account_type', 'seller'),
+    supabase
+      .from('header_ad_promotions')
+      .select('id,title,subtitle,media_type,media_url,poster_url,target_url,cta_label,alt_text')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false })
+      .limit(8),
   ])
 
   const categories = (categoryResponse.data || []) as CategoryRow[]
@@ -264,9 +295,26 @@ async function loadHomeData(filters: SearchFilters) {
     (profilesResponse.data || []).map((profile) => [profile.id, profile as ProfileRow]),
   )
 
+  const headerAds: HeaderPromo[] = (headerAdsResponse.data || []).flatMap((row) => {
+    if (row.media_type !== 'image' && row.media_type !== 'video') return []
+    if (!row.media_url || !row.target_url || !row.title) return []
+    return [{
+      id: row.id,
+      title: row.title,
+      subtitle: row.subtitle,
+      mediaType: row.media_type,
+      mediaUrl: row.media_url,
+      posterUrl: row.poster_url,
+      targetUrl: row.target_url,
+      ctaLabel: row.cta_label || 'اكتشف الآن',
+      altText: row.alt_text || row.title,
+    }]
+  })
+
   return {
     categories,
     products,
+    headerAds,
     imageByProduct,
     profileById,
     stats: {
@@ -331,55 +379,16 @@ export default async function HomePage({
 
   return (
     <>
-      <header className="header">
-        <div className="header-top">
-          <div className="header-top-content">
-            <span>🚚 الاستلام وخيارات التوصيل موضحة داخل كل إعلان</span>
-            <span>💬 تجربة شراء وبيع موثوقة من داخل حساب DEBA</span>
-          </div>
-        </div>
-
-        <div className="header-main">
-          <Link href="/" className="logo">
-            <div className="logo-icon">🛍️</div>
-            <span>DEBA</span>
-          </Link>
-
-          <form action="/" method="get" className="search-bar" role="search">
-            <input
-              name="q"
-              type="search"
-              defaultValue={q || ''}
-              placeholder="ابحث عن منتج أو وصف أو مواصفة..."
-              aria-label="البحث في DEBA"
-            />
-            {category && category !== 'all' && (
-              <input type="hidden" name="category" value={category} />
-            )}
-            <button className="search-btn" type="submit" aria-label="بحث">🔍</button>
-          </form>
-
-          <HomeAuthActions />
-        </div>
-
-        <nav className="nav">
-          <div className="nav-content">
-            <Link href="/" className={'nav-item' + (!category ? ' active' : '')}>الرئيسية</Link>
-
-            {presentationCategories.slice(0, 6).map((item) => (
-              <Link
-                key={item.row.id}
-                href={'/?category=' + encodeURIComponent(item.row.slug) + '#featured'}
-                className={'nav-item' + (category === item.row.slug ? ' active' : '')}
-              >
-                {item.label}
-              </Link>
-            ))}
-
-            <Link href="#featured" className="nav-item">البائعون</Link>
-          </div>
-        </nav>
-      </header>
+      <Header
+        categories={presentationCategories.map((item) => ({
+          id: item.row.id,
+          nameAr: item.label,
+          slug: item.row.slug,
+        }))}
+        initialSearch={q || ''}
+        initialCategory={category || 'all'}
+        promotions={data.headerAds}
+      />
 
       <section className="hero fade-in">
         <div className="hero-content">
@@ -424,7 +433,7 @@ export default async function HomePage({
               href={'/?category=' + encodeURIComponent(item.row.slug) + '#featured'}
               className="category-card"
             >
-              <div className="category-icon">{item.icon}</div>
+              <div className="category-icon" aria-hidden="true"><item.icon size={30} /></div>
               <div className="category-name">{item.label}</div>
             </Link>
           ))}
@@ -497,62 +506,50 @@ export default async function HomePage({
 
         {data.products.length ? (
           <div className="products-grid">
-            {data.products.slice(0, PRODUCT_LIMIT).map((product) => {
+            {data.products.slice(0, PRODUCT_LIMIT).map((product, index) => {
               const image = data.imageByProduct.get(product.id)
               const seller = product.owner_id ? data.profileById.get(product.owner_id) : null
-              const sellerName = seller?.display_name || seller?.username || 'عضو DEBA'
-              const sellerInitial = (sellerName.trim().charAt(0) || 'D').toUpperCase()
-              const isNew = product.condition_grade === 'new'
-              const condition =
-                (product.condition_grade && CONDITION_LABELS[product.condition_grade]) ||
-                'غير محددة'
+              const item: ProductCardItem = {
+                id: product.id,
+                slug: product.slug,
+                title: product.title,
+                description: product.description,
+                listingType: 'sale',
+                price: normalizePrice(product.price),
+                currency: product.currency || 'EGP',
+                conditionGrade: product.condition_grade,
+                city: product.city,
+                governorate: product.governorate,
+                categoryName:
+                  data.categories.find((categoryRow) => categoryRow.id === product.category_id)?.name_ar || null,
+                imageUrl: getImageUrl(image?.storage_path || null),
+                imageAlt: image?.alt_text?.trim() || product.title,
+                sellerId: product.owner_id,
+                sellerName: seller?.display_name || seller?.username || 'عضو DEBA',
+                sellerAvatar:
+                  seller?.avatar_url && /^https?:\/\//i.test(seller.avatar_url)
+                    ? seller.avatar_url
+                    : null,
+                sellerVerified: false,
+                quantityAvailable: product.quantity,
+                isLowStock: product.quantity > 0 && product.quantity <= 3,
+                deliveryMethod: product.delivery_method,
+              }
 
               return (
-                <Link
+                <ProductCard
                   key={product.id}
-                  href={'/products/' + encodeURIComponent(product.slug)}
-                  className="product-card"
-                  style={{ display: 'block', color: 'inherit', textDecoration: 'none' }}
-                >
-                  <div className="product-image">
-                    {getImageUrl(image?.storage_path || null) ? (
-                      <img
-                        src={getImageUrl(image?.storage_path || null) || ''}
-                        alt={image?.alt_text?.trim() || product.title}
-                        loading="lazy"
-                      />
-                    ) : null}
-                    <span className={'product-badge ' + (isNew ? 'new' : 'verified')}>
-                      {isNew ? 'جديد' : '✓ معتمد'}
-                    </span>
-                  </div>
-
-                  <div className="product-info">
-                    <h3 className="product-title">{product.title}</h3>
-                    <div className="product-meta">
-                      <span className="product-condition">{condition}</span>
-                      <span>📍 {locationText(product)}</span>
-                    </div>
-                    <div className="product-price">{formatPrice(product)}</div>
-                    <div className="product-seller">
-                      <div className="seller-avatar">
-                        {seller?.avatar_url && /^https?:\/\//i.test(seller.avatar_url) ? (
-                          <img src={seller.avatar_url} alt="" />
-                        ) : (
-                          sellerInitial
-                        )}
-                      </div>
-                      <span>{sellerName}</span>
-                      <span className="trust-badge">✓ DEBA</span>
-                    </div>
-                  </div>
-                </Link>
+                  item={item}
+                  priority={index < 4}
+                />
               )
             })}
           </div>
         ) : (
           <div className="empty-state" style={{ padding: '40px', textAlign: 'center' }}>
-            <div className="empty-icon">📦</div>
+            <div className="empty-icon">
+              <PackageCheck size={42} aria-hidden="true" />
+            </div>
             <h3>لا توجد منتجات منشورة حاليًا</h3>
             <p>
               {q
@@ -587,21 +584,21 @@ export default async function HomePage({
 
           <div className="community-visual">
             <div className="community-card">
-              <div className="community-icon">🛍️</div>
+              <div className="community-icon"><PackageCheck size={30} aria-hidden="true" /></div>
               <div className="community-card-info">
                 <h4>اكتشف منتجات تستحقها</h4>
                 <p>تفاصيل واضحة، أسعار محددة، وتجربة شراء مصممة لتكون بسيطة واحترافية.</p>
               </div>
             </div>
             <div className="community-card">
-              <div className="community-icon">🏷️</div>
+              <div className="community-icon"><Tag size={30} aria-hidden="true" /></div>
               <div className="community-card-info">
                 <h4>حوّل ما لا تحتاجه إلى قيمة</h4>
                 <p>أضف إعلانك، قدّم بيانات دقيقة، ووصل إلى مجتمع DEBA المهتم بما تعرضه.</p>
               </div>
             </div>
             <div className="community-card">
-              <div className="community-icon">🛡️</div>
+              <div className="community-icon"><ShieldCheck size={30} aria-hidden="true" /></div>
               <div className="community-card-info">
                 <h4>ثقة تبدأ من التفاصيل</h4>
                 <p>معلومات المنتج والحالة والموقع والصور جزء أساسي من تجربة المنصة.</p>
@@ -618,22 +615,22 @@ export default async function HomePage({
 
         <div className="trust-grid">
           <div className="trust-card">
-            <div className="trust-icon">🛡️</div>
-            <h3>إعلانات معتمدة</h3>
-            <p>المنتجات الظاهرة في السوق العام تظهر بعد النشر والمراجعة.</p>
+            <div className="trust-icon"><ShieldCheck size={30} aria-hidden="true" /></div>
+            <h3>إعلانات مُراجعة</h3>
+            <p>المنتجات الظاهرة في السوق العام تمر عبر حالة نشر ومراجعة قبل عرضها.</p>
           </div>
           <div className="trust-card">
-            <div className="trust-icon">🧭</div>
+            <div className="trust-icon"><Compass size={30} aria-hidden="true" /></div>
             <h3>تجربة موحدة</h3>
             <p>تصفح، اشترِ، أو أضف إعلانك من تجربة واحدة مصممة للسوق المصري.</p>
           </div>
           <div className="trust-card">
-            <div className="trust-icon">📦</div>
+            <div className="trust-icon"><PackageCheck size={30} aria-hidden="true" /></div>
             <h3>بيانات المنتج واضحة</h3>
             <p>السعر والحالة والموقع والصور المعروضة تأتي من الإعلان نفسه.</p>
           </div>
           <div className="trust-card">
-            <div className="trust-icon">📈</div>
+            <div className="trust-icon"><TrendingUp size={30} aria-hidden="true" /></div>
             <h3>قيمة مستدامة</h3>
             <p>نساعد المنتجات على الوصول إلى أصحابها الجدد بدل بقائها بلا استخدام.</p>
           </div>
@@ -705,7 +702,7 @@ export default async function HomePage({
         </div>
 
         <div className="footer-bottom">
-          <p>© 2026 DEBA. جميع الحقوق محفوظة.</p>
+          <p>© ${new Date().getFullYear()} DEBA. جميع الحقوق محفوظة.</p>
         </div>
       </footer>
     </>
