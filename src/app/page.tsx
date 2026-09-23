@@ -3,19 +3,14 @@ import Link from 'next/link'
 import type { LucideIcon } from 'lucide-react'
 import {
   BookOpen,
-  Cpu,
-  Dumbbell,
-  Gamepad2,
   Layers3,
   Palette,
   Plug,
+  Shirt,
   Smartphone,
   Sofa,
   Wrench,
   ShieldCheck,
-  CheckCircle2,
-  Truck,
-  CreditCard,
   Compass,
   PackageCheck,
   Tag,
@@ -70,6 +65,8 @@ type ProductRow = {
   published_at: string | null
   created_at: string
   category_id: string | null
+  quantity: number
+  delivery_method: 'pickup' | 'seller_delivery' | 'platform_delivery' | 'both'
 }
 
 type ImageRow = {
@@ -148,19 +145,8 @@ function getImageUrl(storagePath: string | null) {
   )
 }
 
-function formatPrice(product: ProductRow) {
-  const price = normalizePrice(product.price)
-  if (price === null) return 'السعر عند التواصل'
-
-  return (
-    new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(price) +
-    ' ' +
-    (product.currency || 'EGP')
-  )
-}
-
-function locationText(product: ProductRow) {
-  return [product.city, product.governorate].filter(Boolean).join('، ') || 'مصر'
+function isSafePublicUrl(value: string) {
+  return /^https?:\/\//i.test(value) || (/^\//.test(value) && !value.startsWith('//')) || value.startsWith('#')
 }
 
 async function loadHomeData(filters: SearchFilters) {
@@ -184,7 +170,7 @@ async function loadHomeData(filters: SearchFilters) {
   let productQuery = supabase
     .from('products')
     .select(
-      'id,owner_id,title,slug,description,listing_type,price,currency,condition_grade,city,governorate,moderation_status,published_at,created_at,category_id',
+      'id,owner_id,title,slug,description,listing_type,price,currency,condition_grade,city,governorate,moderation_status,published_at,created_at,category_id,quantity,delivery_method',
     )
     .eq('listing_type', 'sale')
     .eq('status', 'published')
@@ -298,6 +284,7 @@ async function loadHomeData(filters: SearchFilters) {
   const headerAds: HeaderPromo[] = (headerAdsResponse.data || []).flatMap((row) => {
     if (row.media_type !== 'image' && row.media_type !== 'video') return []
     if (!row.media_url || !row.target_url || !row.title) return []
+    if (!isSafePublicUrl(row.media_url) || !isSafePublicUrl(row.target_url)) return []
     return [{
       id: row.id,
       title: row.title,
@@ -702,7 +689,7 @@ export default async function HomePage({
         </div>
 
         <div className="footer-bottom">
-          <p>© ${new Date().getFullYear()} DEBA. جميع الحقوق محفوظة.</p>
+          <p>© {new Date().getFullYear()} DEBA. جميع الحقوق محفوظة.</p>
         </div>
       </footer>
     </>
