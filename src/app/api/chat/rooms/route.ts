@@ -173,13 +173,11 @@ export async function GET() {
             governorate: product.governorate || null,
             conditionGrade: product.condition_grade || null,
             categoryName:
-              category && typeof category === 'object'
-                ? (typeof category.name_ar === 'string'
-                    ? category.name_ar
-                    : typeof category.name_en === 'string'
-                      ? category.name_en
-                      : null)
-                : null,
+              typeof categoryRecord?.name_ar === 'string'
+                ? categoryRecord.name_ar
+                : typeof categoryRecord?.name_en === 'string'
+                  ? categoryRecord.name_en
+                  : null,
             imageUrl,
             imageAlt: typeof image?.alt_text === 'string' ? image.alt_text : null,
           },
