@@ -6241,3 +6241,7 @@
 @media(max-width:980px){.deba-cart-layout,.deba-checkout-v2-layout{grid-template-columns:1fr}.deba-cart-summary,.deba-checkout-v2-sidebar{position:static}.deba-skeleton-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.deba-cart-page,.deba-checkout-v2-page{width:min(100% - 20px,640px);padding-top:18px}.deba-cart-hero,.deba-checkout-v2-hero{align-items:flex-start;flex-direction:column}.deba-checkout-steps{grid-template-columns:repeat(2,1fr)}.deba-cart-item{grid-template-columns:86px minmax(0,1fr);padding:11px 12px}.deba-cart-item-media{min-height:86px}.deba-cart-item-title-row{flex-direction:column;gap:4px}.deba-cart-item-footer{align-items:flex-start}.deba-cart-summary{padding:13px}.deba-checkout-grid,.deba-review-info-grid{grid-template-columns:1fr}.deba-checkout-grid label.is-wide{grid-column:auto}.deba-skeleton-grid{grid-template-columns:1fr}.deba-order-confirmation-card{align-items:flex-start;flex-direction:column}.deba-order-confirmation-actions{width:100%}.deba-order-confirmation-actions>*{flex:1}}
 @media(max-width:480px){.deba-checkout-steps{grid-template-columns:1fr}.deba-cart-empty{width:min(100% - 20px,680px);margin-top:40px;padding:26px 18px}.deba-cart-continue{width:100%}}
+
+.deba-purchase-actions{display:grid;gap:8px}
+.deba-purchase-actions .deba-add-to-cart-button{margin-top:0}
+.deba-purchase-actions .deba-purchase-primary{margin-top:0}
