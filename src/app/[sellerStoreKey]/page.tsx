@@ -118,7 +118,7 @@ export default async function SellerStorePage({ params }: StorePageProps) {
       conditionGrade: product.condition_grade,
       city: product.city,
       governorate: product.governorate,
-      categoryName: product.category?.name_ar || null,
+      categoryName: product.category?.[0]?.name_ar || null,
       imageUrl: imageUrl(supabase, image?.storage_path || null),
       imageAlt: image?.alt_text?.trim() || product.title,
       isFavorite: favoriteIds.has(product.id),
