@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   CircleUserRound,
-  Copy,
   ExternalLink,
   MessageCircle,
   Heart,
