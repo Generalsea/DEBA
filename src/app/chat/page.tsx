@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation'
-import ChatWorkspace from '@/components/ChatWorkspace'
 import ChatCommsExact from '@/components/ChatCommsExact'
 import { createClient } from '@/utils/supabase/server'
 
