@@ -329,6 +329,7 @@ async function loadHomeData(filters: SearchFilters) {
     headerAds,
     imageByProduct,
     profileById,
+    ratingByProduct,
     stats: {
       products: productCountResponse.count || 0,
       members: membersCountResponse.count || 0,
@@ -586,8 +587,8 @@ export default async function HomePage({
                     quantityAvailable: product.quantity,
                     isLowStock: product.quantity > 0 && product.quantity <= 3,
                     deliveryMethod: product.delivery_method,
-                    ratingValue: ratingByProduct.get(product.id)?.value ?? null,
-                    ratingCount: ratingByProduct.get(product.id)?.count ?? 0,
+                    ratingValue: data.ratingByProduct.get(product.id)?.value ?? null,
+                    ratingCount: data.ratingByProduct.get(product.id)?.count ?? 0,
                   }
 
                   return <ProductCard key={product.id} item={item} priority={index < 2} />
@@ -744,8 +745,8 @@ export default async function HomePage({
                     quantityAvailable: product.quantity,
                     isLowStock: product.quantity > 0 && product.quantity <= 3,
                     deliveryMethod: product.delivery_method,
-                    ratingValue: ratingByProduct.get(product.id)?.value ?? null,
-                    ratingCount: ratingByProduct.get(product.id)?.count ?? 0,
+                    ratingValue: data.ratingByProduct.get(product.id)?.value ?? null,
+                    ratingCount: data.ratingByProduct.get(product.id)?.count ?? 0,
                   }
 
                   return <ProductCard key={product.id} item={item} priority={index < 4} />
