@@ -1519,6 +1519,12 @@ html[data-theme="dark"] .deba-future-home .fm-category-card {
     display: none;
   }
 
+  .deba-future-home .deba-header-actions > .deba-action:nth-child(4) {
+    display: inline-flex;
+    min-width: 40px;
+    padding: 0;
+  }
+
   .deba-future-home .deba-mobile-search {
     display: block;
     width: min(100% - 20px, 640px);
