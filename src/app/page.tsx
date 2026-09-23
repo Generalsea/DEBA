@@ -90,6 +90,11 @@ type ProfileRow = {
   avatar_url: string | null
 }
 
+type ReviewRow = {
+  product_id: string
+  rating: number
+}
+
 const CONDITION_LABELS: Record<string, string> = {
   new: 'جديد',
   like_new: 'كالجديد',
@@ -253,7 +258,7 @@ async function loadHomeData(filters: SearchFilters) {
   )
   const productIds = products.map((product) => product.id)
 
-  const [imagesResponse, profilesResponse] = await Promise.all([
+  const [imagesResponse, profilesResponse, reviewsResponse] = await Promise.all([
     productIds.length
       ? supabase
           .from('product_images')
@@ -268,6 +273,13 @@ async function loadHomeData(filters: SearchFilters) {
           .select('id,display_name,username,avatar_url')
           .in('id', ownerIds)
       : Promise.resolve({ data: [], error: null }),
+    productIds.length
+      ? supabase
+          .from('reviews')
+          .select('product_id,rating')
+          .eq('status', 'published')
+          .in('product_id', productIds)
+      : Promise.resolve({ data: [], error: null }),
   ])
 
   const imageByProduct = new Map<string, ImageRow>()
@@ -278,6 +290,20 @@ async function loadHomeData(filters: SearchFilters) {
   const profileById = new Map(
     (profilesResponse.data || []).map((profile) => [profile.id, profile as ProfileRow]),
   )
+
+  const ratingByProduct = new Map<string, { value: number; count: number }>()
+  for (const review of (reviewsResponse.data || []) as ReviewRow[]) {
+    const current = ratingByProduct.get(review.product_id) || { value: 0, count: 0 }
+    current.value += Number(review.rating)
+    current.count += 1
+    ratingByProduct.set(review.product_id, current)
+  }
+  for (const [productId, aggregate] of ratingByProduct) {
+    ratingByProduct.set(productId, {
+      value: Number((aggregate.value / aggregate.count).toFixed(1)),
+      count: aggregate.count,
+    })
+  }
 
   const headerAds: HeaderPromo[] = (headerAdsResponse.data || []).flatMap((row) => {
     if (row.media_type !== 'image' && row.media_type !== 'video') return []
@@ -560,6 +586,8 @@ export default async function HomePage({
                     quantityAvailable: product.quantity,
                     isLowStock: product.quantity > 0 && product.quantity <= 3,
                     deliveryMethod: product.delivery_method,
+                    ratingValue: ratingByProduct.get(product.id)?.value ?? null,
+                    ratingCount: ratingByProduct.get(product.id)?.count ?? 0,
                   }
 
                   return <ProductCard key={product.id} item={item} priority={index < 2} />
@@ -716,6 +744,8 @@ export default async function HomePage({
                     quantityAvailable: product.quantity,
                     isLowStock: product.quantity > 0 && product.quantity <= 3,
                     deliveryMethod: product.delivery_method,
+                    ratingValue: ratingByProduct.get(product.id)?.value ?? null,
+                    ratingCount: ratingByProduct.get(product.id)?.count ?? 0,
                   }
 
                   return <ProductCard key={product.id} item={item} priority={index < 4} />
