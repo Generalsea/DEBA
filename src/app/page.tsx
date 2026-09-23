@@ -145,8 +145,12 @@ function getImageUrl(storagePath: string | null) {
   )
 }
 
-function isSafePublicUrl(value: string) {
-  return /^https?:\/\//i.test(value) || (/^\//.test(value) && !value.startsWith('//')) || value.startsWith('#')
+function isSafeMediaUrl(value: string) {
+  return /^https?:\/\//i.test(value) || (/^\//.test(value) && !value.startsWith('//'))
+}
+
+function isSafeTargetUrl(value: string) {
+  return isSafeMediaUrl(value) || value.startsWith('#')
 }
 
 async function loadHomeData(filters: SearchFilters) {
@@ -284,7 +288,7 @@ async function loadHomeData(filters: SearchFilters) {
   const headerAds: HeaderPromo[] = (headerAdsResponse.data || []).flatMap((row) => {
     if (row.media_type !== 'image' && row.media_type !== 'video') return []
     if (!row.media_url || !row.target_url || !row.title) return []
-    if (!isSafePublicUrl(row.media_url) || !isSafePublicUrl(row.target_url)) return []
+    if (!isSafeMediaUrl(row.media_url) || !isSafeTargetUrl(row.target_url)) return []
     return [{
       id: row.id,
       title: row.title,
@@ -381,7 +385,7 @@ export default async function HomePage({
         <div className="hero-content">
           <span className="section-eyebrow">DEBA MARKETPLACE</span>
           <h1>Marketplace مصري لبيع وشراء المنتجات</h1>
-          <p>اكتشف منتجاتك القادمة، بع ما تملك، واشترِ بثقة عبر تجربة DEBA الحديثة</p>
+          <p>اكتشف المنتجات، بع ما تملك، وتسوق عبر تجربة DEBA الحديثة</p>
           <Link
             href={category || q ? '/#featured' : '#featured'}
             className="header-btn btn-primary"
@@ -556,7 +560,7 @@ export default async function HomePage({
             <span className="section-eyebrow" style={{ color: 'white' }}>DEBA COMMUNITY</span>
             <h2>سوق واحد. قيمة أكبر.</h2>
             <p>
-              في DEBA تتحول المنتجات غير المستخدمة إلى فرص جديدة. اكتشف منتجات موثقة التفاصيل،
+              في DEBA تتحول المنتجات غير المستخدمة إلى فرص جديدة. اكتشف منتجات واضحة التفاصيل،
               تواصل مع البائعين، وأدر مشترياتك وإعلاناتك من حساب واحد.
             </p>
 
