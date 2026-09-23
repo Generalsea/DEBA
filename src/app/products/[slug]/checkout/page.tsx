@@ -6,6 +6,9 @@ import Header from '@/components/Header'
 import CheckoutForm from '@/components/CheckoutForm'
 import { createClient } from '@/utils/supabase/server'
 
+// Keep Arabic/non-ASCII product routes fully dynamic on Next.js 16.
+export const dynamic = 'force-dynamic'
+
 type CategoryRow = {
   id: string
   name_ar: string
@@ -33,6 +36,14 @@ type Product = {
 const SELECT =
   'id,owner_id,title,slug,listing_type,price,currency,quantity,delivery_method,category:categories!products_category_id_fkey(id,name_ar,name_en,slug)'
 
+function normalizeRouteSlug(value: string) {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
 function normalizePrice(value: number | string | null) {
   const numberValue = typeof value === 'number' ? value : Number(value ?? 0)
   return Number.isFinite(numberValue) ? numberValue : 0
@@ -52,11 +63,12 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
+  const normalizedSlug = normalizeRouteSlug(slug)
   const supabase = await createClient()
   const { data } = await supabase
     .from('products')
     .select('title')
-    .eq('slug', slug)
+    .eq('slug', normalizedSlug)
     .eq('status', 'published')
     .eq('moderation_status', 'approved')
     .eq('listing_type', 'sale')
@@ -73,6 +85,7 @@ export default async function CheckoutPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
+  const normalizedSlug = normalizeRouteSlug(slug)
   const supabase = await createClient()
 
   const [{ data: product, error }, { data: categories }, { data: claimsData }] =
@@ -80,7 +93,7 @@ export default async function CheckoutPage({
       supabase
         .from('products')
         .select(SELECT)
-        .eq('slug', slug)
+        .eq('slug', normalizedSlug)
         .eq('status', 'published')
         .eq('moderation_status', 'approved')
         .eq('listing_type', 'sale')
