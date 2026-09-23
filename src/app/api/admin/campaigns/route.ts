@@ -350,6 +350,9 @@ async function mutateCampaign(request: Request, id: string | null) {
     }
 
     if (poster instanceof File && poster.size > 0) {
+      if (mediaType !== 'video') {
+        return NextResponse.json({ error: 'صورة الغلاف مخصصة لحملات الفيديو فقط.' }, { status: 400 })
+      }
       uploadedPoster = await uploadFile(poster, mediaType, 'poster')
     }
 
@@ -414,6 +417,15 @@ async function mutateCampaign(request: Request, id: string | null) {
         console.error('DEBA campaign update failed', error)
         return NextResponse.json({ error: 'تعذر تحديث الحملة.' }, { status: 500 })
       }
+
+      await writeAdminAudit(
+        user.id,
+        'update',
+        id,
+        current as unknown as Record<string, unknown>,
+        data as unknown as Record<string, unknown>,
+        request,
+      )
 
       await Promise.all([
         uploadedMedia ? removeStoragePath(current.media_storage_path) : Promise.resolve(),
