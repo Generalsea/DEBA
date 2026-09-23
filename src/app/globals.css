@@ -8809,3 +8809,767 @@ html[data-theme="dark"] .brand-side {
     font-size: 10.5px !important;
   }
 }
+
+
+/* =========================================================
+   DEBA ACCOUNT + COMMUNICATIONS EXPERIENCE
+   ========================================================= */
+
+.deba-profile-role-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.deba-profile-store-link,
+.deba-profile-sidebar-store,
+.deba-purchase-chat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--deba-border-strong);
+  background: var(--deba-surface);
+  color: var(--deba-text);
+  font-weight: 900;
+}
+
+.deba-profile-store-link,
+.deba-profile-sidebar-store {
+  min-height: 37px;
+  padding-inline: 11px;
+  border-radius: 10px;
+  font-size: 9.5px;
+}
+
+.deba-profile-store-link:hover,
+.deba-profile-sidebar-store:hover,
+.deba-purchase-chat:hover {
+  border-color: var(--deba-brand);
+  color: var(--deba-brand);
+}
+
+.deba-profile-sidebar-store {
+  margin: 5px 8px 0;
+  width: calc(100% - 16px);
+  text-decoration: none;
+}
+
+.deba-purchase-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.deba-purchase-chat {
+  min-height: 40px;
+  width: 100%;
+  border-radius: 10px;
+  font-size: 10px;
+  background: var(--deba-surface-2);
+}
+
+/* Profile visual system */
+.deba-profile-shell {
+  width: min(var(--deba-container), calc(100% - 40px));
+  margin-inline: auto;
+  padding: 22px 0 70px;
+}
+
+.deba-profile-hero {
+  overflow: hidden;
+  border: 1px solid var(--deba-border);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 8% 12%, var(--deba-brand-soft), transparent 28%),
+    linear-gradient(135deg, var(--deba-surface), var(--deba-surface-2));
+  box-shadow: var(--deba-shadow-md);
+}
+
+.deba-profile-hero-glow {
+  display: none;
+}
+
+.deba-profile-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 240px;
+  align-items: center;
+  gap: 22px;
+  padding: clamp(20px, 4vw, 34px);
+}
+
+.deba-profile-identity {
+  min-width: 0;
+}
+
+.deba-profile-avatar-button {
+  border-radius: 20px;
+}
+
+.deba-profile-avatar {
+  border: 2px solid var(--deba-surface);
+  box-shadow: 0 0 0 1px var(--deba-border), var(--deba-shadow-sm);
+}
+
+.deba-profile-identity-copy h1 {
+  margin: 7px 0 6px;
+  font-size: clamp(25px, 4vw, 37px);
+  line-height: 1.1;
+}
+
+.deba-profile-role-row,
+.deba-profile-contact-line {
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.deba-profile-role-badge,
+.deba-profile-trust-badge,
+.deba-profile-contact-line > span {
+  border: 1px solid var(--deba-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--deba-surface) 85%, transparent);
+}
+
+.deba-profile-contact-line > span {
+  min-height: 27px;
+  padding-inline: 9px;
+}
+
+.deba-profile-hero-actions {
+  padding: 13px;
+  border: 1px solid var(--deba-border);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--deba-surface) 92%, transparent);
+  box-shadow: var(--deba-shadow-sm);
+}
+
+.deba-profile-stat-grid {
+  margin-top: 12px;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 10px;
+}
+
+.deba-profile-stat {
+  min-height: 105px;
+  border: 1px solid var(--deba-border);
+  border-radius: 15px;
+  background: var(--deba-surface);
+  box-shadow: var(--deba-shadow-sm);
+}
+
+.deba-profile-layout {
+  margin-top: 12px;
+  grid-template-columns: 225px minmax(0,1fr);
+  gap: 12px;
+}
+
+.deba-profile-sidebar {
+  position: sticky;
+  top: 14px;
+  align-self: start;
+  border: 1px solid var(--deba-border);
+  border-radius: 17px;
+  background: var(--deba-surface);
+  box-shadow: var(--deba-shadow-sm);
+}
+
+.deba-profile-content {
+  min-width: 0;
+  border: 1px solid var(--deba-border);
+  border-radius: 17px;
+  background: var(--deba-surface);
+  box-shadow: var(--deba-shadow-sm);
+}
+
+.deba-profile-content-head {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--deba-border);
+}
+
+.deba-profile-content-head h2 {
+  font-size: 22px;
+}
+
+.deba-profile-overview-grid {
+  padding: 13px;
+}
+
+.deba-profile-panel {
+  border-radius: 15px;
+  box-shadow: none;
+}
+
+/* Communications */
+.deba-chat-page {
+  min-height: calc(100vh - 150px);
+  padding: 18px 0 40px;
+  background:
+    radial-gradient(circle at 85% 8%, var(--deba-brand-soft), transparent 24%),
+    var(--deba-bg);
+}
+
+.deba-chat-shell {
+  width: min(var(--deba-container), calc(100% - 40px));
+  height: min(720px, calc(100vh - 190px));
+  min-height: 580px;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 310px minmax(0,1fr);
+  overflow: hidden;
+  border: 1px solid var(--deba-border);
+  border-radius: 21px;
+  background: var(--deba-surface);
+  box-shadow: var(--deba-shadow-lg);
+}
+
+.deba-chat-sidebar {
+  min-width: 0;
+  border-inline-end: 1px solid var(--deba-border);
+  background: linear-gradient(180deg, var(--deba-surface), var(--deba-surface-2));
+}
+
+.deba-chat-sidebar-head,
+.deba-chat-main-head {
+  min-height: 72px;
+  padding: 13px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--deba-border);
+}
+
+.deba-chat-sidebar-head span,
+.deba-chat-main-person > div > span {
+  color: var(--deba-brand);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .11em;
+}
+
+.deba-chat-sidebar-head h1 {
+  margin: 4px 0 0;
+  color: var(--deba-text);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.deba-chat-sidebar-head button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--deba-border);
+  border-radius: 9px;
+  background: var(--deba-surface);
+  color: var(--deba-text-2);
+}
+
+.deba-chat-safety-chip,
+.deba-chat-protection {
+  margin: 10px;
+  padding: 9px 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  border: 1px solid var(--deba-border);
+  border-radius: 11px;
+  background: var(--deba-brand-soft);
+  color: var(--deba-text-2);
+  font-size: 8.5px;
+  line-height: 1.55;
+  font-weight: 800;
+}
+
+.deba-chat-safety-chip svg,
+.deba-chat-protection svg {
+  flex: 0 0 auto;
+  color: var(--deba-brand);
+}
+
+.deba-chat-room-list {
+  height: calc(100% - 130px);
+  overflow-y: auto;
+  padding: 3px 8px 10px;
+}
+
+.deba-chat-room {
+  width: 100%;
+  min-height: 66px;
+  padding: 9px 8px;
+  display: grid;
+  grid-template-columns: 40px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 8px;
+  text-align: start;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--deba-text);
+}
+
+.deba-chat-room:hover,
+.deba-chat-room.is-active {
+  border-color: var(--deba-border);
+  background: var(--deba-surface);
+  box-shadow: var(--deba-shadow-sm);
+}
+
+.deba-chat-avatar {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--deba-brand-soft);
+  color: var(--deba-brand);
+  font-weight: 900;
+}
+
+.deba-chat-avatar.large {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+}
+
+.deba-chat-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.deba-chat-room-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.deba-chat-room-copy strong {
+  overflow: hidden;
+  color: var(--deba-text);
+  font-size: 10px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deba-chat-room-copy small {
+  overflow: hidden;
+  color: var(--deba-text-3);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deba-chat-room-time {
+  align-self: start;
+  padding-top: 3px;
+  color: var(--deba-text-3);
+  font-size: 7.5px;
+  white-space: nowrap;
+}
+
+.deba-chat-main {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0,1fr) auto auto;
+  background:
+    linear-gradient(180deg, var(--deba-surface), var(--deba-surface-2));
+}
+
+.deba-chat-main-person {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.deba-chat-main-person > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.deba-chat-main-person strong {
+  overflow: hidden;
+  color: var(--deba-text);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deba-chat-context {
+  max-width: 45%;
+  min-height: 35px;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--deba-border);
+  border-radius: 10px;
+  background: var(--deba-surface-2);
+  color: var(--deba-text-2);
+  font-size: 8.5px;
+  font-weight: 800;
+}
+
+.deba-chat-context span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deba-chat-message-list {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.deba-chat-message {
+  display: flex;
+}
+
+.deba-chat-message.mine {
+  justify-content: flex-start;
+}
+
+.deba-chat-message.theirs {
+  justify-content: flex-end;
+}
+
+.deba-chat-message-bubble {
+  max-width: min(76%, 560px);
+  padding: 8px 10px 6px;
+  border: 1px solid var(--deba-border);
+  border-radius: 13px;
+  background: var(--deba-surface);
+  color: var(--deba-text);
+  box-shadow: var(--deba-shadow-sm);
+}
+
+.deba-chat-message.mine .deba-chat-message-bubble {
+  border-start-end-radius: 5px;
+  background: var(--deba-brand-soft);
+}
+
+.deba-chat-message.theirs .deba-chat-message-bubble {
+  border-start-start-radius: 5px;
+}
+
+.deba-chat-message-bubble > span {
+  display: block;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 10px;
+  line-height: 1.75;
+}
+
+.deba-chat-message-bubble small {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  justify-content: flex-end;
+  color: var(--deba-text-3);
+  font-size: 7.5px;
+}
+
+.deba-chat-error {
+  margin: 0 12px 7px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--deba-red) 35%, var(--deba-border));
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--deba-red) 8%, transparent);
+  color: var(--deba-red);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.deba-chat-composer {
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 74px;
+  gap: 7px;
+  border-top: 1px solid var(--deba-border);
+  background: var(--deba-surface);
+}
+
+.deba-chat-composer textarea {
+  min-height: 42px;
+  resize: none;
+  border: 1px solid var(--deba-border);
+  border-radius: 11px;
+  padding: 9px 10px;
+  background: var(--deba-surface-2);
+  color: var(--deba-text);
+  font: inherit;
+  font-size: 10px;
+  outline: none;
+}
+
+.deba-chat-composer textarea:focus {
+  border-color: var(--deba-brand);
+  box-shadow: 0 0 0 3px var(--deba-brand-soft);
+}
+
+.deba-chat-composer button {
+  min-height: 42px;
+  border: 1px solid var(--deba-brand);
+  border-radius: 11px;
+  background: var(--deba-brand);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.deba-chat-composer button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.deba-chat-privacy {
+  margin: 0;
+  padding: 5px 12px 10px;
+  color: var(--deba-text-3);
+  font-size: 7.5px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.deba-chat-empty {
+  min-height: 140px;
+  padding: 20px 12px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  color: var(--deba-text-3);
+  font-size: 9px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.deba-chat-empty svg {
+  color: var(--deba-brand);
+}
+
+.deba-chat-empty strong {
+  color: var(--deba-text);
+  font-size: 11px;
+}
+
+.deba-chat-welcome {
+  width: min(560px, calc(100% - 32px));
+  height: 100%;
+  margin-inline: auto;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.deba-chat-welcome-mark {
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--deba-border);
+  border-radius: 19px;
+  background: var(--deba-brand-soft);
+  color: var(--deba-brand);
+}
+
+.deba-chat-welcome > span {
+  color: var(--deba-brand);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.deba-chat-welcome h2 {
+  margin: 2px 0 0;
+  color: var(--deba-text);
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.deba-chat-welcome p {
+  max-width: 50ch;
+  color: var(--deba-text-2);
+  font-size: 10px;
+  line-height: 1.8;
+}
+
+/* Mobile: account & comms behave like focused app surfaces */
+@media (max-width: 760px) {
+  .deba-profile-shell {
+    width: min(100% - 24px, var(--deba-container));
+    padding-top: 12px;
+  }
+
+  .deba-profile-hero {
+    border-radius: 17px;
+  }
+
+  .deba-profile-hero-inner {
+    grid-template-columns: 1fr;
+    gap: 13px;
+    padding: 17px;
+  }
+
+  .deba-profile-contact-line {
+    display: grid;
+  }
+
+  .deba-profile-hero-actions {
+    display: grid;
+    gap: 9px;
+  }
+
+  .deba-profile-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .deba-profile-sidebar {
+    position: static;
+    overflow-x: auto;
+    display: flex;
+    gap: 7px;
+    padding: 7px;
+    scrollbar-width: none;
+  }
+
+  .deba-profile-sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .deba-profile-sidebar-section,
+  .deba-profile-sidebar-support,
+  .deba-profile-signout {
+    flex: 0 0 auto;
+  }
+
+  .deba-profile-sidebar-section {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+  }
+
+  .deba-profile-sidebar-title {
+    display: none;
+  }
+
+  .deba-profile-sidebar-section button {
+    min-height: 40px;
+    white-space: nowrap;
+    border-radius: 10px;
+  }
+
+  .deba-profile-sidebar-store {
+    width: auto;
+    margin: 0;
+    min-height: 40px;
+    white-space: nowrap;
+  }
+
+  .deba-profile-sidebar-support {
+    display: none;
+  }
+
+  .deba-profile-signout {
+    min-height: 40px;
+    white-space: nowrap;
+  }
+
+  .deba-profile-content {
+    border-radius: 15px;
+  }
+
+  .deba-profile-content-head {
+    padding: 14px;
+  }
+
+  .deba-profile-overview-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .deba-profile-role-actions {
+    align-items: stretch;
+  }
+
+  .deba-profile-role-actions > a {
+    flex: 1 1 130px;
+  }
+
+  .deba-chat-page {
+    padding: 7px 0 18px;
+  }
+
+  .deba-chat-shell {
+    width: calc(100% - 12px);
+    height: calc(100vh - 105px);
+    min-height: 0;
+    grid-template-columns: 1fr;
+    border-radius: 17px;
+  }
+
+  .deba-chat-sidebar {
+    position: absolute;
+    inset-inline: 6px;
+    top: 0;
+    bottom: 0;
+    z-index: 40;
+    width: calc(100% - 12px);
+    border: 0;
+    border-radius: 17px;
+    transition: transform .18s ease;
+  }
+
+  .deba-chat-sidebar.has-selection {
+    transform: translateX(105%);
+  }
+
+  .deba-chat-main {
+    height: 100%;
+  }
+
+  .deba-chat-main-head {
+    padding-inline: 11px;
+  }
+
+  .deba-chat-context {
+    max-width: 48%;
+  }
+
+  .deba-chat-message-list {
+    padding-inline: 10px;
+  }
+
+  .deba-chat-message-bubble {
+    max-width: 88%;
+  }
+
+  .deba-chat-composer {
+    grid-template-columns: minmax(0,1fr) 65px;
+    padding-inline: 7px;
+  }
+
+  .deba-chat-privacy {
+    padding-inline: 8px;
+  }
+}
