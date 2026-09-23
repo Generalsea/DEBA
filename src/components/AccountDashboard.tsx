@@ -29,6 +29,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import EgyptLocationPicker from '@/components/EgyptLocationPicker'
+import DebaLogo from '@/components/DebaLogo'
 import type { ProfileAccountData } from '@/components/ProfileDashboard'
 
 type NotificationRow = NonNullable<ProfileAccountData['notifications']>[number]
@@ -417,7 +418,7 @@ export default function AccountDashboard({ account, initialSection }: Props) {
         <aside className="sidebar">
           <div className="sidebar-header">
             <div className="sidebar-logo">
-              <span className="logo">DEBA</span>
+              <DebaLogo href="/" compact />
               <span className="badge">لوحة التحكم</span>
             </div>
             <div className="user-profile-card">
