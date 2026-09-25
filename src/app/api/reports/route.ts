@@ -4,19 +4,17 @@ import { consumeApiRateLimit } from '@/utils/rateLimit'
 
 const ALLOWED_REASONS = new Set([
   'spam',
-  'scam',
-  'prohibited',
+  'fraud',
+  'prohibited_item',
   'misleading',
-  'duplicate',
   'other',
 ])
 
 const REASON_LABELS: Record<string, string> = {
   spam: 'إعلان مزعج أو مكرر',
-  scam: 'اشتباه احتيال',
-  prohibited: 'محتوى أو سلعة محظورة',
+  fraud: 'اشتباه احتيال',
+  prohibited_item: 'محتوى أو سلعة محظورة',
   misleading: 'وصف أو سعر مضلل',
-  duplicate: 'إعلان مكرر',
   other: 'سبب آخر',
 }
 
@@ -50,7 +48,13 @@ export async function POST(request: Request) {
     } | null
 
     const productId = body?.productId?.trim() || ''
-    const reason = body?.reason?.trim() || ''
+    const rawReason = body?.reason?.trim() || ''
+    const reasonAliasMap: Record<string, string> = {
+      scam: 'fraud',
+      prohibited: 'prohibited_item',
+      duplicate: 'spam',
+    }
+    const reason = reasonAliasMap[rawReason] || rawReason
     const description = body?.description?.trim().slice(0, 2000) || null
 
     if (!productId || !reason || !ALLOWED_REASONS.has(reason)) {
@@ -103,7 +107,7 @@ export async function POST(request: Request) {
         reporter_id: userData.user.id,
         product_id: productId,
         reported_user_id: product.owner_id,
-        reason: reason + ': ' + REASON_LABELS[reason],
+        reason,
         description,
         status: 'open',
       })
