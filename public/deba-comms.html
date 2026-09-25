@@ -390,8 +390,6 @@
   .chat-dialog-action.danger { color:var(--danger); background:var(--danger-bg); border-color:transparent; }
   .chat-item-product-thumb-fallback { width:20px; height:20px; border-radius:4px; display:grid; place-items:center; flex:0 0 auto; background:var(--bg-subtle); color:var(--text-tertiary); font:800 8px/1 var(--font-en); }
 
-  .product-starter-card { width:min(100%,380px); overflow:hidden; padding:0; background:var(--bg-elevated); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow-md); cursor:pointer; transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
-  .product-starter-card:hover { transform:translateY(-1px); border-color:var(--primary); box-shadow:var(--shadow-lg); }
   .product-card-msg-media { height:150px; width:100%; background:linear-gradient(135deg,var(--bg-subtle),var(--bg-hover)); overflow:hidden; }
   .product-card-msg-media img { display:block; width:100%; height:100%; object-fit:cover; }
   .product-card-msg-media.placeholder { display:flex; align-items:center; justify-content:center; color:var(--text-tertiary); font:900 18px/1 var(--font-en); letter-spacing:2px; }
@@ -403,6 +401,17 @@
   .conversation-empty-icon { width:34px; height:34px; margin:0 auto 8px; border-radius:50%; display:grid; place-items:center; background:var(--bg-subtle); border:1px solid var(--border); font-size:16px; }
   .conversation-empty-title { color:var(--text-secondary); font-size:12.5px; font-weight:800; }
   .conversation-empty-copy { margin-top:3px; font-size:11px; line-height:1.6; }
+  .product-message-card { width:min(100%,380px); padding:0; overflow:hidden; border-radius:18px; box-shadow:var(--shadow-lg); border:1px solid var(--border); background:var(--bg-elevated); cursor:pointer; transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .product-message-card:hover { transform:translateY(-1px); border-color:var(--primary); box-shadow:var(--shadow-xl); }
+  .product-message-media { width:100%; height:156px; background:linear-gradient(135deg,var(--bg-subtle),var(--bg-hover)); overflow:hidden; display:block; }
+  .product-message-media img { width:100%; height:100%; display:block; object-fit:cover; }
+  .product-message-media.placeholder { display:flex; align-items:center; justify-content:center; color:var(--text-tertiary); font:900 20px/1 var(--font-en); letter-spacing:2px; }
+  .product-card-msg-eyebrow { font-size:10px; font-weight:800; color:var(--primary); margin-bottom:5px; }
+  .product-card-msg-actions { display:flex; justify-content:flex-start; margin-top:10px; }
+  .product-card-msg-action { padding:7px 12px; border-radius:999px; background:var(--primary-soft); border:1px solid rgba(255,107,53,.16); color:var(--primary); font-size:11px; font-weight:800; }
+  .product-card-msg-action:hover { background:var(--primary); color:#fff; }
+  .product-context-message { max-width:82%; }
+  #productContextCard[data-has-product="true"] { display:flex !important; }
 </style>
 </head>
 <body>
@@ -691,20 +700,25 @@
 
   window.DEBAComms.setProductState = function(state) {
     const card = document.getElementById('productContextCard');
+    if (card) card.dataset.hasProduct = room && room.product_id ? 'true' : 'false';
     if (!card) return;
+
     const states = {
       loading: document.getElementById('productContextLoading'),
       empty: document.getElementById('productContextEmpty'),
       error: document.getElementById('productContextError'),
       ready: document.getElementById('productContextReady'),
     };
+
     Object.entries(states).forEach(([key, node]) => {
       if (!node) return;
       const visible = key === state;
       node.hidden = !visible;
-      node.style.display = visible ? '' : 'none';
+      node.style.display = visible ? 'flex' : 'none';
     });
+
     card.dataset.state = state;
+    card.style.display = state === 'empty' && !card.dataset.hasProduct ? 'none' : 'flex';
     card.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
   }
 
@@ -977,6 +991,7 @@
     if (loadingNode) loadingNode.remove();
     area.setAttribute('aria-busy', 'false');
     area.innerHTML = '';
+
     const divider = document.createElement('div');
     divider.className = 'date-divider';
     const label = document.createElement('div');
@@ -987,93 +1002,108 @@
     divider.appendChild(label);
     area.appendChild(divider);
 
-    if (!items.length) {
-      if (activeProductMessage?.productId) {
-        const starterRow = document.createElement('div');
-        starterRow.className = 'message received';
-        starterRow.dataset.kind = 'product-starter';
+    if (activeProductMessage?.productId) {
+      const row = document.createElement('div');
+      row.className = 'message received product-context-message';
+      row.dataset.kind = 'product-context';
 
-        const avatar = document.createElement('div');
-        avatar.className = 'message-avatar';
-        avatar.textContent = 'DEBA';
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.textContent = 'DEBA';
 
-        const content = document.createElement('div');
-        content.className = 'message-content';
+      const content = document.createElement('div');
+      content.className = 'message-content';
 
-        const starterCard = document.createElement('div');
-        starterCard.className = 'product-card-msg product-starter-card';
-        starterCard.setAttribute('role', 'button');
-        starterCard.tabIndex = 0;
-        starterCard.setAttribute('aria-label', 'فتح الإعلان والبدء بالتفاوض');
-        starterCard.addEventListener('click', (event) => {
-          if (!(event.target instanceof HTMLElement) || !event.target.closest('button')) {
-            if (typeof window.DEBAComms.onProductOpen === 'function') window.DEBAComms.onProductOpen();
-          }
-        });
-        starterCard.addEventListener('keydown', (event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            if (typeof window.DEBAComms.onProductOpen === 'function') window.DEBAComms.onProductOpen();
-          }
-        });
+      const card = document.createElement('div');
+      card.className = 'product-card-msg product-message-card';
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', 'فتح الإعلان المرتبط بالمحادثة');
 
-        const media = document.createElement('div');
-        media.className = 'product-card-msg-media';
-        if (activeProductMessage.imageUrl) {
-          const image = document.createElement('img');
-          image.src = activeProductMessage.imageUrl;
-          image.alt = activeProductMessage.title;
-          image.onerror = () => {
-            image.remove();
-            media.classList.add('placeholder');
-            media.textContent = 'DEBA';
-          };
-          media.appendChild(image);
-        } else {
+      const media = document.createElement('div');
+      media.className = 'product-message-media';
+
+      if (activeProductMessage.imageUrl) {
+        const img = document.createElement('img');
+        img.src = activeProductMessage.imageUrl;
+        img.alt = activeProductMessage.title;
+        img.onerror = () => {
+          img.remove();
           media.classList.add('placeholder');
           media.textContent = 'DEBA';
-        }
-
-        const body = document.createElement('div');
-        body.className = 'product-card-msg-body';
-
-        const eyebrow = document.createElement('div');
-        eyebrow.className = 'product-card-msg-eyebrow';
-        eyebrow.textContent = 'الإعلان محل التفاوض';
-
-        const title = document.createElement('div');
-        title.className = 'product-card-msg-title';
-        title.textContent = activeProductMessage.title;
-
-        const price = document.createElement('div');
-        price.className = 'product-card-msg-price';
-        price.textContent = activeProductMessage.price;
-
-        const meta = document.createElement('div');
-        meta.className = 'product-card-msg-meta';
-        meta.textContent = (activeProductMessage.location || 'مصر') + ' · إعلان مرتبط';
-
-        const actionRow = document.createElement('div');
-        actionRow.className = 'product-card-msg-actions';
-
-        const action = document.createElement('button');
-        action.type = 'button';
-        action.className = 'product-card-msg-action';
-        action.textContent = 'عرض الإعلان';
-        action.addEventListener('click', (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (typeof window.DEBAComms.onProductOpen === 'function') window.DEBAComms.onProductOpen();
-        });
-
-        actionRow.appendChild(action);
-        body.append(eyebrow, title, price, meta, actionRow);
-        starterCard.append(media, body);
-        content.appendChild(starterCard);
-        starterRow.append(avatar, content);
-        area.appendChild(starterRow);
+        };
+        media.appendChild(img);
+      } else {
+        media.classList.add('placeholder');
+        media.textContent = 'DEBA';
       }
 
+      const body = document.createElement('div');
+      body.className = 'product-card-msg-body';
+
+      const eyebrow = document.createElement('div');
+      eyebrow.className = 'product-card-msg-eyebrow';
+      eyebrow.textContent = 'الإعلان محل التفاوض';
+
+      const title = document.createElement('div');
+      title.className = 'product-card-msg-title';
+      title.textContent = activeProductMessage.title;
+
+      const price = document.createElement('div');
+      price.className = 'product-card-msg-price';
+      price.textContent = activeProductMessage.price;
+
+      const meta = document.createElement('div');
+      meta.className = 'product-card-msg-meta';
+      meta.textContent = (activeProductMessage.location || 'مصر') + ' · إعلان مرتبط';
+
+      const actionRow = document.createElement('div');
+      actionRow.className = 'product-card-msg-actions';
+
+      const action = document.createElement('button');
+      action.type = 'button';
+      action.className = 'product-card-msg-action';
+      action.textContent = 'عرض الإعلان';
+      action.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (typeof window.DEBAComms.onProductOpen === 'function') {
+          window.DEBAComms.onProductOpen();
+        }
+      });
+      actionRow.appendChild(action);
+
+      body.append(eyebrow, title, price, meta, actionRow);
+      card.append(media, body);
+
+      const openProduct = () => {
+        if (typeof window.DEBAComms.onProductOpen === 'function') {
+          window.DEBAComms.onProductOpen();
+        }
+      };
+      card.addEventListener('click', (event) => {
+        if (!(event.target instanceof HTMLElement) || !event.target.closest('button')) openProduct();
+      });
+      card.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openProduct();
+        }
+      });
+
+      content.appendChild(card);
+      const metaRow = document.createElement('div');
+      metaRow.className = 'message-meta';
+      const labelNode = document.createElement('span');
+      labelNode.textContent = 'إعلان مرتبط بالمحادثة';
+      metaRow.appendChild(labelNode);
+      content.appendChild(metaRow);
+
+      row.append(avatar, content);
+      area.appendChild(row);
+    }
+
+    if (!items.length) {
       const empty = document.createElement('div');
       empty.className = 'conversation-empty-state';
       empty.innerHTML =
