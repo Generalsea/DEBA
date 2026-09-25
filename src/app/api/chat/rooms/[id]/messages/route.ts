@@ -346,7 +346,7 @@ export async function POST(request: Request, context: Context) {
     if (messageType === 'offer') {
       const metadata = payload.metadata || {}
       const amount = Number(metadata.amount)
-      if (!Number.isFinite(amount) || amount <= 0) {
+      if (!Number.isFinite(amount) || amount <= 0 || amount > 1000000000) {
         return NextResponse.json({ error: 'قيمة العرض غير صحيحة.' }, { status: 400 })
       }
 
@@ -354,6 +354,10 @@ export async function POST(request: Request, context: Context) {
       const currency = typeof metadata.currency === 'string' && /^[A-Z]{3}$/.test(metadata.currency)
         ? metadata.currency
         : 'EGP'
+      const parentOfferMessageId =
+        typeof metadata.parentOfferMessageId === 'string' && metadata.parentOfferMessageId.trim()
+          ? metadata.parentOfferMessageId.trim()
+          : null
 
       const result = await insertMessage(
         request,
@@ -367,7 +371,8 @@ export async function POST(request: Request, context: Context) {
           amount,
           currency,
           note: note || 'عرض سعر مرتبط بالمحادثة',
-          title: 'عرض سعر من البائع',
+          title: parentOfferMessageId ? 'عرض سعر مقابل' : 'عرض سعر',
+          ...(parentOfferMessageId ? { parentOfferMessageId } : {}),
         },
       )
 
@@ -400,21 +405,41 @@ export async function POST(request: Request, context: Context) {
           : ''
         if (!action) return NextResponse.json({ error: 'إجراء العرض غير صحيح.' }, { status: 400 })
 
-        const result = await insertMessage(
-          request,
-          supabase,
-          roomId,
-          userData.user.id,
-          'system',
-          action === 'accept' ? '✅ تم قبول عرض السعر' : action === 'counter' ? '💰 تم طلب التفاوض' : '❌ تم رفض عرض السعر',
-          {
-            kind: 'offer_action',
-            action,
-            offerMessageId: typeof metadata.offerMessageId === 'string' ? metadata.offerMessageId : null,
-          },
-        )
-        if (result.error) return result.error
-        return NextResponse.json({ message: result.data, riskFlags: [] }, { status: 201 })
+        const offerMessageId =
+          typeof metadata.offerMessageId === 'string' && metadata.offerMessageId.trim()
+            ? metadata.offerMessageId.trim()
+            : ''
+        if (!offerMessageId) {
+          return NextResponse.json({ error: 'معرّف العرض مطلوب.' }, { status: 400 })
+        }
+
+        let counterAmount: number | null = null
+        if (action === 'counter') {
+          const parsedAmount = Number(metadata.amount)
+          if (!Number.isFinite(parsedAmount) || parsedAmount <= 0 || parsedAmount > 1000000000) {
+            return NextResponse.json({ error: 'قيمة العرض المقابل غير صحيحة.' }, { status: 400 })
+          }
+          counterAmount = parsedAmount
+        }
+
+        const counterNote = typeof metadata.note === 'string'
+          ? metadata.note.trim().slice(0, 1000)
+          : null
+
+        const { data, error } = await supabase.rpc('apply_chat_offer_action', {
+          p_room_id: roomId,
+          p_offer_message_id: offerMessageId,
+          p_action: action,
+          p_amount: counterAmount,
+          p_note: counterNote,
+        })
+
+        if (error) {
+          console.error('DEBA offer action failed', error)
+          return NextResponse.json({ error: 'تعذر تنفيذ إجراء العرض.' }, { status: 400 })
+        }
+
+        return NextResponse.json({ message: data, riskFlags: [] }, { status: 201 })
       }
 
       return NextResponse.json({ error: 'بيانات الرسالة النظامية غير مدعومة.' }, { status: 400 })
