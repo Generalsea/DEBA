@@ -161,7 +161,7 @@ test('marketplace hardening exposes location, seller stores, chat, and optimisti
   assert.match(chatApi, /deba-chat-media/)
   assert.match(chatSurface, /عنوان MAC/)
   assert.match(chatMediaMigration, /deba-chat-media/)
-  assert.match(chatMediaMigration, /public,?\s*false/)
+  assert.match(chatMediaMigration, /public,\s*false/)
   assert.match(chatMediaMigration, /chat media private read/)
   assert.match(favorite, /deba:favorite-changed/)
   assert.match(favorite, /setIsFavorite(!previous)/)
