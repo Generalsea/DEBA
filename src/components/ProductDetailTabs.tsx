@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import ProductReviews from '@/components/ProductReviews'
 import {
+  AlertTriangle,
   BadgeCheck,
   CheckCircle2,
   ClipboardCheck,
@@ -183,6 +184,11 @@ export default function ProductDetailTabs({
   definitions,
 }: ProductDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]['id']>('overview')
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportReason, setReportReason] = useState('scam')
+  const [reportDescription, setReportDescription] = useState('')
+  const [reportStatus, setReportStatus] = useState('')
+  const [reportSubmitting, setReportSubmitting] = useState(false)
   const root = metadata || {}
   const specifications = asObject(root.specifications)
   const identification = asObject(root.identification)
@@ -212,6 +218,47 @@ export default function ProductDetailTabs({
 
   const presentSpecs = definitions.filter((definition) => formatValue(specifications[definition.key]))
   const isStructured = detailsSchemaVersion === 1 && Boolean(detailsLastCompletedAt)
+
+  async function submitReport() {
+    setReportSubmitting(true)
+    setReportStatus('')
+
+    try {
+      const response = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId,
+          reason: reportReason,
+          description: reportDescription.trim() || undefined,
+        }),
+      })
+
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: string; report?: { id?: string } }
+        | null
+
+      if (response.status === 401) {
+        const next = window.location.pathname + window.location.search
+        window.location.assign('/login?next=' + encodeURIComponent(next))
+        return
+      }
+
+      if (!response.ok) {
+        setReportStatus(payload?.error || 'تعذر إرسال البلاغ الآن.')
+        return
+      }
+
+      setReportStatus('تم إرسال البلاغ إلى فريق المراجعة.')
+      setReportDescription('')
+      setReportOpen(false)
+    } catch (error) {
+      console.error('DEBA report submission failed', error)
+      setReportStatus('تعذر إرسال البلاغ الآن. حاول مرة أخرى.')
+    } finally {
+      setReportSubmitting(false)
+    }
+  }
 
   return (
     <section className="deba-detail-tabs-shell">
@@ -556,6 +603,78 @@ export default function ProductDetailTabs({
             )}
           </div>
         )}
+
+        <section className="deba-detail-report-card" aria-labelledby="deba-report-title">
+          <div className="deba-detail-report-copy">
+            <div className="deba-detail-report-icon">
+              <AlertTriangle size={18} />
+            </div>
+            <div>
+              <strong id="deba-report-title">هل ترى مشكلة في هذا الإعلان؟</strong>
+              <p>أبلغنا عن إعلان مزعج، مضلل، احتيالي أو مخالف ليتم فحصه من فريق المراجعة.</p>
+            </div>
+          </div>
+
+          {!reportOpen ? (
+            <button
+              type="button"
+              className="deba-detail-report-button"
+              onClick={() => {
+                setReportOpen(true)
+                setReportStatus('')
+              }}
+            >
+              إبلاغ عن الإعلان
+            </button>
+          ) : (
+            <div className="deba-detail-report-form">
+              <label>
+                <span>سبب البلاغ</span>
+                <select value={reportReason} onChange={(event) => setReportReason(event.target.value)}>
+                  <option value="scam">اشتباه احتيال</option>
+                  <option value="misleading">وصف أو سعر مضلل</option>
+                  <option value="prohibited">محتوى أو سلعة محظورة</option>
+                  <option value="spam">إعلان مزعج أو مكرر</option>
+                  <option value="duplicate">إعلان مكرر</option>
+                  <option value="other">سبب آخر</option>
+                </select>
+              </label>
+              <label>
+                <span>تفاصيل إضافية <small>(اختياري)</small></span>
+                <textarea
+                  value={reportDescription}
+                  onChange={(event) => setReportDescription(event.target.value.slice(0, 2000))}
+                  placeholder="اكتب ما لاحظته..."
+                  maxLength={2000}
+                  rows={4}
+                />
+              </label>
+              <div className="deba-detail-report-actions">
+                <button
+                  type="button"
+                  className="deba-detail-report-secondary"
+                  onClick={() => {
+                    setReportOpen(false)
+                    setReportStatus('')
+                  }}
+                  disabled={reportSubmitting}
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  className="deba-detail-report-submit"
+                  onClick={submitReport}
+                  disabled={reportSubmitting}
+                >
+                  {reportSubmitting ? 'جارٍ الإرسال…' : 'إرسال البلاغ'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {reportStatus ? <p className="deba-detail-report-status">{reportStatus}</p> : null}
+        </section>
       </div>
     </section>
   )
