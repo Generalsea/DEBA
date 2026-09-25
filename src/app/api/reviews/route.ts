@@ -63,110 +63,45 @@ export async function GET(request: Request) {
     }
 
     const supabase = await createClient()
-    const { data: userData } = await supabase.auth.getUser()
-    const userId = userData.user?.id || null
-
-    const { data: rows, error } = await supabase
-      .from('reviews')
-      .select(
-        'id,order_id,reviewer_id,target_type,target_id,product_id,seller_id,rating,title,body,status,verified_purchase,created_at',
-      )
-      .eq('product_id', productId)
-      .eq('target_type', 'product')
-      .order('created_at', { ascending: false })
-      .limit(100)
+    const { data, error } = await supabase.rpc('get_product_review_feed', {
+      p_product_id: productId,
+    })
 
     if (error) {
-      console.error('DEBA review lookup failed', error)
+      console.error('DEBA review feed lookup failed', error)
       return NextResponse.json({ error: 'تعذر تحميل التقييمات.' }, { status: 500 })
     }
 
-    const reviewRows = (rows || []) as ReviewRow[]
-    const publicRows = reviewRows.filter((row) => row.status === 'published')
-    const userRows = userId
-      ? reviewRows.filter((row) => row.reviewer_id === userId)
-      : []
-
-    let canReview = false
-    let reviewOrderId: string | null = null
-
-    if (userId) {
-      const { data: completedOrders, error: ordersError } = await supabase
-        .from('orders')
-        .select('id')
-        .eq('buyer_id', userId)
-        .eq('status', 'completed')
-        .order('completed_at', { ascending: false })
-        .limit(100)
-
-      if (!ordersError && completedOrders?.length) {
-        const orderIds = completedOrders.map((row) => row.id)
-        const { data: items } = await supabase
-          .from('order_items')
-          .select('order_id')
-          .in('order_id', orderIds)
-          .eq('product_id', productId)
-          .limit(1)
-
-        reviewOrderId = items?.[0]?.order_id || null
-
-        if (reviewOrderId) {
-          canReview = !userRows.some(
-            (row) =>
-              row.order_id === reviewOrderId &&
-              row.target_type === 'product' &&
-              row.target_id === productId,
-          )
-        }
-      }
-    }
-
-    const breakdown = [1, 2, 3, 4, 5].map((rating) => ({
-      rating,
-      count: publicRows.filter((row) => row.rating === rating).length,
-    }))
-
-    const averageRating = publicRows.length
-      ? publicRows.reduce((sum, row) => sum + row.rating, 0) / publicRows.length
-      : 0
-
-    const reviewerIds = Array.from(
-      new Set(publicRows.map((row) => row.reviewer_id)),
-    )
-
-    const { data: profiles } = reviewerIds.length
-      ? await supabase
-          .from('profiles')
-          .select('id,display_name,username,avatar_url')
-          .in('id', reviewerIds)
-      : { data: [] as Array<{ id: string; display_name: string | null; username: string | null; avatar_url: string | null }> }
-
-    const profileMap = new Map(
-      (profiles || []).map((profile) => [profile.id, profile]),
-    )
+    const feed = (data as {
+      reviews?: Array<{
+        id: string
+        rating: number
+        title: string | null
+        body: string | null
+        verifiedPurchase: boolean
+        createdAt: string
+        reviewer?: {
+          display_name: string | null
+          username: string | null
+          avatar_url: string | null
+        } | null
+      }>
+      average_rating?: number
+      review_count?: number
+      breakdown?: Array<{ rating: number; count: number }>
+      can_review?: boolean
+      review_order_id?: string | null
+      pending_mine?: boolean
+    } | null) || {}
 
     return NextResponse.json({
-      reviews: publicRows.map((row) => ({
-        id: row.id,
-        orderId: row.order_id,
-        rating: row.rating,
-        title: row.title,
-        body: row.body,
-        verifiedPurchase: row.verified_purchase,
-        createdAt: row.created_at,
-        reviewer: profileMap.get(row.reviewer_id) || {
-          id: row.reviewer_id,
-          display_name: null,
-          username: null,
-          avatar_url: null,
-        },
-      })),
-      averageRating: Number(averageRating.toFixed(2)),
-      reviewCount: publicRows.length,
-      breakdown,
-      canReview,
-      reviewOrderId,
-      pendingMine: userRows.some((row) => row.status === 'pending'),
+      reviews: Array.isArray(feed.reviews) ? feed.reviews : [],
+      averageRating: Number(feed.average_rating || 0),
+      reviewCount: Number(feed.review_count || 0),
+      breakdown: Array.isArray(feed.breakdown) ? feed.breakdown : [],
+      canReview: feed.can_review === true,
+      reviewOrderId: feed.review_order_id || null,
+      pendingMine: feed.pending_mine === true,
     })
   } catch (error) {
     console.error('DEBA reviews GET failed', error)
