@@ -13384,3 +13384,24 @@ html[data-theme="dark"] .deba-comms-security-banner-sm {
     font-size: 10px;
   }
 }
+
+
+.deba-classified-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.deba-classified-pagination-status {
+  min-width: 140px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.deba-classified-btn.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
