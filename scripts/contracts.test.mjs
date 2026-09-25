@@ -332,3 +332,15 @@ test('seller lifecycle private functions expose only required execute roles', as
   assert.match(migration, /grant execute on function private\.update_seller_listing\(.*authenticated/s)
   assert.match(migration, /revoke execute on function private\.guard_seller_product_lifecycle/)
 })
+
+test('product view telemetry keeps direct table access denied and indexed', async () => {
+  const migration = await read(
+    'supabase/migrations/20260925200916_harden_product_view_telemetry_access_20260925.sql',
+  )
+
+  assert.match(migration, /product_views_viewer_id_idx/)
+  assert.match(migration, /product_views_no_direct_select/)
+  assert.match(migration, /product_views_no_direct_insert/)
+  assert.match(migration, /using \(false\)/)
+  assert.match(migration, /with check \(false\)/)
+})
