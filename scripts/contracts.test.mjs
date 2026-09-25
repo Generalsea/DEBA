@@ -319,7 +319,7 @@ test('seller dashboard and listing lifecycle are RPC-driven with private view te
 
 test('seller lifecycle private functions expose only required execute roles', async () => {
   const migration = await read(
-    'supabase/migrations/20260925200619_restrict_seller_lifecycle_private_function_exec_20260925.sql',
+    'supabase/migrations/20260925200827_restrict_seller_lifecycle_private_function_exec_20260925.sql',
   )
 
   assert.match(migration, /revoke execute on function private\.record_product_view/)
