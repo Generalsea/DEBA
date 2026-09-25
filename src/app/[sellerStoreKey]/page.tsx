@@ -69,7 +69,7 @@ export default async function SellerStorePage({ params }: StorePageProps) {
     )
   }
 
-  const [{ data: products }, { data: verification }, { data: claimsData }] = await Promise.all([
+  const [{ data: products }, { data: ratingData }, { data: claimsData }] = await Promise.all([
     supabase
       .from('products')
       .select('id,title,slug,description,listing_type,price,currency,condition_grade,city,governorate,owner_id,quantity,delivery_method,category:categories!products_category_id_fkey(id,name_ar,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)')
@@ -81,15 +81,11 @@ export default async function SellerStorePage({ params }: StorePageProps) {
       .gt('price', 0)
       .order('published_at', { ascending: false, nullsFirst: false })
       .limit(48),
-    supabase
-      .from('seller_verifications')
-      .select('status,verification_level')
-      .eq('user_id', seller.id)
-      .maybeSingle(),
+    supabase.rpc('get_seller_rating_summary', { p_seller_id: seller.id }),
     supabase.auth.getClaims(),
   ])
 
-  const ratingSummary = (verification as {
+  const ratingSummary = (ratingData as {
     average_rating?: number
     review_count?: number
     rating_5?: number
