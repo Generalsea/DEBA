@@ -902,14 +902,17 @@
     divider.appendChild(label);
     area.appendChild(divider);
 
+    let liveProductMessage = null;
+    let liveProductMessageInserted = false;
+
     if (activeProductMessage?.productId) {
-      const productMessage = document.createElement('div');
-      productMessage.className = 'message received';
-      productMessage.dataset.kind = 'product-card';
+      liveProductMessage = document.createElement('div');
+      liveProductMessage.className = 'message received';
+      liveProductMessage.dataset.kind = 'product-card';
 
       const avatar = document.createElement('div');
       avatar.className = 'message-avatar';
-      avatar.textContent = 'DEBA';
+      avatar.textContent = 'أ';
 
       const content = document.createElement('div');
       content.className = 'message-content';
@@ -958,8 +961,7 @@
       if (activeProductMessage.imageUrl) card.appendChild(cardImage);
       card.appendChild(body);
       content.appendChild(card);
-      productMessage.append(avatar, content);
-      area.appendChild(productMessage);
+      liveProductMessage.append(avatar, content);
     }
 
     if (!items.length) {
@@ -970,6 +972,11 @@
     }
 
     items.forEach(message => {
+      if (liveProductMessage && !liveProductMessageInserted && message.message_type === 'offer') {
+        area.appendChild(liveProductMessage);
+        liveProductMessageInserted = true;
+      }
+
       const mine = Boolean(currentUserId && message.sender_id === currentUserId);
       const row = document.createElement('div');
       row.className = 'message ' + (mine ? 'sent' : 'received');
@@ -1073,6 +1080,11 @@
       row.appendChild(content);
       area.appendChild(row);
     });
+
+    if (liveProductMessage && !liveProductMessageInserted) {
+      area.appendChild(liveProductMessage);
+      liveProductMessageInserted = true;
+    }
 
     if (items.length) {
       const typing = document.createElement('div');
