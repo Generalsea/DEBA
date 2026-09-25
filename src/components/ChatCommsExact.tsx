@@ -476,7 +476,17 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         return
       }
 
-      const rawAmount = window.prompt('أدخل قيمة العرض بالجنيه', '160')
+      const currentRoom = roomIdRef.current
+        ? roomsRef.current.find((item) => item.id === roomIdRef.current)
+        : null
+      const currentPrice = Number(currentRoom?.product?.price)
+      const suggestedAmount = Number.isFinite(currentPrice) && currentPrice > 0
+        ? Math.max(1, Math.round(currentPrice * 0.94))
+        : 0
+      const rawAmount = window.prompt(
+        'أدخل قيمة العرض بالجنيه',
+        suggestedAmount > 0 ? String(suggestedAmount) : '',
+      )
       if (rawAmount == null) return
 
       const amount = Number(rawAmount.replace(/,/g, ''))
@@ -485,9 +495,10 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         return
       }
 
+      const productCity = currentRoom?.product?.city || currentRoom?.product?.governorate || 'الموقع المحدد'
       const note = window.prompt(
         'اكتب ملاحظة العرض',
-        'يمكنني تخفيض السعر إلى ' + amount + ' جنيه إذا استلمته اليوم من المعادي.',
+        'يمكنني تخفيض السعر إلى ' + amount + ' جنيه إذا استلمته من ' + productCity + '.',
       )
       if (note == null) return
 
