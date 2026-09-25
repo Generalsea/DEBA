@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 
 type Product = {
@@ -109,6 +110,7 @@ function formatPrice(product: Product | null | undefined) {
 }
 
 export default function ChatCommsExact({ initialProduct }: { initialProduct: string }) {
+  const router = useRouter()
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const roomIdRef = useRef<string | null>(null)
   const userIdRef = useRef<string | null>(null)
@@ -131,6 +133,7 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         renderMessages?: (messages: Message[], currentUserId: string | null) => void
         onOpenChat?: (roomId: string) => void | Promise<void>
         onProductOpen?: () => void | Promise<void>
+        onNavigate?: (destination: 'home' | 'profile' | 'product') => void | Promise<void>
         onSend?: () => void | Promise<void>
         onQuick?: (text: string) => void | Promise<void>
         onRefresh?: () => void | Promise<void>
@@ -485,17 +488,38 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
       }
     }
 
+    const navigate = async (destination: 'home' | 'profile' | 'product') => {
+      if (destination === 'home') {
+        router.push('/')
+        return
+      }
+
+      if (destination === 'profile') {
+        router.push('/profile')
+        return
+      }
+
+      const room = roomIdRef.current
+        ? roomsRef.current.find((item) => item.id === roomIdRef.current)
+        : null
+      const slug = room?.product?.slug
+
+      if (!slug) {
+        showToast('لا يوجد إعلان مرتبط بهذه المحادثة.')
+        return
+      }
+
+      router.push('/products/' + encodeURIComponent(slug))
+    }
+
     const installBridge = async () => {
       const win = frameWindow()
       const bridge = win?.DEBAComms
       if (!win || !bridge || disposed) return
 
       bridge.onOpenChat = openLiveRoom
-      bridge.onProductOpen = () => {
-        const room = roomIdRef.current ? roomsRef.current.find((item) => item.id === roomIdRef.current) : null
-        const slug = room?.product?.slug
-        window.location.href = slug ? '/products/' + encodeURIComponent(slug) : '/'
-      }
+      bridge.onProductOpen = () => navigate('product')
+      bridge.onNavigate = navigate
       bridge.onSend = sendMessage
       bridge.onAttach = (kind) => {
         const input = frame.contentDocument?.getElementById('attachmentInput') as HTMLInputElement | null
@@ -577,7 +601,7 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
     <iframe
       ref={iframeRef}
       title="DEBA Comms"
-      src={'/deba-comms.html' + (initialProduct ? '?product=' + encodeURIComponent(initialProduct) : '')}
+      src="/deba-comms.html"
       style={{
         position: 'fixed',
         inset: 0,
