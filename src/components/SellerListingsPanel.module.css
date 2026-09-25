@@ -258,6 +258,13 @@
   color: var(--deba-ink, #111827);
 }
 
+.editorHint {
+  grid-column: 1 / -1;
+  padding: 8px 0 0;
+  color: var(--deba-text-muted, #697386);
+  font-size: 12px;
+}
+
 .editorActions {
   grid-column: 1 / -1;
   display: flex;
