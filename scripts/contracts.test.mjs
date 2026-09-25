@@ -418,3 +418,11 @@ test('verified seller ratings are only writable through transaction-bound review
   assert.match(form, /Idempotency-Key/)
   assert.match(api, /rpc\('create_review'/)
 })
+
+test('direct report row mutations are revoked for public API roles', async () => {
+  const migration = await read(
+    'supabase/migrations/20260925202257_lock_direct_report_mutations_20260925.sql',
+  )
+
+  assert.match(migration, /revoke update, delete on public\.reports from anon, authenticated/)
+})
