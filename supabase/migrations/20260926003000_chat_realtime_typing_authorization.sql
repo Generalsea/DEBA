@@ -3,6 +3,8 @@
 -- Typing indicators are transient Broadcast events on a private room channel.
 -- Access is limited to authenticated members of the corresponding chat room.
 
+drop policy if exists "deba chat participants can receive broadcast" on realtime.messages;
+
 create policy "deba chat participants can receive broadcast"
 on realtime.messages
 for select
@@ -15,6 +17,8 @@ using (
     else false
   end
 );
+
+drop policy if exists "deba chat participants can send broadcast" on realtime.messages;
 
 create policy "deba chat participants can send broadcast"
 on realtime.messages
