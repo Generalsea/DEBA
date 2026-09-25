@@ -243,12 +243,24 @@ async function loadHomeData(filters: SearchFilters) {
       .order('created_at', { ascending: false })
   }
 
-  if (searchTerm) {
-    const pattern = '%' + searchTerm + '%'
-    productQuery = productQuery.or('title.ilike.' + pattern + ',description.ilike.' + pattern)
-  }
+  const productsResponse =
+    searchTerm
+      ? await supabase.rpc('search_marketplace_products', {
+          p_query: searchTerm,
+          p_limit: PRODUCT_LIMIT,
+          p_offset: 0,
+          p_category_slug:
+            filters.category && filters.category !== 'all' ? filters.category : null,
+          p_min_price: filters.minPrice ?? null,
+          p_max_price: filters.maxPrice ?? null,
+          p_condition: filters.condition ?? null,
+          p_governorate: filters.governorate ?? null,
+          p_city: filters.city ?? null,
+          p_sort: filters.sort ?? 'relevance',
+        })
+      : await productQuery
 
-  const [categoryResponse, productsResponse, productCountResponse, membersCountResponse, headerAdsResponse] =
+  const [categoryResponse, productCountResponse, membersCountResponse, headerAdsResponse] =
     await Promise.all([
       supabase
         .from('categories')
@@ -278,8 +290,18 @@ async function loadHomeData(filters: SearchFilters) {
         .limit(8),
     ])
 
+  let resolvedProductsResponse = productsResponse
+
+  if (searchTerm && productsResponse.error) {
+    console.error('DEBA FTS search RPC failed; falling back to ILIKE search', productsResponse.error)
+    const pattern = '%' + searchTerm + '%'
+    resolvedProductsResponse = await productQuery.or(
+      'title.ilike.' + pattern + ',description.ilike.' + pattern,
+    )
+  }
+
   const categories = (categoryResponse.data || []) as CategoryRow[]
-  const products = (productsResponse.data || []) as ProductRow[]
+  const products = (resolvedProductsResponse.data || []) as ProductRow[]
   const ownerIds = Array.from(
     new Set(products.map((product) => product.owner_id).filter((id): id is string => Boolean(id))),
   )
