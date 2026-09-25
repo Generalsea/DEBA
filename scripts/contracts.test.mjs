@@ -162,7 +162,7 @@ test('marketplace hardening exposes location, seller stores, chat, and optimisti
   assert.match(chatApi, /deba-chat-media/)
   assert.match(chatSurface, /عنوان MAC/)
   assert.match(chatMediaMigration, /deba-chat-media/)
-  assert.match(chatMediaMigration, /public,\s*false/)
+  assert.match(chatMediaMigration, /insert into storage\.buckets[\s\S]+?public,[\s\S]+?false,/)
   assert.match(chatMediaMigration, /chat media private read/)
   assert.match(chatMembershipMigration, /drop policy if exists "chat_participants_insert_self"/)
   assert.match(chatMembershipMigration, /revoke insert on public\.chat_participants from anon, authenticated/)
