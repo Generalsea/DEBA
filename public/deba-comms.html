@@ -637,13 +637,13 @@
 <div class="toast" id="toast"></div>
 
 <div class="context-menu" id="contextMenu">
-  <button class="context-item" onclick="showToast('📌 تم تثبيت الرسالة'); hideContext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>تثبيت الرسالة</span></button>
-  <button class="context-item" onclick="showToast('↩️ تم الرد'); hideContext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span>رد</span></button>
-  <button class="context-item" onclick="showToast('➡️ تم التحويل'); hideContext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg><span>تحويل</span></button>
-  <button class="context-item" onclick="showToast('📋 تم النسخ'); hideContext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>نسخ</span></button>
-  <button class="context-item" onclick="showToast('🚩 تم الإبلاغ'); hideContext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg><span>إبلاغ</span></button>
+  <button class="context-item" type="button" data-action="pin" onclick="pinContextMessage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>تثبيت الرسالة</span></button>
+  <button class="context-item" type="button" data-action="reply" onclick="replyToContextMessage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span>رد</span></button>
+  <button class="context-item" type="button" data-action="forward" onclick="forwardContextMessage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg><span>تحويل</span></button>
+  <button class="context-item" type="button" data-action="copy" onclick="copyContextMessage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>نسخ</span></button>
+  <button class="context-item" type="button" data-action="report" onclick="reportContextMessage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg><span>إبلاغ</span></button>
   <div class="context-divider"></div>
-  <button class="context-item danger" onclick="showToast('🗑️ تم الحذف'); hideContext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>حذف</span></button>
+  <button class="context-item danger" type="button" data-action="delete" onclick="deleteContextMessage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>حذف</span></button>
 </div>
 <input id="attachmentInput" type="file" hidden aria-hidden="true">
 
@@ -1216,14 +1216,28 @@
     showToast(messages[action] || 'تم تنفيذ الإجراء');
   }
 
+  let contextMessage = null;
+
   document.addEventListener('contextmenu', function(e) {
-    if (e.target.closest('.message-bubble')) {
-      e.preventDefault();
-      const menu = document.getElementById('contextMenu');
-      menu.style.left = e.pageX + 'px';
-      menu.style.top = e.pageY + 'px';
-      menu.classList.add('show');
+    const target = e.target.closest('.message-bubble, .offer-card');
+    if (!target) return;
+
+    const row = target.closest('[data-message-id]');
+    if (row) {
+      contextMessage = {
+        id: row.dataset.messageId || null,
+        text: row.querySelector('.message-bubble')?.textContent?.trim() ||
+          row.querySelector('.offer-note')?.textContent?.trim() || '',
+      };
+    } else {
+      contextMessage = null;
     }
+
+    e.preventDefault();
+    const menu = document.getElementById('contextMenu');
+    menu.style.left = e.pageX + 'px';
+    menu.style.top = e.pageY + 'px';
+    menu.classList.add('show');
   });
 
   document.addEventListener('click', (e) => {
@@ -1231,6 +1245,76 @@
   });
 
   function hideContext() { document.getElementById('contextMenu').classList.remove('show'); }
+
+  function selectedContextRow() {
+    if (!contextMessage?.id) return null;
+    try {
+      return document.querySelector('[data-message-id="' + CSS.escape(contextMessage.id) + '"]');
+    } catch {
+      return null;
+    }
+  }
+
+  function pinContextMessage() {
+    const row = selectedContextRow();
+    if (!row) { showToast('لم يتم تحديد رسالة.'); hideContext(); return; }
+    const pinned = row.dataset.pinned !== 'true';
+    row.dataset.pinned = pinned ? 'true' : 'false';
+    row.style.boxShadow = pinned ? '0 0 0 2px var(--primary-ring)' : '';
+    showToast(pinned ? '📌 تم تثبيت الرسالة في هذه الجلسة' : '📌 تم إلغاء تثبيت الرسالة');
+    hideContext();
+  }
+
+  function replyToContextMessage() {
+    const input = document.getElementById('messageInput');
+    if (!input || !contextMessage?.text) { showToast('تعذر تحديد نص الرسالة.'); hideContext(); return; }
+    input.value = 'ردًا على: ' + contextMessage.text.slice(0, 180);
+    input.focus();
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    hideContext();
+  }
+
+  async function forwardContextMessage() {
+    if (!contextMessage?.text) { showToast('تعذر تحديد نص الرسالة.'); hideContext(); return; }
+    try {
+      await navigator.clipboard.writeText(contextMessage.text);
+      showToast('➡️ تم نسخ نص الرسالة لإعادة إرساله');
+    } catch {
+      showToast('➡️ لم يسمح المتصفح بالنسخ التلقائي.');
+    }
+    hideContext();
+  }
+
+  async function copyContextMessage() {
+    if (!contextMessage?.text) { showToast('لا يوجد نص لنسخه.'); hideContext(); return; }
+    try {
+      await navigator.clipboard.writeText(contextMessage.text);
+      showToast('📋 تم نسخ النص');
+    } catch {
+      showToast('تعذر النسخ في هذا المتصفح.');
+    }
+    hideContext();
+  }
+
+  function reportContextMessage() {
+    showDialog(
+      'الإبلاغ عن رسالة',
+      '<div class="chat-dialog-item"><strong>الرسالة المحددة</strong><span>' +
+        escapeHtml(contextMessage?.text || 'رسالة بدون نص قابل للعرض') +
+        '</span></div><div class="chat-dialog-item"><strong>حالة القناة</strong><span>لا يوجد endpoint مستقل لبلاغات الرسائل في API الحالي؛ لن ندعي إرسال بلاغ غير مدعوم.</span></div>',
+      [{ label:'إغلاق', tone:'primary', run:() => { closeChatDialog(); hideContext(); } }],
+    );
+    hideContext();
+  }
+
+  function deleteContextMessage() {
+    showDialog(
+      'حذف رسالة',
+      '<div class="chat-dialog-item"><strong>الحذف غير متاح حاليًا</strong><span>واجهة الرسائل الحالية لا توفر DELETE endpoint للرسائل. لم يتم إجراء حذف وهمي أو إخفاء محلي يوحي بأنه حُذف من الخادم.</span></div>',
+      [{ label:'إغلاق', tone:'primary', run:() => { closeChatDialog(); hideContext(); } }],
+    );
+    hideContext();
+  }
 
   function showToast(msg) {
     const toast = document.getElementById('toast');
