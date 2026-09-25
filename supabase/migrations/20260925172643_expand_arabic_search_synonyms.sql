@@ -1,0 +1,1 @@
+-- Synonym seed data is included idempotently in the foundational migration.

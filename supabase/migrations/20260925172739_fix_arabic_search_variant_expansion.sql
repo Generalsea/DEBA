@@ -1,0 +1,1 @@
+-- Final synonym expansion implementation is included in the foundational migration.

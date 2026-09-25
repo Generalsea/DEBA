@@ -96,6 +96,18 @@ type ReviewRow = {
   rating: number
 }
 
+type HeaderPromoRow = {
+  id: string
+  title: string
+  subtitle: string | null
+  media_type: 'image' | 'video'
+  media_url: string
+  poster_url: string | null
+  target_url: string
+  cta_label: string | null
+  alt_text: string | null
+}
+
 const CONDITION_LABELS: Record<string, string> = {
   new: 'جديد',
   like_new: 'كالجديد',
@@ -243,12 +255,24 @@ async function loadHomeData(filters: SearchFilters) {
       .order('created_at', { ascending: false })
   }
 
-  if (searchTerm) {
-    const pattern = '%' + searchTerm + '%'
-    productQuery = productQuery.or('title.ilike.' + pattern + ',description.ilike.' + pattern)
-  }
+  const productsResponse =
+    searchTerm
+      ? await supabase.rpc('search_marketplace_products', {
+          p_query: searchTerm,
+          p_limit: PRODUCT_LIMIT,
+          p_offset: 0,
+          p_category_slug:
+            filters.category && filters.category !== 'all' ? filters.category : null,
+          p_min_price: filters.minPrice ?? null,
+          p_max_price: filters.maxPrice ?? null,
+          p_condition: filters.condition ?? null,
+          p_governorate: filters.governorate ?? null,
+          p_city: filters.city ?? null,
+          p_sort: filters.sort ?? 'relevance',
+        })
+      : await productQuery
 
-  const [categoryResponse, productsResponse, productCountResponse, membersCountResponse, headerAdsResponse] =
+  const [categoryResponse, productCountResponse, membersCountResponse, headerAdsResponse] =
     await Promise.all([
       supabase
         .from('categories')
@@ -278,8 +302,18 @@ async function loadHomeData(filters: SearchFilters) {
         .limit(8),
     ])
 
+  let resolvedProductsResponse = productsResponse
+
+  if (searchTerm && productsResponse.error) {
+    console.error('DEBA FTS search RPC failed; falling back to ILIKE search', productsResponse.error)
+    const pattern = '%' + searchTerm + '%'
+    resolvedProductsResponse = await productQuery.or(
+      'title.ilike.' + pattern + ',description.ilike.' + pattern,
+    )
+  }
+
   const categories = (categoryResponse.data || []) as CategoryRow[]
-  const products = (productsResponse.data || []) as ProductRow[]
+  const products = (resolvedProductsResponse.data || []) as ProductRow[]
   const ownerIds = Array.from(
     new Set(products.map((product) => product.owner_id).filter((id): id is string => Boolean(id))),
   )
@@ -326,7 +360,8 @@ async function loadHomeData(filters: SearchFilters) {
     ratingByProduct.set(review.product_id, current)
   }
 
-  const headerAds: HeaderPromo[] = (headerAdsResponse.data || []).flatMap((row) => {
+  const headerPromoRows = (headerAdsResponse.data || []) as unknown as HeaderPromoRow[]
+  const headerAds: HeaderPromo[] = headerPromoRows.flatMap((row) => {
     if (row.media_type !== 'image' && row.media_type !== 'video') return []
     if (!row.media_url || !row.target_url || !row.title) return []
     if (!isSafeUrl(row.media_url) || !isSafeUrl(row.target_url)) return []

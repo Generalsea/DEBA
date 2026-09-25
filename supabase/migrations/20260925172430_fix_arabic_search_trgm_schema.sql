@@ -1,0 +1,1 @@
+-- Kept as a migration-history marker. The foundational migration uses the extensions schema explicitly for pg_trgm.

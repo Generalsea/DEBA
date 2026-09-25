@@ -56,6 +56,27 @@ export type Database = {
         }
         Relationships: []
       }
+      api_rate_limits: {
+        Row: {
+          rate_key: string
+          request_count: number
+          updated_at: string
+          window_started_at: string
+        }
+        Insert: {
+          rate_key: string
+          request_count?: number
+          updated_at?: string
+          window_started_at: string
+        }
+        Update: {
+          rate_key?: string
+          request_count?: number
+          updated_at?: string
+          window_started_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -104,6 +125,8 @@ export type Database = {
           name_ar: string
           name_en: string
           parent_id: string | null
+          search_text: string | null
+          search_vector: unknown
           slug: string
           sort_order: number
           updated_at: string
@@ -119,6 +142,8 @@ export type Database = {
           name_ar: string
           name_en: string
           parent_id?: string | null
+          search_text?: string | null
+          search_vector?: unknown
           slug: string
           sort_order?: number
           updated_at?: string
@@ -134,6 +159,8 @@ export type Database = {
           name_ar?: string
           name_en?: string
           parent_id?: string | null
+          search_text?: string | null
+          search_vector?: unknown
           slug?: string
           sort_order?: number
           updated_at?: string
@@ -324,6 +351,7 @@ export type Database = {
       }
       chat_rooms: {
         Row: {
+          context_key: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -332,6 +360,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          context_key?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -340,6 +369,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          context_key?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -353,6 +383,69 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_security_events: {
+        Row: {
+          accept_language: string | null
+          created_at: string
+          email_snapshot: string | null
+          id: string
+          ip_address: unknown
+          mac_address: string | null
+          message_id: string | null
+          metadata: Json
+          phone_snapshot: string | null
+          retention_until: string
+          room_id: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accept_language?: string | null
+          created_at?: string
+          email_snapshot?: string | null
+          id?: string
+          ip_address?: unknown
+          mac_address?: string | null
+          message_id?: string | null
+          metadata?: Json
+          phone_snapshot?: string | null
+          retention_until?: string
+          room_id: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accept_language?: string | null
+          created_at?: string
+          email_snapshot?: string | null
+          id?: string
+          ip_address?: unknown
+          mac_address?: string | null
+          message_id?: string | null
+          metadata?: Json
+          phone_snapshot?: string | null
+          retention_until?: string
+          room_id?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_security_events_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_security_events_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -637,6 +730,247 @@ export type Database = {
           },
         ]
       }
+      header_ad_promotions: {
+        Row: {
+          alt_text: string
+          created_at: string
+          cta_label: string
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          media_storage_path: string | null
+          media_type: string
+          media_url: string
+          poster_storage_path: string | null
+          poster_url: string | null
+          sort_order: number
+          starts_at: string | null
+          subtitle: string | null
+          target_url: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          alt_text?: string
+          created_at?: string
+          cta_label?: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          media_storage_path?: string | null
+          media_type: string
+          media_url: string
+          poster_storage_path?: string | null
+          poster_url?: string | null
+          sort_order?: number
+          starts_at?: string | null
+          subtitle?: string | null
+          target_url: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          alt_text?: string
+          created_at?: string
+          cta_label?: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          media_storage_path?: string | null
+          media_type?: string
+          media_url?: string
+          poster_storage_path?: string | null
+          poster_url?: string | null
+          sort_order?: number
+          starts_at?: string | null
+          subtitle?: string | null
+          target_url?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      invoice_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          invoice_id: string
+          payload: Json
+          provider_event_id: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          invoice_id: string
+          payload?: Json
+          provider_event_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          invoice_id?: string
+          payload?: Json
+          provider_event_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_events_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          line_subtotal: number
+          line_total: number
+          metadata: Json
+          order_item_id: string | null
+          quantity: number
+          tax_amount: number
+          tax_rate: number | null
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          line_subtotal: number
+          line_total: number
+          metadata?: Json
+          order_item_id?: string | null
+          quantity: number
+          tax_amount?: number
+          tax_rate?: number | null
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          line_subtotal?: number
+          line_total?: number
+          metadata?: Json
+          order_item_id?: string | null
+          quantity?: number
+          tax_amount?: number
+          tax_rate?: number | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          created_at: string
+          currency: string
+          document_payload: Json
+          id: string
+          invoice_number: string
+          issued_at: string | null
+          issuer_snapshot: Json
+          issuer_user_id: string
+          last_error: string | null
+          order_id: string
+          provider: string
+          provider_document_id: string | null
+          provider_status: string | null
+          provider_submission_id: string | null
+          receiver_snapshot: Json
+          status: string
+          subtotal: number
+          tax_amount: number
+          tax_rate: number | null
+          tax_treatment: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          document_payload?: Json
+          id?: string
+          invoice_number: string
+          issued_at?: string | null
+          issuer_snapshot?: Json
+          issuer_user_id: string
+          last_error?: string | null
+          order_id: string
+          provider?: string
+          provider_document_id?: string | null
+          provider_status?: string | null
+          provider_submission_id?: string | null
+          receiver_snapshot?: Json
+          status?: string
+          subtotal: number
+          tax_amount?: number
+          tax_rate?: number | null
+          tax_treatment?: string
+          total: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          document_payload?: Json
+          id?: string
+          invoice_number?: string
+          issued_at?: string | null
+          issuer_snapshot?: Json
+          issuer_user_id?: string
+          last_error?: string | null
+          order_id?: string
+          provider?: string
+          provider_document_id?: string | null
+          provider_status?: string | null
+          provider_submission_id?: string | null
+          receiver_snapshot?: Json
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          tax_rate?: number | null
+          tax_treatment?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string | null
@@ -749,39 +1083,67 @@ export type Database = {
           amount: number
           buyer_id: string
           created_at: string
+          created_by: string | null
           currency: string
           expires_at: string | null
           id: string
+          last_action_by: string | null
           message: string | null
+          message_id: string | null
           parent_offer_id: string | null
           product_id: string
+          responded_at: string | null
+          room_id: string | null
+          seller_id: string | null
           status: string
+          updated_at: string
         }
         Insert: {
           amount: number
           buyer_id: string
           created_at?: string
+          created_by?: string | null
           currency?: string
           expires_at?: string | null
           id?: string
+          last_action_by?: string | null
           message?: string | null
+          message_id?: string | null
           parent_offer_id?: string | null
           product_id: string
+          responded_at?: string | null
+          room_id?: string | null
+          seller_id?: string | null
           status?: string
+          updated_at?: string
         }
         Update: {
           amount?: number
           buyer_id?: string
           created_at?: string
+          created_by?: string | null
           currency?: string
           expires_at?: string | null
           id?: string
+          last_action_by?: string | null
           message?: string | null
+          message_id?: string | null
           parent_offer_id?: string | null
           product_id?: string
+          responded_at?: string | null
+          room_id?: string | null
+          seller_id?: string | null
           status?: string
+          updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "offers_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "offers_parent_offer_id_fkey"
             columns: ["parent_offer_id"]
@@ -794,6 +1156,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -935,7 +1304,7 @@ export type Database = {
           payment_status?: string
           platform_fee?: number
           product_id?: string | null
-          reference_code: string
+          reference_code?: string
           seller_id: string
           shipping_fee?: number
           status?: string
@@ -1225,6 +1594,8 @@ export type Database = {
           price: number | null
           published_at: string | null
           quantity: number
+          search_text: string | null
+          search_vector: unknown
           slug: string
           sold_at: string | null
           status: string
@@ -1262,6 +1633,8 @@ export type Database = {
           price?: number | null
           published_at?: string | null
           quantity?: number
+          search_text?: string | null
+          search_vector?: unknown
           slug: string
           sold_at?: string | null
           status?: string
@@ -1299,6 +1672,8 @@ export type Database = {
           price?: number | null
           published_at?: string | null
           quantity?: number
+          search_text?: string | null
+          search_vector?: unknown
           slug?: string
           sold_at?: string | null
           status?: string
@@ -1365,6 +1740,7 @@ export type Database = {
           governorate: string | null
           id: string
           is_public: boolean
+          seller_store_key: string | null
           updated_at: string
           username: string | null
         }
@@ -1378,6 +1754,7 @@ export type Database = {
           governorate?: string | null
           id: string
           is_public?: boolean
+          seller_store_key?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -1391,6 +1768,7 @@ export type Database = {
           governorate?: string | null
           id?: string
           is_public?: boolean
+          seller_store_key?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -1584,6 +1962,191 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      risk_assessments: {
+        Row: {
+          created_at: string
+          id: string
+          level: string
+          model_version: string
+          order_id: string
+          reasons: Json
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          score: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level: string
+          model_version?: string
+          order_id: string
+          reasons?: Json
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: string
+          model_version?: string
+          order_id?: string
+          reasons?: Json
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_assessments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_rule_config: {
+        Row: {
+          key: string
+          numeric_value: number
+          updated_at: string
+        }
+        Insert: {
+          key: string
+          numeric_value: number
+          updated_at?: string
+        }
+        Update: {
+          key?: string
+          numeric_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      saved_searches: {
+        Row: {
+          alert_frequency: string
+          created_at: string
+          filters: Json
+          id: string
+          last_match_count: number
+          last_notified_at: string | null
+          name: string
+          query: string | null
+          search_hash: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_frequency?: string
+          created_at?: string
+          filters?: Json
+          id?: string
+          last_match_count?: number
+          last_notified_at?: string | null
+          name: string
+          query?: string | null
+          search_hash: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_frequency?: string
+          created_at?: string
+          filters?: Json
+          id?: string
+          last_match_count?: number
+          last_notified_at?: string | null
+          name?: string
+          query?: string | null
+          search_hash?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      seller_verifications: {
+        Row: {
+          created_at: string
+          document_country: string | null
+          document_last4: string | null
+          document_storage_path: string | null
+          document_type: string | null
+          expires_at: string | null
+          id: string
+          legal_name: string | null
+          metadata: Json
+          provider: string
+          provider_reference: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          selfie_storage_path: string | null
+          status: string
+          submitted_at: string | null
+          taxpayer_number: string | null
+          updated_at: string
+          user_id: string
+          verification_level: string
+        }
+        Insert: {
+          created_at?: string
+          document_country?: string | null
+          document_last4?: string | null
+          document_storage_path?: string | null
+          document_type?: string | null
+          expires_at?: string | null
+          id?: string
+          legal_name?: string | null
+          metadata?: Json
+          provider?: string
+          provider_reference?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_storage_path?: string | null
+          status?: string
+          submitted_at?: string | null
+          taxpayer_number?: string | null
+          updated_at?: string
+          user_id: string
+          verification_level?: string
+        }
+        Update: {
+          created_at?: string
+          document_country?: string | null
+          document_last4?: string | null
+          document_storage_path?: string | null
+          document_type?: string | null
+          expires_at?: string | null
+          id?: string
+          legal_name?: string | null
+          metadata?: Json
+          provider?: string
+          provider_reference?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_storage_path?: string | null
+          status?: string
+          submitted_at?: string | null
+          taxpayer_number?: string | null
+          updated_at?: string
+          user_id?: string
+          verification_level?: string
+        }
+        Relationships: []
       }
       shipment_events: {
         Row: {
@@ -1785,6 +2348,48 @@ export type Database = {
           },
         ]
       }
+      tax_profiles: {
+        Row: {
+          activity_code: string | null
+          address_snapshot: Json
+          branch_code: string | null
+          created_at: string
+          eta_enabled: boolean
+          invoice_mode: string
+          legal_name: string | null
+          tax_status: string
+          taxpayer_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_code?: string | null
+          address_snapshot?: Json
+          branch_code?: string | null
+          created_at?: string
+          eta_enabled?: boolean
+          invoice_mode?: string
+          legal_name?: string | null
+          tax_status?: string
+          taxpayer_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_code?: string | null
+          address_snapshot?: Json
+          branch_code?: string | null
+          created_at?: string
+          eta_enabled?: boolean
+          invoice_mode?: string
+          legal_name?: string | null
+          tax_status?: string
+          taxpayer_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
@@ -1883,6 +2488,38 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_review_risk: {
+        Args: { p_assessment_id: string; p_note: string; p_status: string }
+        Returns: Json
+      }
+      admin_review_seller_verification: {
+        Args: { p_note: string; p_status: string; p_verification_id: string }
+        Returns: Json
+      }
+      apply_chat_offer_action: {
+        Args: {
+          p_action: string
+          p_amount?: number
+          p_note?: string
+          p_offer_message_id: string
+          p_room_id: string
+        }
+        Returns: {
+          body: string | null
+          created_at: string
+          id: string
+          message_type: string
+          metadata: Json
+          room_id: string
+          sender_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       apply_payment_state: {
         Args: {
           p_payment_id: string
@@ -1891,6 +2528,15 @@ export type Database = {
           p_provider_payment_id: string
           p_status: string
         }
+        Returns: Json
+      }
+      assess_order_risk: { Args: { p_order_id: string }; Returns: Json }
+      consume_api_rate_limit: {
+        Args: { p_limit: number; p_rate_key: string; p_window_seconds: number }
+        Returns: boolean
+      }
+      create_cart_orders: {
+        Args: { p_groups: Json; p_idempotency_key: string }
         Returns: Json
       }
       create_dispute: {
@@ -1913,6 +2559,7 @@ export type Database = {
         }
         Returns: Json
       }
+      create_internal_invoice: { Args: { p_order_id: string }; Returns: Json }
       create_review: {
         Args: {
           p_body: string
@@ -1922,6 +2569,77 @@ export type Database = {
           p_target_id: string
           p_target_type: string
           p_title: string
+        }
+        Returns: Json
+      }
+      get_admin_analytics: { Args: never; Returns: Json }
+      get_or_create_marketplace_chat: {
+        Args: { p_product_id: string }
+        Returns: Json
+      }
+      get_seller_analytics: { Args: never; Returns: Json }
+      mark_chat_read: { Args: { p_room_id: string }; Returns: Json }
+      search_marketplace_products: {
+        Args: {
+          p_category_slug?: string
+          p_city?: string
+          p_condition?: string
+          p_governorate?: string
+          p_limit?: number
+          p_max_price?: number
+          p_min_price?: number
+          p_offset?: number
+          p_query?: string
+          p_sort?: string
+        }
+        Returns: {
+          category_id: string
+          city: string
+          condition_grade: string
+          created_at: string
+          currency: string
+          description: string
+          governorate: string
+          id: string
+          owner_id: string
+          price: number
+          published_at: string
+          quantity: number
+          relevance: number
+          slug: string
+          title: string
+        }[]
+      }
+      send_chat_message: {
+        Args: {
+          p_body: string
+          p_message_type: string
+          p_metadata?: Json
+          p_room_id: string
+        }
+        Returns: {
+          body: string | null
+          created_at: string
+          id: string
+          message_type: string
+          metadata: Json
+          room_id: string
+          sender_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      start_seller_verification: {
+        Args: {
+          p_document_country: string
+          p_document_type: string
+          p_legal_name: string
+          p_taxpayer_number: string
+          p_verification_level: string
         }
         Returns: Json
       }

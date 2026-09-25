@@ -229,3 +229,23 @@ test('authenticated Playwright path is wired and offer lifecycle is database-enf
   assert.match(productCard, /data-testid="product-card"/)
   assert.match(productTabs, /data-testid="report-submit"/)
 })
+
+
+test('Arabic search intelligence uses normalized PostgreSQL FTS with safe fallback', async () => {
+  const migration = await read(
+    'supabase/migrations/20260925172342_arabic_search_intelligence.sql',
+  )
+  const page = await read('src/app/page.tsx')
+
+  assert.match(migration, /private\.deba_normalize_arabic/)
+  assert.match(migration, /to_tsvector\(['"]arabic['"]/)
+  assert.match(migration, /gin_trgm_ops/)
+  assert.match(migration, /pg_trgm/)
+  assert.match(migration, /search_marketplace_products/)
+  assert.match(migration, /search_synonyms/)
+  assert.match(migration, /similarity\(/)
+  assert.match(migration, /word_similarity\(/)
+  assert.match(page, /search_marketplace_products/)
+  assert.match(page, /falling back to ILIKE search/)
+  assert.doesNotMatch(page, /productQuery = productQuery\.or\('title\.ilike\./)
+})
