@@ -32,3 +32,6 @@ jobs:
 
       - name: Contract tests
         run: npm test
+
+      - name: Playwright collection
+        run: npm run e2e:list
