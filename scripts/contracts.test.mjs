@@ -316,3 +316,19 @@ test('seller dashboard and listing lifecycle are RPC-driven with private view te
   assert.match(viewRoute, /record_product_view/)
   assert.match(productPage, /ProductViewTracker/)
 })
+
+test('seller lifecycle private functions expose only required execute roles', async () => {
+  const migration = await read(
+    'supabase/migrations/20260925200619_restrict_seller_lifecycle_private_function_exec_20260925.sql',
+  )
+
+  assert.match(migration, /revoke execute on function private\.record_product_view/)
+  assert.match(migration, /grant execute on function private\.record_product_view.*anon, authenticated/s)
+  assert.match(migration, /revoke execute on function private\.get_seller_dashboard/)
+  assert.match(migration, /grant execute on function private\.get_seller_dashboard.*authenticated/s)
+  assert.match(migration, /revoke execute on function private\.update_seller_listing_status/)
+  assert.match(migration, /grant execute on function private\.update_seller_listing_status.*authenticated/s)
+  assert.match(migration, /revoke execute on function private\.update_seller_listing\(/)
+  assert.match(migration, /grant execute on function private\.update_seller_listing\(.*authenticated/s)
+  assert.match(migration, /revoke execute on function private\.guard_seller_product_lifecycle/)
+})
