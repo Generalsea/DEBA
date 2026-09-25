@@ -23,7 +23,9 @@ export async function consumeApiRateLimit(
 
   if (error) {
     console.error('DEBA rate-limit check failed', error)
-    return { allowed: true, limit, windowSeconds }
+    // Security boundary: a failed limiter must fail closed so a database/API
+    // availability incident cannot silently disable abuse protection.
+    return { allowed: false, limit, windowSeconds }
   }
 
   return {
