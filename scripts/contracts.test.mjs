@@ -355,3 +355,97 @@ test('seller partial edits preserve unedited description and location fields', a
   assert.match(migration, /when p_governorate is null then v_product\.governorate/)
   assert.match(migration, /when p_district is null then v_product\.district/)
 })
+
+test('public profiles expose only public identity and seller trust aggregates', async () => {
+  const page = await read('src/app/members/[username]/page.tsx')
+  const store = await read('src/app/[sellerStoreKey]/page.tsx')
+  const migration = await read(
+    'supabase/migrations/20260925201854_public_profiles_trust_reviews_moderation_20260925.sql',
+  )
+
+  assert.match(page, /\.eq\(['"]is_public['"], true\)/)
+  assert.match(page, /seller_store_key/)
+  assert.match(page, /get_seller_rating_summary/)
+  assert.doesNotMatch(page, /addressLine1|addressLine2|postalCode|document_storage_path|selfie_storage_path/)
+  assert.match(store, /get_seller_rating_summary/)
+  assert.match(store, /sellerReviews/)
+  assert.match(store, /verifiedPurchase/)
+
+  assert.match(migration, /get_seller_rating_summary/)
+  assert.match(migration, /review_count >= 5/)
+  assert.match(migration, /average_rating >= 4\.5/)
+  assert.match(migration, /revoke insert, update, delete on public\.reviews/)
+  assert.match(migration, /grant select on public\.reviews/)
+})
+
+test('report lifecycle is database-enforced and product reports can auto-pause at threshold', async () => {
+  const route = await read('src/app/api/admin/moderation/route.ts')
+  const reportApi = await read('src/app/api/reports/route.ts')
+  const tabs = await read('src/components/ProductDetailTabs.tsx')
+  const migration = await read(
+    'supabase/migrations/20260925201854_public_profiles_trust_reviews_moderation_20260925.sql',
+  )
+
+  assert.match(route, /review_report/)
+  assert.match(route, /admin_update_report_status/)
+  assert.match(route, /under_review/)
+  assert.match(reportApi, /fraud/)
+  assert.match(reportApi, /prohibited_item/)
+  assert.match(reportApi, /reason,\n        description/)
+  assert.doesNotMatch(reportApi, /reason \+ ': '/)
+  assert.match(tabs, /value="fraud"/)
+  assert.match(tabs, /value="prohibited_item"/)
+  assert.doesNotMatch(tabs, /value="scam"/)
+  assert.match(migration, /count\(distinct reporter_id\)/)
+  assert.match(migration, /v_distinct_reporters < 3/)
+  assert.match(migration, /status = 'paused'/)
+  assert.match(migration, /moderation_status = 'needs_changes'/)
+  assert.match(migration, /report\.threshold_auto_pause/)
+  assert.match(migration, /Only open reports can enter review/)
+  assert.match(migration, /Review the report before resolving or dismissing it/)
+})
+ 
+test('verified seller ratings are only writable through transaction-bound review creation', async () => {
+  const trust = await read('supabase/migrations/20260921202505_phase_2_trust_core.sql')
+  const form = await read('src/components/SellerReviewForm.tsx')
+  const api = await read('src/app/api/reviews/route.ts')
+
+  assert.match(trust, /v_order\.status <> 'completed'/)
+  assert.match(trust, /target_type = 'seller'/)
+  assert.match(trust, /p_target_id <> v_order\.seller_id/)
+  assert.match(form, /targetType: 'seller'/)
+  assert.match(form, /targetId: sellerId/)
+  assert.match(form, /Idempotency-Key/)
+  assert.match(api, /rpc\('create_review'/)
+  assert.match(api, /targetType !== 'product' && targetType !== 'seller'/)
+  assert.match(api, /p_target_type: targetType/)
+})
+
+test('direct report row mutations are revoked for public API roles', async () => {
+  const migration = await read(
+    'supabase/migrations/20260925202257_lock_direct_report_mutations_20260925.sql',
+  )
+
+  assert.match(migration, /revoke update, delete on public\.reports from anon, authenticated/)
+})
+
+test('public review feeds expose safe columns instead of direct review table reads', async () => {
+  const reviewApi = await read('src/app/api/reviews/route.ts')
+  const store = await read('src/app/[sellerStoreKey]/page.tsx')
+  const migration = await read(
+    'supabase/migrations/20260925202524_safe_public_review_feeds_20260925.sql',
+  )
+  const limitFix = await read(
+    'supabase/migrations/20260925202541_fix_seller_review_feed_limit_20260925.sql',
+  )
+
+  assert.match(reviewApi, /get_product_review_feed/)
+  assert.doesNotMatch(reviewApi, /from\(['"]reviews['"]\)/)
+  assert.match(store, /get_seller_review_feed/)
+  assert.doesNotMatch(store, /from\(['"]reviews['"]\)/)
+  assert.match(migration, /revoke select on public\.reviews from anon, authenticated/)
+  assert.match(migration, /get_product_review_feed/)
+  assert.match(migration, /verifiedPurchase/)
+  assert.match(migration, /case when coalesce\(p\.is_public,false\)/)
+  assert.match(limitFix, /limit greatest\(1, least\(coalesce\(p_limit,6\), 12\)\)/)
+})

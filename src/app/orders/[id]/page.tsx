@@ -5,6 +5,7 @@ import Header from '@/components/Header'
 import OrderActions from '@/components/OrderActions'
 import RefundActions from '@/components/RefundActions'
 import DisputeActions from '@/components/DisputeActions'
+import SellerReviewForm from '@/components/SellerReviewForm'
 import { createClient } from '@/utils/supabase/server'
 
 type CategoryRow = { id: string; name_ar: string; slug: string }
@@ -402,6 +403,13 @@ export default async function OrderPage({
               )
             })()}
           </section>
+        ) : null}
+
+        {isBuyer && order.status === 'completed' ? (
+          <SellerReviewForm
+            orderId={order.id}
+            sellerId={order.seller_id}
+          />
         ) : null}
 
         {!['cancelled','refunded'].includes(order.status) ? (

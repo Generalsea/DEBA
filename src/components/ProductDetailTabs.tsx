@@ -185,7 +185,7 @@ export default function ProductDetailTabs({
 }: ProductDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]['id']>('overview')
   const [reportOpen, setReportOpen] = useState(false)
-  const [reportReason, setReportReason] = useState('scam')
+  const [reportReason, setReportReason] = useState('fraud')
   const [reportDescription, setReportDescription] = useState('')
   const [reportStatus, setReportStatus] = useState('')
   const [reportSubmitting, setReportSubmitting] = useState(false)
@@ -631,11 +631,10 @@ export default function ProductDetailTabs({
               <label>
                 <span>سبب البلاغ</span>
                 <select data-testid="report-reason" value={reportReason} onChange={(event) => setReportReason(event.target.value)}>
-                  <option value="scam">اشتباه احتيال</option>
+                  <option value="fraud">اشتباه احتيال</option>
                   <option value="misleading">وصف أو سعر مضلل</option>
-                  <option value="prohibited">محتوى أو سلعة محظورة</option>
+                  <option value="prohibited_item">محتوى أو سلعة محظورة</option>
                   <option value="spam">إعلان مزعج أو مكرر</option>
-                  <option value="duplicate">إعلان مكرر</option>
                   <option value="other">سبب آخر</option>
                 </select>
               </label>
