@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { BadgeCheck, MapPin, MessageCircle, ShieldCheck, Store } from 'lucide-react'
+import { BadgeCheck, MapPin, MessageCircle, ShieldCheck, Star, Store, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import Header, { type HeaderCategory } from '@/components/Header'
 import ProductCard, { type ProductCardItem } from '@/components/ProductCard'
@@ -89,6 +89,17 @@ export default async function SellerStorePage({ params }: StorePageProps) {
     supabase.auth.getClaims(),
   ])
 
+  const ratingSummary = (verification as {
+    average_rating?: number
+    review_count?: number
+    rating_5?: number
+    rating_4?: number
+    rating_3?: number
+    rating_2?: number
+    rating_1?: number
+    verified_seller?: boolean
+    top_rated?: boolean
+  } | null) || {}
   const userId = typeof claimsData?.claims?.sub === 'string' ? claimsData.claims.sub : null
   const productIds = (products || []).map((product) => product.id)
   const { data: favoriteRows } = userId && productIds.length
@@ -125,13 +136,27 @@ export default async function SellerStorePage({ params }: StorePageProps) {
       sellerId: seller.id,
       sellerName: seller.display_name,
       sellerAvatar: imageUrl(supabase, seller.avatar_url || null),
-      sellerVerified: verification?.status === 'verified',
+      sellerVerified: ratingSummary.verified_seller === true,
       quantityAvailable: product.quantity,
       deliveryMethod: product.delivery_method as ProductCardItem['deliveryMethod'],
     }
   })
 
   const location = [seller.city, seller.governorate].filter(Boolean).join('، ')
+  const sellerReviewsResult = await supabase
+    .from('reviews')
+    .select('id,rating,title,body,created_at,reviewer_id,verified_purchase')
+    .eq('seller_id', seller.id)
+    .eq('target_type', 'seller')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(6)
+
+  const reviewerIds = Array.from(new Set((sellerReviewsResult.data || []).map((review) => review.reviewer_id)))
+  const { data: reviewerProfiles } = reviewerIds.length
+    ? await supabase.from('profiles').select('id,display_name,username,avatar_url').in('id', reviewerIds)
+    : { data: [] as Array<{ id: string; display_name: string | null; username: string | null; avatar_url: string | null }> }
+  const reviewerMap = new Map((reviewerProfiles || []).map((profile) => [profile.id, profile]))
   const avatar = imageUrl(supabase, seller.avatar_url || null)
 
   return (
@@ -147,18 +172,54 @@ export default async function SellerStorePage({ params }: StorePageProps) {
             <div style={{ minWidth: 0 }}>
               <h1 style={{ marginTop: 0 }}>{seller.display_name}</h1>
               <div className="deba-store-meta">
-                {verification?.status === 'verified' ? <span><BadgeCheck size={14} /> بائع موثق</span> : <span><ShieldCheck size={14} /> حساب بائع DEBA</span>}
+                {ratingSummary.verified_seller ? <span><BadgeCheck size={14} /> بائع موثق</span> : <span><ShieldCheck size={14} /> حساب بائع DEBA</span>}
                 {location ? <span><MapPin size={14} /> {location}</span> : null}
                 <span><Store size={14} /> {storeProducts.length} إعلان متاح</span>
               </div>
             </div>
           </div>
           {seller.bio ? <p style={{ marginTop: 15 }}>{seller.bio}</p> : <p style={{ marginTop: 15 }}>متجر بائع داخل سوق DEBA، مع دورة بيع وطلبات مرتبطة بالمنصة.</p>}
+          <div className="deba-store-trust-row">
+            <span className="deba-store-rating"><Star size={14} fill="currentColor" /> {ratingSummary.average_rating ? Number(ratingSummary.average_rating).toFixed(1) : '—'} · {Number(ratingSummary.review_count || 0).toLocaleString('ar-EG')} تقييم</span>
+            {ratingSummary.top_rated ? <span className="deba-store-top-rated"><Trophy size={14} /> أعلى تقييمًا</span> : null}
+          </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
             <Link href="/chat" className="deba-profile-primary-action"><MessageCircle size={16} />المحادثات</Link>
             <Link href="/sell" className="deba-profile-ghost-action">أضف إعلانك</Link>
           </div>
         </section>
+
+        {ratingSummary.review_count ? (
+          <section className="deba-store-reviews">
+            <div className="deba-related-head">
+              <div>
+                <span>VERIFIED FEEDBACK</span>
+                <h2>تجارب المشترين مع البائع</h2>
+              </div>
+            </div>
+            <div className="deba-store-review-grid">
+              {(sellerReviewsResult.data || []).map((review) => {
+                const reviewer = reviewerMap.get(review.reviewer_id)
+                const reviewerName = reviewer?.display_name || reviewer?.username || 'مستخدم DEBA'
+                return (
+                  <article key={review.id} className="deba-store-review-card">
+                    <div className="deba-store-review-head">
+                      <strong>{reviewerName}</strong>
+                      <span><BadgeCheck size={12} /> {review.verified_purchase ? 'شراء موثق' : 'تقييم'}</span>
+                    </div>
+                    <div className="deba-reviews-stars small" aria-label={review.rating + ' من 5'}>
+                      {Array.from({ length: 5 }, (_, index) => (
+                        <Star key={index} size={13} fill={index < review.rating ? 'currentColor' : 'none'} />
+                      ))}
+                    </div>
+                    {review.title ? <h3>{review.title}</h3> : null}
+                    <p>{review.body || 'بدون تعليق.'}</p>
+                  </article>
+                )
+              })}
+            </div>
+          </section>
+        ) : null}
 
         <section style={{ marginTop: 22 }}>
           <div className="deba-related-head">
