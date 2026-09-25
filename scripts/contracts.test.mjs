@@ -192,6 +192,7 @@ test('marketplace hardening exposes location, seller stores, chat, and optimisti
   assert.doesNotMatch(chatSurface, /let liveProductMessage/)
   assert.match(chatSurface, /\.product-thumb \{ width:72px/)
   assert.match(chatSurface, /activeProductMessage/)
+  assert.match(chatSurface, /function formatMoney\(value, currency = 'EGP'\)/)
   assert.match(chatSurface, /product-context-card/)
   assert.match(chatSurface, /product-context-message/)
   assert.match(chatSurface, /product-message-card/)
