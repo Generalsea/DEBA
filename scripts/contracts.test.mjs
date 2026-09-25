@@ -142,6 +142,7 @@ test('marketplace hardening exposes location, seller stores, chat, and optimisti
   const favorite = await read('src/components/FavoriteButton.tsx')
   const migration = await read('supabase/migrations/20260923220000_marketplace_hardening.sql')
   const chatMediaMigration = await read('supabase/migrations/20260925000100_private_chat_media_and_security_indexes.sql')
+  const chatMembershipMigration = await read('supabase/migrations/20260925000200_lock_chat_participant_membership.sql')
 
   assert.match(location, /navigator|x-vercel-ip-city/i)
   assert.match(store, /seller_store_key/)
@@ -163,6 +164,8 @@ test('marketplace hardening exposes location, seller stores, chat, and optimisti
   assert.match(chatMediaMigration, /deba-chat-media/)
   assert.match(chatMediaMigration, /public,\s*false/)
   assert.match(chatMediaMigration, /chat media private read/)
+  assert.match(chatMembershipMigration, /drop policy if exists "chat_participants_insert_self"/)
+  assert.match(chatMembershipMigration, /revoke insert on public\.chat_participants from anon, authenticated/)
   assert.match(favorite, /deba:favorite-changed/)
   assert.match(favorite, /setIsFavorite(!previous)/)
   assert.match(migration, /profiles_seller_store_key_uidx/)
