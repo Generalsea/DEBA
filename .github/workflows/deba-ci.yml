@@ -1,0 +1,37 @@
+name: DEBA CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, feat/deba-marketplace-hardening]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Contract tests
+        run: npm test
+
+      - name: Playwright collection
+        run: npm run e2e:list

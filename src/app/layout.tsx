@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import './globals.css'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'http://localhost:3000').replace(/\/$/, '')
@@ -39,7 +40,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
         <script
@@ -47,7 +48,14 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Script
+          id="deba-theme-bootstrap"
+          src="/deba-theme-bootstrap.js"
+          strategy="beforeInteractive"
+        />
+      </body>
     </html>
   )
 }

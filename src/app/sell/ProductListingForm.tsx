@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { AlertCircle, CheckCircle2, ImagePlus, LoaderCircle, ShieldCheck, Upload, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
+import EgyptLocationPicker from '@/components/EgyptLocationPicker'
 
 const BUCKET = 'deba-product-media'
 
@@ -547,18 +548,17 @@ export default function ProductListingForm({ categories, definitions }: Props) {
           </div>
         </div>
         <div className="deba-sell-grid">
-          <label>
-            <span>المحافظة *</span>
-            <input value={governorate} onChange={(event) => setGovernorate(event.target.value)} placeholder="القاهرة" />
-          </label>
-          <label>
-            <span>المدينة *</span>
-            <input value={city} onChange={(event) => setCity(event.target.value)} placeholder="المعادي" />
-          </label>
-          <label>
-            <span>الحي / المنطقة *</span>
-            <input value={district} onChange={(event) => setDistrict(event.target.value)} placeholder="المعادي الجديدة" />
-          </label>
+          <div className="is-wide">
+            <EgyptLocationPicker
+              governorate={governorate}
+              city={city}
+              district={district}
+              onGovernorateChange={setGovernorate}
+              onCityChange={setCity}
+              onDistrictChange={setDistrict}
+              required
+            />
+          </div>
           <label>
             <span>بلد المنشأ / المصدر *</span>
             <input value={origin} onChange={(event) => setOrigin(event.target.value)} placeholder="مثال: مصر / الصين / غير معروف" />

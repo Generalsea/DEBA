@@ -21,6 +21,7 @@ export default function FavoriteButton({
 }: FavoriteButtonProps) {
   const [isFavorite, setIsFavorite] = useState(initialFavorite)
   const [loading, setLoading] = useState(false)
+  const [errorState, setErrorState] = useState(false)
 
   async function toggleFavorite(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault()
@@ -28,7 +29,10 @@ export default function FavoriteButton({
 
     if (loading) return
 
+    const previous = isFavorite
+    setErrorState(false)
     setLoading(true)
+    setIsFavorite(!previous)
 
     try {
       const supabase = createClient()
@@ -51,6 +55,7 @@ export default function FavoriteButton({
 
         if (error) throw error
         setIsFavorite(false)
+        window.dispatchEvent(new CustomEvent('deba:favorite-changed', { detail: { productId, isFavorite: false } }))
       } else {
         const { error } = await supabase.from('favorites').insert({
           user_id: user.id,
@@ -59,9 +64,13 @@ export default function FavoriteButton({
 
         if (error && error.code !== '23505') throw error
         setIsFavorite(true)
+        window.dispatchEvent(new CustomEvent('deba:favorite-changed', { detail: { productId, isFavorite: true } }))
       }
     } catch (error) {
       console.error('DEBA favorite toggle failed', error)
+      setIsFavorite(previous)
+      setErrorState(true)
+      window.setTimeout(() => setErrorState(false), 1600)
     } finally {
       setLoading(false)
     }
@@ -70,11 +79,12 @@ export default function FavoriteButton({
   return (
     <button
       type="button"
-      className={'deba-favorite-button' + (isFavorite ? ' is-favorite' : '') + (className ? ' ' + className : '')}
+      className={'deba-favorite-button' + (isFavorite ? ' is-favorite' : '') + (loading ? ' is-loading' : '') + (errorState ? ' has-error' : '') + (className ? ' ' + className : '')}
       aria-label={isFavorite ? 'إزالة من المفضلة' : label}
       aria-pressed={isFavorite}
       disabled={loading}
       onClick={toggleFavorite}
+      aria-busy={loading}
     >
       <Heart
         size={size}

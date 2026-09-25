@@ -1,12 +1,11 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
-import {
-  BadgeCheck,
-  Heart,
-  MapPin,
-  PackageCheck,
-} from 'lucide-react'
+import { BadgeCheck, MapPin, PackageCheck, Star, Truck } from 'lucide-react'
 import FavoriteButton from '@/components/FavoriteButton'
+import AddToCartButton from '@/components/AddToCartButton'
+import type { CartProduct } from '@/lib/types'
 
 export type ProductCardItem = {
   id: string
@@ -23,11 +22,21 @@ export type ProductCardItem = {
   imageUrl: string | null
   imageAlt: string
   isFavorite?: boolean
+  sellerId?: string | null
+  sellerName?: string | null
+  sellerAvatar?: string | null
+  sellerVerified?: boolean
+  quantityAvailable?: number
+  isLowStock?: boolean
+  deliveryMethod?: CartProduct['deliveryMethod'] | null
+  ratingValue?: number | null
+  ratingCount?: number
 }
 
 type ProductCardProps = {
   item: ProductCardItem
   priority?: boolean
+  compact?: boolean
 }
 
 const CONDITION_LABELS: Record<string, string> = {
@@ -42,11 +51,8 @@ const CONDITION_LABELS: Record<string, string> = {
 
 function formatPrice(item: ProductCardItem) {
   if (item.price === null) return 'السعر عند التواصل'
-
   return (
-    new Intl.NumberFormat('ar-EG', {
-      maximumFractionDigits: 0,
-    }).format(item.price) +
+    new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(item.price) +
     ' ' +
     item.currency
   )
@@ -56,17 +62,56 @@ function locationText(item: ProductCardItem) {
   return [item.city, item.governorate].filter(Boolean).join('، ')
 }
 
-export default function ProductCard({ item, priority = false }: ProductCardProps) {
+function deliveryLabel(method: ProductCardItem['deliveryMethod']) {
+  switch (method) {
+    case 'seller_delivery':
+    case 'platform_delivery':
+      return 'شحن متاح'
+    case 'both':
+      return 'استلام أو شحن'
+    case 'pickup':
+      return 'استلام من الموقع'
+    default:
+      return null
+  }
+}
+
+export default function ProductCard({ item, priority = false, compact = false }: ProductCardProps) {
   const location = locationText(item)
   const condition =
-    (item.conditionGrade && CONDITION_LABELS[item.conditionGrade]) || 'حالة جيدة'
+    (item.conditionGrade && CONDITION_LABELS[item.conditionGrade]) || 'غير محددة'
+  const unavailable = (item.quantityAvailable ?? 1) < 1
+  const lowStock = !unavailable && Boolean(item.isLowStock)
+  const sellerName = item.sellerName?.trim() || null
+
+  const cartProduct: CartProduct | null =
+    item.price !== null &&
+    Boolean(item.sellerId) &&
+    (item.quantityAvailable ?? 0) > 0
+      ? {
+          id: item.id,
+          title: item.title,
+          slug: item.slug,
+          price: item.price,
+          currency: item.currency || 'EGP',
+          conditionGrade: item.conditionGrade,
+          listingType: 'sale',
+          quantityAvailable: Math.max(0, item.quantityAvailable ?? 0),
+          sellerId: item.sellerId as string,
+          sellerName: sellerName || 'عضو DEBA',
+          sellerAvatar: item.sellerAvatar || null,
+          imageUrl: item.imageUrl,
+          imageAlt: item.imageAlt,
+          deliveryMethod: item.deliveryMethod || 'pickup',
+        }
+      : null
 
   return (
-    <article className="deba-product-card">
-      <div className="deba-product-media">
+    <article data-testid="product-card" className={'deba-market-card' + (compact ? ' is-compact' : '') + (unavailable ? ' is-unavailable' : '')}>
+      <div className="deba-market-card-media">
         <Link
-          href={'/products/' + item.slug}
-          className="deba-product-image-link"
+          href={'/products/' + encodeURIComponent(item.slug)}
+          className="deba-market-card-image"
           aria-label={'عرض ' + item.title}
         >
           {item.imageUrl ? (
@@ -75,67 +120,101 @@ export default function ProductCard({ item, priority = false }: ProductCardProps
               alt={item.imageAlt}
               fill
               priority={priority}
-              sizes="(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw"
+              sizes="(max-width: 640px) 48vw, (max-width: 1024px) 31vw, 260px"
             />
           ) : (
-            <div className="deba-product-placeholder">
-              <PackageCheck size={34} strokeWidth={1.5} />
+            <div className="deba-market-card-placeholder">
+              <PackageCheck size={33} aria-hidden="true" />
               <span>DEBA</span>
             </div>
           )}
 
-          <span className="deba-product-badge sale">
-            <BadgeCheck size={12} />
-            {condition}
-          </span>
+          <div className="deba-market-card-badges">
+            <span>{condition}</span>
+            {lowStock ? <span className="is-warning">كمية محدودة</span> : null}
+          </div>
+
+          {unavailable ? <div className="deba-market-card-unavailable">غير متاح حاليًا</div> : null}
         </Link>
 
         <FavoriteButton
           productId={item.id}
           initialFavorite={Boolean(item.isFavorite)}
           label="إضافة إلى المفضلة"
-          className="deba-product-favorite"
+          className="deba-market-card-favorite"
         />
       </div>
 
-      <div className="deba-product-body">
-        <div className="deba-product-meta">
+      <div className="deba-market-card-body">
+        <div className="deba-market-card-category">
           <span>{item.categoryName || 'أخرى'}</span>
-          {location && (
-            <span className="deba-product-location">
-              <MapPin size={12} />
+          {location ? (
+            <span>
+              <MapPin size={12} aria-hidden="true" />
               {location}
             </span>
-          )}
+          ) : null}
         </div>
 
-        <Link href={'/products/' + item.slug} className="deba-product-title">
+        <Link href={'/products/' + encodeURIComponent(item.slug)} className="deba-market-card-title">
           {item.title}
         </Link>
 
-        {item.description && (
-          <p className="deba-product-description">
-            {item.description.length > 92
-              ? item.description.slice(0, 92) + '…'
-              : item.description}
+        {!compact && item.description ? (
+          <p className="deba-market-card-description">
+            {item.description.length > 105 ? item.description.slice(0, 105) + '…' : item.description}
           </p>
-        )}
+        ) : null}
 
-        <div className="deba-product-price">
-          <div>
-            <span>السعر</span>
-            <strong>{formatPrice(item)}</strong>
+        {item.ratingValue !== null && item.ratingValue !== undefined && (item.ratingCount ?? 0) > 0 ? (
+          <div
+            className="deba-market-card-rating"
+            aria-label={item.ratingValue + ' من 5، ' + item.ratingCount + ' تقييم'}
+          >
+            <Star size={13} fill="currentColor" aria-hidden="true" />
+            <strong>
+              {item.ratingValue.toLocaleString('ar-EG', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+            </strong>
+            <span>({(item.ratingCount ?? 0).toLocaleString('ar-EG')})</span>
           </div>
-          <Heart size={16} aria-hidden="true" />
+        ) : null}
+
+        <div className="deba-market-card-price">
+          <span>السعر</span>
+          <strong>{formatPrice(item)}</strong>
         </div>
 
-        <Link
-          href={'/products/' + item.slug}
-          className="deba-product-action"
-        >
-          <PackageCheck size={16} />
-          اشترِ الآن
-        </Link>
+        {sellerName ? (
+          <div className="deba-market-card-seller">
+            <span className="deba-market-card-seller-avatar">
+              {item.sellerAvatar ? (
+                <img src={item.sellerAvatar} alt="" width={28} height={28} loading="lazy" referrerPolicy="no-referrer" />
+              ) : (
+                sellerName.charAt(0).toUpperCase()
+              )}
+            </span>
+            <span className="deba-market-card-seller-name">{sellerName}</span>
+            {item.sellerVerified ? <BadgeCheck size={14} aria-label="بائع موثق" /> : null}
+          </div>
+        ) : null}
+
+        {deliveryLabel(item.deliveryMethod) ? (
+          <div className="deba-market-card-delivery">
+            <Truck size={14} aria-hidden="true" />
+            <span>{deliveryLabel(item.deliveryMethod)}</span>
+          </div>
+        ) : null}
+
+        <div className="deba-market-card-actions">
+          {cartProduct ? (
+            <AddToCartButton product={cartProduct} disabled={unavailable} />
+          ) : (
+            <Link href={'/products/' + encodeURIComponent(item.slug)} className="deba-product-action">
+              <PackageCheck size={15} aria-hidden="true" />
+              {unavailable ? 'غير متاح' : 'عرض التفاصيل'}
+            </Link>
+          )}
+        </div>
       </div>
     </article>
   )

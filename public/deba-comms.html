@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEBA Comms — تواصل مع songtone1 | شليور لاسلكي 18V</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #FF6B35;
+    --primary-dark: #E85A2A;
+    --primary-soft: rgba(255, 107, 53, 0.06);
+    --primary-glow: rgba(255, 107, 53, 0.12);
+    --primary-ring: rgba(255, 107, 53, 0.18);
+    
+    --bg: #F5F6F8;
+    --bg-elevated: #FFFFFF;
+    --bg-subtle: #F1F3F5;
+    --bg-hover: #E8EBEE;
+    --bg-chat: #F7F8FA;
+    --bg-input: #F1F3F5;
+    
+    --text: #0A0E1A;
+    --text-secondary: #4A5568;
+    --text-tertiary: #8A94A6;
+    --text-muted: #B8C1CE;
+    --text-inverse: #FFFFFF;
+    
+    --border: #E2E6EC;
+    --border-light: #EEF1F5;
+    --border-strong: #D1D6DE;
+    
+    --success: #10B981;
+    --success-bg: rgba(16, 185, 129, 0.1);
+    --warning: #F59E0B;
+    --warning-bg: rgba(245, 158, 11, 0.1);
+    --danger: #EF4444;
+    --danger-bg: rgba(239, 68, 68, 0.08);
+    --info: #3B82F6;
+    --info-bg: rgba(59, 130, 246, 0.08);
+    
+    --shadow-xs: 0 1px 2px rgba(10, 14, 26, 0.04);
+    --shadow-sm: 0 2px 8px rgba(10, 14, 26, 0.06);
+    --shadow-md: 0 4px 16px rgba(10, 14, 26, 0.08);
+    --shadow-lg: 0 8px 32px rgba(10, 14, 26, 0.12);
+    --shadow-xl: 0 16px 48px rgba(10, 14, 26, 0.16);
+    
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-2xl: 24px;
+    --radius-full: 9999px;
+    
+    --font-ar: 'Cairo', -apple-system, sans-serif;
+    --font-en: 'Inter', sans-serif;
+    
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  [data-theme="dark"] {
+    --bg: #0A0D14;
+    --bg-elevated: #111622;
+    --bg-subtle: #161D2B;
+    --bg-hover: #1E2636;
+    --bg-chat: #0D1118;
+    --bg-input: #161D2B;
+    
+    --text: #F1F5F9;
+    --text-secondary: #CBD5E1;
+    --text-tertiary: #64748B;
+    --text-muted: #3F4A5C;
+    
+    --border: #1E2636;
+    --border-light: #161D2B;
+    --border-strong: #2A3347;
+    
+    --primary-soft: rgba(255, 107, 53, 0.1);
+    --primary-glow: rgba(255, 107, 53, 0.18);
+    --primary-ring: rgba(255, 107, 53, 0.25);
+    
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  html, body {
+    height: 100%;
+    font-family: var(--font-ar);
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, textarea { font-family: inherit; }
+  a { text-decoration: none; color: inherit; }
+
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--bg);
+  }
+
+  .top-header {
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    position: relative;
+    z-index: 20;
+  }
+
+  .header-right { display: flex; align-items: center; gap: 24px; }
+  .location-badge { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text); }
+  .location-badge svg { width: 16px; height: 16px; color: var(--primary); }
+  .header-help { display: flex; align-items: center; gap: 16px; font-size: 13px; }
+  .header-help a { color: var(--text-secondary); transition: color var(--ease); }
+  .header-help a:hover { color: var(--primary); }
+  .header-help .divider { width: 1px; height: 16px; background: var(--border); }
+  .header-left { display: flex; align-items: center; gap: 20px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-size: 22px; font-weight: 900; color: var(--text); letter-spacing: -0.5px; }
+  .logo-mark { width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 16px; box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3); }
+  .logo-sub { font-size: 10px; color: var(--text-tertiary); font-weight: 500; margin-top: -2px; }
+
+  .account-area { display: flex; align-items: center; gap: 10px; }
+  .account-link { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-full); background: var(--bg-elevated); transition: all var(--ease); min-width: 190px; }
+  .account-link:hover { background: var(--bg-subtle); border-color: var(--border-strong); }
+  .account-avatar { width: 34px; height: 34px; border-radius: var(--radius-full); background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 800; overflow: hidden; position: relative; flex-shrink: 0; }
+  .account-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .account-avatar .account-online-dot { position: absolute; bottom: 0; left: 0; width: 9px; height: 9px; background: var(--success); border: 2px solid var(--bg-elevated); border-radius: 50%; }
+  .account-meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .account-name { font-size: 12.5px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .account-username { font-size: 10px; color: var(--text-tertiary); direction: ltr; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .account-status { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--success); font-weight: 700; }
+  .account-status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+  .brand-home-link { display: inline-flex; }
+  @media (max-width: 768px) {
+    .account-link { min-width: 0; padding: 6px; }
+    .account-meta { display: none; }
+  }
+
+  .main-content { flex: 1; display: grid; grid-template-columns: 1fr 360px; gap: 0; overflow: hidden; padding: 16px; }
+  .chat-panel { background: var(--bg-elevated); border-radius: var(--radius-xl); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-sm); }
+  .chat-topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--bg-elevated); }
+  .listing-back { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--bg-subtle); border: 1px solid var(--border); border-radius: var(--radius-full); font-size: 13px; font-weight: 500; color: var(--text-secondary); transition: all var(--ease); cursor: pointer; }
+  .listing-back:hover { background: var(--bg-hover); color: var(--text); border-color: var(--border-strong); }
+  .listing-back svg { width: 16px; height: 16px; }
+  .listing-back .listing-title { font-weight: 600; color: var(--text); }
+  .listing-back .listing-price { color: var(--primary); font-weight: 700; }
+  .seller-info-bar { display: flex; align-items: center; gap: 12px; }
+  .seller-avatar-sm { width: 40px; height: 40px; border-radius: var(--radius-full); background: linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 700; position: relative; overflow: hidden; }
+  .seller-avatar-sm img { width: 100%; height: 100%; object-fit: cover; }
+  .seller-avatar-sm .online-dot { position: absolute; bottom: 0; left: 0; width: 10px; height: 10px; background: var(--success); border-radius: 50%; border: 2px solid var(--bg-elevated); }
+  .seller-meta { display: flex; flex-direction: column; gap: 2px; }
+  .seller-label { font-size: 11px; color: var(--text-tertiary); font-weight: 500; }
+  .seller-name { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
+  .verified-icon { width: 16px; height: 16px; color: var(--info); }
+  .topbar-actions { display: flex; gap: 6px; }
+  .icon-btn { width: 38px; height: 38px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: all var(--ease); border: 1px solid transparent; }
+  .icon-btn:hover { background: var(--bg-subtle); color: var(--text); border-color: var(--border); }
+  .icon-btn svg { width: 18px; height: 18px; }
+
+  .security-banner { display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: linear-gradient(90deg, rgba(255, 107, 53, 0.08) 0%, rgba(255, 107, 53, 0.04) 100%); border-bottom: 1px solid rgba(255, 107, 53, 0.12); font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; }
+  .security-banner svg { width: 18px; height: 18px; color: var(--primary); flex-shrink: 0; }
+  .security-banner strong { color: var(--text); font-weight: 700; }
+
+  .product-context { padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg-subtle); }
+  .product-context-card { display: flex; gap: 14px; padding: 12px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all var(--ease); cursor: pointer; }
+  .product-context-card:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+  .product-thumb { width: 72px; height: 72px; border-radius: var(--radius-md); overflow: hidden; flex-shrink: 0; background: var(--bg-subtle); position: relative; }
+  .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .product-thumb .badge { position: absolute; top: 4px; right: 4px; background: var(--primary); color: white; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-full); }
+  .product-details { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .product-title { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .product-meta { font-size: 12px; color: var(--text-tertiary); display: flex; align-items: center; gap: 8px; }
+  .product-meta .dot { width: 3px; height: 3px; background: var(--text-muted); border-radius: 50%; }
+  .product-price-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+  .product-price { font-size: 16px; font-weight: 800; color: var(--primary); }
+  .product-price .currency { font-size: 11px; font-weight: 600; color: var(--text-tertiary); margin-right: 2px; }
+  .view-listing-btn { padding: 6px 12px; background: var(--primary-soft); color: var(--primary); border-radius: var(--radius-full); font-size: 12px; font-weight: 600; transition: all var(--ease); }
+  .view-listing-btn:hover { background: var(--primary); color: white; }
+
+  .messages-area { flex: 1; overflow-y: auto; padding: 24px 20px; background: var(--bg-chat); display: flex; flex-direction: column; gap: 4px; scroll-behavior: smooth; }
+  .messages-area::-webkit-scrollbar { width: 6px; }
+  .messages-area::-webkit-scrollbar-track { background: transparent; }
+  .messages-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .date-divider { display: flex; align-items: center; gap: 16px; margin: 16px 0; }
+  .date-divider::before, .date-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .date-divider-label { padding: 6px 14px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-full); font-size: 11.5px; font-weight: 600; color: var(--text-tertiary); white-space: nowrap; box-shadow: var(--shadow-xs); font-family: var(--font-en); }
+  .message { display: flex; gap: 10px; max-width: 72%; animation: messageIn 0.35s var(--ease-spring); }
+  @keyframes messageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .message.sent { align-self: flex-start; flex-direction: row; }
+  .message.received { align-self: flex-end; flex-direction: row-reverse; }
+  .message-avatar { width: 32px; height: 32px; border-radius: var(--radius-full); background: linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; flex-shrink: 0; align-self: flex-end; overflow: hidden; }
+  .message-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .message.sent .message-avatar { background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%); }
+  .message-content { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .message-bubble { padding: 12px 16px; border-radius: var(--radius-lg); font-size: 14px; line-height: 1.65; word-wrap: break-word; position: relative; }
+  .message.sent .message-bubble { background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border); border-top-right-radius: 4px; box-shadow: var(--shadow-xs); }
+  .message.received .message-bubble { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; border-top-left-radius: 4px; box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25); }
+  .message-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-tertiary); padding: 0 4px; font-family: var(--font-en); }
+  .message.received .message-meta { flex-direction: row-reverse; }
+  .read-receipt { display: flex; align-items: center; color: var(--info); }
+  .read-receipt svg { width: 14px; height: 14px; }
+
+  .product-card-msg { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; max-width: 300px; box-shadow: var(--shadow-md); }
+  .product-card-msg img { width: 100%; height: 150px; object-fit: cover; }
+  .product-card-msg-body { padding: 12px; }
+  .product-card-msg-title { font-size: 13.5px; font-weight: 700; margin-bottom: 4px; color: var(--text); line-height: 1.4; }
+  .product-card-msg-price { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+  .product-card-msg-meta { font-size: 11px; color: var(--text-tertiary); display: flex; align-items: center; gap: 4px; }
+  .offer-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; box-shadow: var(--shadow-sm); }
+  .offer-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .offer-header svg { width: 14px; height: 14px; color: var(--primary); }
+  .offer-amount { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+  .offer-note { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5; }
+  .offer-actions { display: flex; gap: 8px; }
+  .offer-btn { flex: 1; padding: 8px; border-radius: var(--radius-md); font-size: 12.5px; font-weight: 700; transition: all var(--ease); }
+  .offer-btn.accept { background: var(--success); color: white; }
+  .offer-btn.accept:hover { background: #059669; }
+  .offer-btn.counter { background: var(--bg-subtle); color: var(--text); border: 1px solid var(--border); }
+  .offer-btn.counter:hover { background: var(--bg-hover); }
+  .offer-btn.decline { background: var(--danger-bg); color: var(--danger); }
+  .offer-btn.decline:hover { background: var(--danger); color: white; }
+  .typing-indicator { display: flex; gap: 4px; padding: 14px 18px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-lg); border-top-right-radius: 4px; width: fit-content; box-shadow: var(--shadow-xs); }
+  .typing-dot { width: 7px; height: 7px; background: var(--text-tertiary); border-radius: 50%; animation: typing 1.4s infinite; }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-6px); opacity: 1; } }
+
+  .quick-replies { display: flex; gap: 8px; padding: 12px 20px; background: var(--bg-elevated); border-top: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+  .quick-replies::-webkit-scrollbar { display: none; }
+  .quick-reply { padding: 8px 14px; background: var(--bg-subtle); border: 1px solid var(--border); border-radius: var(--radius-full); font-size: 12.5px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; transition: all var(--ease); }
+  .quick-reply:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+
+  .input-area { padding: 16px 20px; background: var(--bg-elevated); border-top: 1px solid var(--border); }
+  .input-wrapper { display: flex; align-items: flex-end; gap: 8px; background: var(--bg-input); border: 1.5px solid var(--border); border-radius: var(--radius-xl); padding: 8px 8px 8px 16px; transition: all var(--ease); }
+  .input-wrapper:focus-within { border-color: var(--primary); background: var(--bg-elevated); box-shadow: 0 0 0 4px var(--primary-ring); }
+  .input-actions { display: flex; gap: 2px; padding-bottom: 4px; }
+  .input-action-btn { width: 36px; height: 36px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); transition: all var(--ease); }
+  .input-action-btn:hover { background: var(--bg-hover); color: var(--primary); }
+  .input-action-btn svg { width: 18px; height: 18px; }
+  .message-input { flex: 1; border: none; background: transparent; padding: 10px 8px; font-size: 14px; color: var(--text); outline: none; resize: none; max-height: 120px; min-height: 20px; line-height: 1.5; }
+  .message-input::placeholder { color: var(--text-muted); }
+  .send-btn { width: 44px; height: 44px; border-radius: var(--radius-full); background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all var(--ease); box-shadow: 0 4px 14px rgba(255, 107, 53, 0.35); }
+  .send-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(255, 107, 53, 0.45); }
+  .send-btn:active { transform: scale(0.95); }
+  .send-btn svg { width: 20px; height: 20px; transform: rotate(180deg); }
+  .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .legal-footer { padding: 10px 20px; background: var(--bg-subtle); border-top: 1px solid var(--border); font-size: 11px; color: var(--text-tertiary); text-align: center; line-height: 1.6; }
+
+  .sidebar { background: var(--bg-elevated); border-radius: var(--radius-xl); border: 1px solid var(--border); margin-right: 16px; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-sm); }
+  .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .brand { display: flex; flex-direction: column; gap: 2px; }
+  .brand-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: var(--primary); font-family: var(--font-en); }
+  .brand-title { font-size: 20px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+  .refresh-btn { width: 38px; height: 38px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; transition: all var(--ease); }
+  .refresh-btn:hover { background: var(--bg-subtle); color: var(--text); }
+  .refresh-btn svg { width: 16px; height: 16px; }
+  .security-banner-sm { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--primary-soft); border: 1px solid rgba(255, 107, 53, 0.15); border-radius: var(--radius-md); font-size: 11.5px; font-weight: 600; color: var(--primary-dark); }
+  .security-banner-sm svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .search-box { padding: 12px 20px; border-bottom: 1px solid var(--border); }
+  .search-input-wrapper { position: relative; }
+  .search-input { width: 100%; padding: 10px 14px 10px 38px; background: var(--bg-subtle); border: 1px solid transparent; border-radius: var(--radius-md); font-size: 13px; color: var(--text); outline: none; transition: all var(--ease); }
+  .search-input::placeholder { color: var(--text-tertiary); }
+  .search-input:focus { background: var(--bg-elevated); border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-ring); }
+  .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-tertiary); pointer-events: none; }
+  .tabs { display: flex; gap: 4px; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+  .tab { flex: 1; padding: 8px 10px; font-size: 12px; font-weight: 600; color: var(--text-tertiary); border-radius: var(--radius-md); transition: all var(--ease); position: relative; }
+  .tab:hover { color: var(--text); background: var(--bg-subtle); }
+  .tab.active { background: var(--primary-soft); color: var(--primary); }
+  .tab-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 5px; background: var(--primary); color: white; font-size: 9px; font-weight: 700; border-radius: var(--radius-full); margin-right: 3px; }
+  .chat-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .chat-list::-webkit-scrollbar { width: 4px; }
+  .chat-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .chat-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: var(--radius-lg); cursor: pointer; transition: all var(--ease); margin-bottom: 2px; position: relative; }
+  .chat-item:hover { background: var(--bg-subtle); }
+  .chat-item.active { background: var(--primary-soft); }
+  .chat-item.active::before { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 24px; background: var(--primary); border-radius: 2px; }
+  .chat-item-avatar { width: 48px; height: 48px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: 700; flex-shrink: 0; position: relative; overflow: hidden; }
+  .chat-item-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .chat-item-avatar.online::after { content: ''; position: absolute; bottom: 0; left: 0; width: 12px; height: 12px; background: var(--success); border-radius: 50%; border: 2.5px solid var(--bg-elevated); }
+  .chat-item-info { flex: 1; min-width: 0; }
+  .chat-item-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; gap: 8px; }
+  .chat-item-name { font-size: 13.5px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; }
+  .chat-item-time { font-size: 10.5px; color: var(--text-tertiary); white-space: nowrap; font-family: var(--font-en); font-weight: 500; }
+  .chat-item-preview { font-size: 12px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-item.unread .chat-item-preview { color: var(--text-secondary); font-weight: 600; }
+  .chat-item.unread .chat-item-time { color: var(--primary); font-weight: 700; }
+  .unread-count { min-width: 20px; height: 20px; padding: 0 6px; background: var(--primary); color: white; font-size: 10px; font-weight: 700; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .chat-item-product { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--text-tertiary); margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--border-light); }
+  .chat-item-product-thumb { width: 20px; height: 20px; border-radius: 4px; object-fit: cover; }
+  .sidebar-stats { padding: 14px 20px; border-top: 1px solid var(--border); background: var(--bg-subtle); display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat-item { text-align: center; }
+  .stat-value { font-size: 16px; font-weight: 800; color: var(--text); font-family: var(--font-en); }
+  .stat-label { font-size: 10px; color: var(--text-tertiary); font-weight: 500; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: var(--bg); padding: 12px 20px; border-radius: var(--radius-full); font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow-xl); z-index: 1000; opacity: 0; transition: all 0.3s var(--ease); display: flex; align-items: center; gap: 8px; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .context-menu { position: fixed; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 6px; min-width: 180px; z-index: 100; display: none; }
+  .context-menu.show { display: block; animation: menuIn 0.15s var(--ease); }
+  @keyframes menuIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .context-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-size: 13px; color: var(--text); border-radius: var(--radius-sm); cursor: pointer; transition: all var(--ease); width: 100%; text-align: right; }
+  .context-item:hover { background: var(--bg-subtle); }
+  .context-item.danger { color: var(--danger); }
+  .context-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .context-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  @media (max-width: 1100px) { .main-content { grid-template-columns: 1fr; } .sidebar { display: none; } }
+  @media (max-width: 768px) {
+    .top-header { padding: 10px 16px; }
+    .header-help, .location-badge span { display: none; }
+    .main-content { padding: 8px; }
+    .listing-back .listing-title, .listing-back .listing-price { display: none; }
+    .message { max-width: 85%; }
+  }
+  *:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top-header">
+    <div class="header-right">
+      <div class="location-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+        <span>التسوق في مصر · القاهرة، القاهرة</span>
+      </div>
+      <div class="header-help">
+        <a href="#">المساعدة</a>
+        <span class="divider"></span>
+        <a href="#">إعلان من نحن</a>
+      </div>
+    </div>
+    <div class="header-left">
+      <div class="account-area">
+        <a class="account-link" id="accountLink" href="/profile" aria-label="حسابي">
+          <div class="account-avatar" id="accountAvatar">
+            <span id="accountInitials">أ</span>
+            <span class="account-online-dot"></span>
+          </div>
+          <div class="account-meta">
+            <div class="account-name" id="accountName">حسابي</div>
+            <div class="account-username" id="accountUsername">@deba</div>
+            <div class="account-status"><span class="account-status-dot"></span><span>نشط الآن</span></div>
+          </div>
+        </a>
+      </div>
+
+      <a class="logo brand-home-link" href="/" aria-label="العودة إلى الصفحة الرئيسية">
+        <div class="logo-mark">D</div>
+        <div>
+          <div>DEBA</div>
+          <div class="logo-sub">سوق الإعلانات والبيع المباشر في مصر</div>
+        </div>
+      </a>
+    </div>
+  </header>
+
+  <div class="main-content">
+    <div class="chat-panel">
+      <div class="chat-topbar">
+        <button class="listing-back" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+          <div>
+            <div style="font-size: 11px; color: var(--text-tertiary);">العودة للإعلان</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="listing-title">شليور لاسلكي 18V</span>
+              <span class="listing-price">— 180 جنيه</span>
+            </div>
+          </div>
+        </button>
+
+        <div class="seller-info-bar">
+          <div class="seller-avatar-sm">
+            S
+            <span class="online-dot"></span>
+          </div>
+          <div class="seller-meta">
+            <div class="seller-label">شريك المحادثة</div>
+            <div class="seller-name">
+              songtone1
+              <svg class="verified-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L14.09 4.26L17 3.27L17.74 6.26L20.73 7L19.74 9.91L22 12L19.74 14.09L20.73 17L17.74 17.74L17 20.73L14.09 19.74L12 22L9.91 19.74L7 20.73L6.26 17.74L3.27 17L4.26 14.09L2 12L4.26 9.91L3.27 7L6.26 6.26L7 3.27L9.91 4.26L12 2Z"/>
+                <path d="M10 12L11.5 13.5L14 10" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="icon-btn" title="مكالمة صوتية" onclick="showToast(' بدء مكالمة صوتية')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+          </button>
+          <button class="icon-btn" title="معلومات" onclick="showToast('ℹ️ معلومات البائع')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </button>
+          <button class="icon-btn" title="المزيد" onclick="showToast('⚙️ خيارات إضافية')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="1" />
+              <circle cx="19" cy="12" r="1" />
+              <circle cx="5" cy="12" r="1" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="security-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <polyline points="9 12 11 14 15 10"></polyline>
+        </svg>
+        <div>
+          <strong>احفظ التفاوض والصفقة داخل DEBA.</strong> الرسائل تُسجّل مع إشارات أمان متاحة للمنصة، وقد تُراجع عند وجود مؤشرات احتيال.
+        </div>
+      </div>
+
+      <div class="product-context">
+        <div class="product-context-card" id="productContextCard" onclick="window.DEBAComms && typeof window.DEBAComms.onProductOpen === 'function' ? window.DEBAComms.onProductOpen() : null">
+          <div class="product-thumb">
+            <img src="https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=200&h=200&fit=crop" alt="شليور">
+            <span class="badge">إعلان نشط</span>
+          </div>
+          <div class="product-details">
+            <div class="product-title">شليور لاسلكي 18V — تجربة DEBA</div>
+            <div class="product-meta">
+              <span>أدوات ومعدات</span>
+              <span class="dot"></span>
+              <span>القاهرة</span>
+              <span class="dot"></span>
+              <span>مستعمل · حالة ممتازة</span>
+            </div>
+            <div class="product-price-row">
+              <div class="product-price">180 <span class="currency">جنيه</span></div>
+              <button class="view-listing-btn">عرض الإعلان</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="messages-area" id="messagesArea">
+        <div class="date-divider">
+          <div class="date-divider-label">اليوم · 14:32</div>
+        </div>
+
+        <div class="message sent">
+          <div class="message-avatar">S</div>
+          <div class="message-content">
+            <div class="message-bubble">السلام عليكم، أنا مهتم بالشليور اللاسلكي. هل لا يزال متاحًا؟</div>
+            <div class="message-meta">
+              <span>14:32</span>
+              <span class="read-receipt">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                  <polyline points="16 6 7 17 2 12" transform="translate(4, 0)"></polyline>
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="message received">
+          <div class="message-avatar">أ</div>
+          <div class="message-content">
+            <div class="message-bubble">وعليكم السلام ورحمة الله! نعم متاح، استخدمته شوية بس في حالة ممتازة. معاه بطاريتين وشاحن أصلي.</div>
+            <div class="message-meta"><span>14:35</span></div>
+          </div>
+        </div>
+
+        <div class="message sent">
+          <div class="message-avatar">S</div>
+          <div class="message-content">
+            <div class="message-bubble">ممتاز! هل يمكن رؤية صور إضافية للبطاريات؟ وهل السعر قابل للتفاوض؟</div>
+            <div class="message-meta">
+              <span>14:36</span>
+              <span class="read-receipt">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                  <polyline points="16 6 7 17 2 12" transform="translate(4, 0)"></polyline>
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="message received">
+          <div class="message-avatar">أ</div>
+          <div class="message-content">
+            <div class="product-card-msg">
+              <img src="https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=400&h=300&fit=crop" alt="">
+              <div class="product-card-msg-body">
+                <div class="product-card-msg-title">شليور لاسلكي 18V + بطاريتين</div>
+                <div class="product-card-msg-price">180 جنيه</div>
+                <div class="product-card-msg-meta">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  القاهرة · إعلان مرتبط
+                </div>
+              </div>
+            </div>
+            <div class="message-meta"><span>14:38</span></div>
+          </div>
+        </div>
+
+        <div class="message received">
+          <div class="message-avatar">أ</div>
+          <div class="message-content">
+            <div class="offer-card">
+              <div class="offer-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                عرض سعر من البائع
+              </div>
+              <div class="offer-amount">160 جنيه</div>
+              <div class="offer-note">يمكنني تخفيض السعر إلى 160 جنيه إذا استلمته اليوم من المعادي.</div>
+              <div class="offer-actions">
+                <button class="offer-btn accept" onclick="handleOffer('accept')">قبول</button>
+                <button class="offer-btn counter" onclick="handleOffer('counter')">تفاوض</button>
+                <button class="offer-btn decline" onclick="handleOffer('decline')">رفض</button>
+              </div>
+            </div>
+            <div class="message-meta"><span>14:40</span></div>
+          </div>
+        </div>
+
+        <div class="message sent">
+          <div class="message-avatar">S</div>
+          <div class="message-content">
+            <div class="message-bubble">شكرًا على الصور! السعر معقول. هل يمكن الاستلام من مدينة نصر بدل المعادي؟</div>
+            <div class="message-meta">
+              <span>14:42</span>
+              <span class="read-receipt">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                  <polyline points="16 6 7 17 2 12" transform="translate(4, 0)"></polyline>
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="message received" id="typingMsg">
+          <div class="message-avatar">أ</div>
+          <div class="message-content">
+            <div class="typing-indicator">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-replies">
+        <button class="quick-reply" onclick="sendQuick('هل السعر قابل للتفاوض؟')">💰 هل السعر قابل للتفاوض؟</button>
+        <button class="quick-reply" onclick="sendQuick('أين يمكن الاستلام؟')">📍 أين يمكن الاستلام؟</button>
+        <button class="quick-reply" onclick="sendQuick('هل المنتج بحالة جيدة؟')">✅ حالة المنتج</button>
+        <button class="quick-reply" onclick="sendQuick('أريد صور إضافية')">📷 صور إضافية</button>
+        <button class="quick-reply" onclick="sendQuick('متى يكون متاحًا؟')"> موعد الاستلام</button>
+      </div>
+
+      <div class="input-area">
+        <div class="input-wrapper">
+          <div class="input-actions">
+            <button class="input-action-btn" title="إرفاق ملف" onclick="showToast('📎 اختر ملفًا')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+            </button>
+            <button class="input-action-btn" title="صورة" onclick="showToast('📷 اختر صورة')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            </button>
+            <button class="input-action-btn" title="موقع" onclick="showToast('📍 تم إرسال الموقع')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            </button>
+            <button class="input-action-btn" title="عرض سعر" data-testid="chat-create-offer" onclick="createOffer()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            </button>
+          </div>
+          <textarea class="message-input" id="messageInput" placeholder="اكتب رسالة واضحة داخل DEBA..." rows="1"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="handleSend()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="legal-footer">
+        لمكافحة الاحتيال، تُسجّل DEBA بيانات السلامة المتعلقة من الجلسة مثل IP والبريد والهاتف المرتبط بالحساب. عند إرسال الرسالة، ستصبح الوسيط لا يُتيح للموقع قراءة عنوان MAC.
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-top">
+          <div class="brand">
+            <span class="brand-label">DEBA COMMS</span>
+            <h1 class="brand-title">مركز المحادثات</h1>
+          </div>
+          <button class="refresh-btn" onclick="refreshChats()" title="تحديث">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="security-banner-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <polyline points="9 12 11 14 15 10"></polyline>
+          </svg>
+          <span>محادثات داخل المنصة وخاضعة للمراقبة الوقائية</span>
+        </div>
+      </div>
+
+      <div class="search-box">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" class="search-input" id="searchInput" placeholder="ابحث في المحادثات...">
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="all" onclick="switchTab(this)">الكل</button>
+        <button class="tab" data-tab="unread" onclick="switchTab(this)">غير مقروءة <span class="tab-badge">2</span></button>
+        <button class="tab" data-tab="offers" onclick="switchTab(this)">عروض</button>
+      </div>
+
+      <div class="chat-list" id="chatList"></div>
+
+      <div class="sidebar-stats">
+        <div class="stat-item"><div class="stat-value">12</div><div class="stat-label">محادثة</div></div>
+        <div class="stat-item"><div class="stat-value">3</div><div class="stat-label">عروض نشطة</div></div>
+        <div class="stat-item"><div class="stat-value">98%</div><div class="stat-label">معدل الرد</div></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="context-menu" id="contextMenu">
+  <button class="context-item" onclick="showToast('📌 تم تثبيت الرسالة'); hideContext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>تثبيت الرسالة</span></button>
+  <button class="context-item" onclick="showToast('↩️ تم الرد'); hideContext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span>رد</span></button>
+  <button class="context-item" onclick="showToast('➡️ تم التحويل'); hideContext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg><span>تحويل</span></button>
+  <button class="context-item" onclick="showToast('📋 تم النسخ'); hideContext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>نسخ</span></button>
+  <button class="context-item" onclick="showToast('🚩 تم الإبلاغ'); hideContext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg><span>إبلاغ</span></button>
+  <div class="context-divider"></div>
+  <button class="context-item danger" onclick="showToast('🗑️ تم الحذف'); hideContext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>حذف</span></button>
+</div>
+
+<script>
+  const chats = [
+    { id: 1, name: 'songtone1', avatar: 'S', gradient: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)', online: true, verified: true, unread: 0, lastTime: '14:42', lastMsg: 'شكرًا على الصور! السعر معقول...', product: { title: 'شليور لاسلكي 18V', price: '180 جنيه', img: 'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=100&h=100&fit=crop' }, active: true },
+    { id: 2, name: 'أحمد محمد', avatar: 'أ', gradient: 'linear-gradient(135deg, #667EEA 0%, #764BA2 100%)', online: true, verified: true, unread: 2, lastTime: '12:15', lastMsg: 'هل الساعة لا تزال متاحة؟', product: { title: 'ساعة ذكية متعددة الوظائف', price: '2,450 جنيه', img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&h=100&fit=crop' } },
+    { id: 3, name: 'فاطمة حسن', avatar: 'ف', gradient: 'linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%)', online: false, verified: false, unread: 1, lastTime: 'أمس', lastMsg: 'شكرًا جزيلاً لك!', product: { title: 'سماعات لاسلكية', price: '1,850 جنيه', img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop' } },
+    { id: 4, name: 'يوسف إبراهيم', avatar: 'ي', gradient: 'linear-gradient(135deg, #43E97B 0%, #38F9D7 100%)', online: false, verified: true, unread: 0, lastTime: 'أمس', lastMsg: 'هل يمكن خفض السعر قليلاً؟', product: { title: 'لابتوب للأعمال', price: '15,500 جنيه', img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=100&h=100&fit=crop' } },
+    { id: 5, name: 'نور الدين', avatar: 'ن', gradient: 'linear-gradient(135deg, #FA709A 0%, #FEE140 100%)', online: true, verified: false, unread: 0, lastTime: 'منذ يومين', lastMsg: 'تم الاستلام، شكرًا!', product: null },
+    { id: 6, name: 'كريم سامي', avatar: 'ك', gradient: 'linear-gradient(135deg, #A8EDEA 0%, #FED6E3 100%)', online: false, verified: false, unread: 0, lastTime: 'منذ 3 أيام', lastMsg: 'أرسلت لك الصور', product: { title: 'كاميرا احترافية', price: '8,900 جنيه', img: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=100&h=100&fit=crop' } }
+  ];
+  let currentTab = 'all';
+
+  window.DEBAComms = window.DEBAComms || {};
+  window.DEBAComms.setAccount = function(viewer) {
+    if (!viewer) return;
+
+    const displayName = viewer.display_name || 'حسابي';
+    const username = viewer.username ? '@' + viewer.username : '@' + displayName.replace(/\\s+/g, '').slice(0, 30);
+
+    const nameNode = document.getElementById('accountName');
+    const usernameNode = document.getElementById('accountUsername');
+    const initialsNode = document.getElementById('accountInitials');
+    const avatar = document.getElementById('accountAvatar');
+
+    if (nameNode) nameNode.textContent = displayName;
+    if (usernameNode) usernameNode.textContent = username;
+    if (initialsNode) initialsNode.textContent = displayName.trim().slice(0, 2) || 'أ';
+
+    if (avatar) {
+      const existing = avatar.querySelector('img');
+      if (viewer.avatar_url) {
+        const image = existing || document.createElement('img');
+        image.src = viewer.avatar_url;
+        image.alt = '';
+        if (!existing) avatar.prepend(image);
+      } else if (existing) {
+        existing.remove();
+      }
+    }
+  };
+
+  window.DEBAComms.setChats = function(nextChats) {
+    chats.splice(0, chats.length, ...nextChats);
+    const hasActive = chats.some(c => c.active);
+    chats.forEach((chat, index) => {
+      chat.active = Boolean(chat.active) || (index === 0 && !hasActive);
+    });
+    const unread = chats.reduce((sum, chat) => sum + Number(chat.unread || 0), 0);
+    const unreadTab = document.querySelector('.tab[data-tab="unread"]');
+    if (unreadTab) {
+      const existing = unreadTab.querySelector('.tab-badge');
+      if (unread > 0) {
+        const badge = existing || document.createElement('span');
+        badge.className = 'tab-badge';
+        badge.textContent = String(unread);
+        if (!existing) unreadTab.appendChild(badge);
+      } else if (existing) {
+        existing.remove();
+      }
+    }
+    renderChatList();
+  };
+
+  window.DEBAComms.setStats = function(stats) {
+    const values = document.querySelectorAll('.sidebar-stats .stat-value');
+    if (values[0]) values[0].textContent = String(stats.conversations ?? 0);
+    if (values[1]) values[1].textContent = String(stats.activeOffers ?? 0);
+    if (values[2]) values[2].textContent = String(stats.responseRate ?? '—');
+  };
+
+  window.DEBAComms.setRoom = function(room) {
+    if (!room) return;
+    const product = room.product || {};
+    const person = room.counterparty || {};
+    const title = product.title || 'شليور لاسلكي 18V';
+    const numericPrice = Number(product.price);
+    const price = Number.isFinite(numericPrice)
+      ? new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(numericPrice)
+      : '180';
+    const currency = product.currency && product.currency !== 'EGP' ? product.currency : 'جنيه';
+    const displayPrice = price + ' ' + currency;
+    const location = product.city || product.governorate || 'القاهرة، القاهرة';
+
+    document.querySelectorAll('.listing-title').forEach(node => node.textContent = title);
+    document.querySelectorAll('.listing-price').forEach(node => node.textContent = '— ' + displayPrice);
+
+    const productTitle = document.querySelector('.product-title');
+    if (productTitle) productTitle.textContent = title;
+
+    const productPrice = document.querySelector('.product-price');
+    if (productPrice) productPrice.innerHTML = price + ' <span class="currency">' + currency + '</span>';
+
+    const meta = document.querySelector('.product-meta');
+    if (meta) {
+      meta.innerHTML =
+        '<span>' + (product.categoryName || 'أدوات ومعدات') + '</span>' +
+        '<span class="dot"></span>' +
+        '<span>' + location + '</span>' +
+        '<span class="dot"></span>' +
+        '<span>' + (product.conditionGrade || 'مستعمل · حالة ممتازة') + '</span>';
+    }
+
+    document.querySelectorAll('.product-thumb img').forEach(image => {
+      if (product.imageUrl) image.src = product.imageUrl;
+    });
+
+    const sellerName = person.display_name || person.username || 'songtone1';
+    const sellerNameNode = document.querySelector('.seller-name');
+    if (sellerNameNode) {
+      const verified = sellerNameNode.querySelector('svg');
+      sellerNameNode.textContent = sellerName;
+      if (verified) sellerNameNode.appendChild(verified);
+    }
+
+    const sellerAvatar = document.querySelector('.seller-avatar-sm');
+    if (sellerAvatar) {
+      sellerAvatar.style.background = 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)';
+      if (person.avatar_url) {
+        let image = sellerAvatar.querySelector('img');
+        if (!image) {
+          image = document.createElement('img');
+          sellerAvatar.prepend(image);
+        }
+        image.src = person.avatar_url;
+        image.alt = '';
+      }
+    }
+
+    const locationNode = document.querySelector('.location-badge span');
+    if (locationNode) locationNode.textContent = 'التسوق في مصر · ' + location;
+  };
+
+  window.DEBAComms.renderMessages = function(items, currentUserId) {
+    const area = document.getElementById('messagesArea');
+    if (!area) return;
+
+    area.innerHTML = '';
+    const divider = document.createElement('div');
+    divider.className = 'date-divider';
+    const label = document.createElement('div');
+    label.className = 'date-divider-label';
+    label.textContent = items.length
+      ? 'اليوم · ' + new Intl.DateTimeFormat('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(items[0].created_at))
+      : 'اليوم';
+    divider.appendChild(label);
+    area.appendChild(divider);
+
+    if (!items.length) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'padding:32px 16px;text-align:center;color:var(--text-tertiary);';
+      empty.innerHTML = '<div style="font-size:32px;margin-bottom:8px;">💬</div><div style="font-size:13px;font-weight:600;margin-bottom:4px;">لا توجد رسائل بعد</div><div style="font-size:11.5px;">اكتب أول رسالة لبدء التفاوض داخل DEBA.</div>';
+      area.appendChild(empty);
+    }
+
+    items.forEach(message => {
+      const mine = Boolean(currentUserId && message.sender_id === currentUserId);
+      const row = document.createElement('div');
+      row.className = 'message ' + (mine ? 'sent' : 'received');
+      row.dataset.messageId = message.id;
+
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.textContent = mine ? 'S' : 'أ';
+
+      const content = document.createElement('div');
+      content.className = 'message-content';
+      const metadata = message.metadata && typeof message.metadata === 'object' ? message.metadata : {};
+
+      if (message.message_type === 'offer') {
+        const offer = document.createElement('div');
+        offer.className = 'offer-card';
+        const amount = Number(metadata.amount);
+        const formattedAmount = Number.isFinite(amount)
+          ? new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(amount)
+          : '—';
+        const currency = metadata.currency === 'EGP' || !metadata.currency ? 'جنيه' : String(metadata.currency);
+        const note = typeof metadata.note === 'string' && metadata.note.trim()
+          ? metadata.note.trim()
+          : (message.body || 'عرض سعر مرتبط بالمحادثة');
+
+        offer.innerHTML =
+          '<div class="offer-header">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+              '<line x1="12" y1="1" x2="12" y2="23"></line>' +
+              '<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>' +
+            '</svg>' +
+            '<span>' + (metadata.title || 'عرض سعر من البائع') + '</span>' +
+          '</div>' +
+          '<div class="offer-amount">' + formattedAmount + ' ' + currency + '</div>' +
+          '<div class="offer-note"></div>' +
+          '<div class="offer-actions">' +
+            '<button class="offer-btn accept" type="button" onclick="handleOffer(\'accept\',\'' + message.id + '\')">قبول</button>' +
+            '<button class="offer-btn counter" type="button" onclick="handleOffer(\'counter\',\'' + message.id + '\')">تفاوض</button>' +
+            '<button class="offer-btn decline" type="button" onclick="handleOffer(\'decline\',\'' + message.id + '\')">رفض</button>' +
+          '</div>';
+
+        const noteNode = offer.querySelector('.offer-note');
+        if (noteNode) noteNode.textContent = note;
+        content.appendChild(offer);
+      } else if (metadata.kind === 'image' && typeof metadata.url === 'string') {
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        const image = document.createElement('img');
+        image.src = metadata.url;
+        image.alt = typeof metadata.fileName === 'string' ? metadata.fileName : 'صورة مرفقة';
+        image.style.cssText = 'display:block;max-width:280px;max-height:220px;width:auto;height:auto;border-radius:12px;object-fit:cover;';
+        bubble.appendChild(image);
+        content.appendChild(bubble);
+      } else if (metadata.kind === 'file' && typeof metadata.url === 'string') {
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        const link = document.createElement('a');
+        link.href = metadata.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = '📎 ' + (typeof metadata.fileName === 'string' ? metadata.fileName : 'ملف مرفق');
+        link.style.cssText = 'color:inherit;text-decoration:underline;font-weight:700;';
+        bubble.appendChild(link);
+        content.appendChild(bubble);
+      } else if (metadata.kind === 'location' && metadata.location && typeof metadata.location === 'object') {
+        const location = metadata.location;
+        const latitude = Number(location.latitude);
+        const longitude = Number(location.longitude);
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        const link = document.createElement('a');
+        link.href = 'https://www.google.com/maps?q=' + encodeURIComponent(latitude + ',' + longitude);
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = '📍 موقع مشترك';
+        link.style.cssText = 'color:inherit;text-decoration:underline;font-weight:700;';
+        bubble.appendChild(link);
+        content.appendChild(bubble);
+      } else {
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        bubble.textContent = message.body || '';
+        content.appendChild(bubble);
+      }
+
+      const meta = document.createElement('div');
+      meta.className = 'message-meta';
+      const time = document.createElement('span');
+      time.textContent = new Intl.DateTimeFormat('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(message.created_at));
+      meta.appendChild(time);
+
+      if (mine) {
+        const receipt = document.createElement('span');
+        receipt.className = 'read-receipt';
+        receipt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline><polyline points="16 6 7 17 2 12" transform="translate(4, 0)"></polyline></svg>';
+        meta.appendChild(receipt);
+      }
+
+      content.appendChild(meta);
+      row.appendChild(avatar);
+      row.appendChild(content);
+      area.appendChild(row);
+    });
+
+    if (items.length) {
+      const typing = document.createElement('div');
+      typing.className = 'message received';
+      typing.id = 'typingMsg';
+      typing.innerHTML = '<div class="message-avatar">أ</div><div class="message-content"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
+      area.appendChild(typing);
+    }
+
+    area.scrollTop = area.scrollHeight;
+  };
+
+  function attachFile(kind) {
+    if (typeof window.DEBAComms.onAttach === 'function') return window.DEBAComms.onAttach(kind);
+    const input = document.getElementById('attachmentInput');
+    if (!input) return;
+    input.accept = kind === 'image'
+      ? 'image/jpeg,image/png,image/webp,image/gif'
+      : 'application/pdf,text/plain,text/csv,application/zip,.doc,.docx,.xls,.xlsx';
+    input.dataset.kind = kind;
+    input.value = '';
+    input.click();
+  }
+
+  function shareLocation() {
+    if (typeof window.DEBAComms.onLocation === 'function') return window.DEBAComms.onLocation();
+    if (!navigator.geolocation) {
+      showToast('📍 المتصفح لا يدعم تحديد الموقع');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      () => showToast('📍 تم تحديد موقعك'),
+      () => showToast('تعذر الوصول إلى الموقع'),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
+  }
+
+  function createOffer() {
+    if (typeof window.DEBAComms.onOffer === 'function') return window.DEBAComms.onOffer();
+    const amount = window.prompt('أدخل قيمة العرض بالجنيه');
+    if (amount) showToast('💰 تم إعداد عرض بقيمة ' + amount + ' جنيه');
+  }
+
+  function renderChatList() {
+    const list = document.getElementById('chatList');
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = chats.filter(c => {
+      const matchSearch = c.name.toLowerCase().includes(search) || c.lastMsg.toLowerCase().includes(search);
+      const matchTab = currentTab === 'all' || (currentTab === 'unread' && c.unread > 0) || (currentTab === 'offers' && c.product);
+      return matchSearch && matchTab;
+    });
+
+    if (!filtered.length) {
+      list.innerHTML = '<div style="padding: 32px 16px; text-align: center; color: var(--text-tertiary);"><div style="font-size: 32px; margin-bottom: 8px;">💬</div><div style="font-size: 13px; font-weight: 600; margin-bottom: 4px;">لا توجد محادثات</div><div style="font-size: 11.5px;">ابدأ محادثة من أي إعلان</div></div>';
+      return;
+    }
+
+    list.innerHTML = filtered.map(c => `
+      <div class="chat-item ${c.active ? 'active' : ''} ${c.unread > 0 ? 'unread' : ''}" onclick="openChat('${String(c.id)}')">
+        <div class="chat-item-avatar ${c.online ? 'online' : ''}" style="background: ${c.gradient}">${c.avatar}</div>
+        <div class="chat-item-info">
+          <div class="chat-item-top"><div class="chat-item-name">${c.name} ${c.verified ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="#3B82F6"><path d="M12 2L14.09 4.26L17 3.27L17.74 6.26L20.73 7L19.74 9.91L22 12L19.74 14.09L20.73 17.74L17.74 17L17 20.73L14.09 19.74L12 22L9.91 19.74L7 20.73L6.26 17.74L3.27 17L4.26 14.09L2 12L4.26 9.91L3.27 7L6.26 6.26L7 3.27L9.91 4.26L12 2Z"/><path d="M10 12L11.5 13.5L14 10" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</div><div class="chat-item-time">${c.lastTime}</div></div>
+          <div class="chat-item-preview">${c.lastMsg}</div>
+          ${c.product ? `<div class="chat-item-product"><img src="${c.product.img}" class="chat-item-product-thumb" alt=""><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.product.title}</span></div>` : ''}
+        </div>
+        ${c.unread > 0 ? `<div class="unread-count">${c.unread}</div>` : ''}
+      </div>`).join('');
+  }
+
+  function openChat(id) {
+    if (typeof window.DEBAComms.onOpenChat === 'function') {
+      return window.DEBAComms.onOpenChat(String(id));
+    }
+    const chat = chats.find(c => String(c.id) === String(id));
+    if (!chat) return;
+    chats.forEach(c => c.active = false);
+    chat.active = true;
+    chat.unread = 0;
+    renderChatList();
+    showToast(`💬 فتح محادثة مع ${chat.name}`);
+  }
+
+  function switchTab(el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    currentTab = el.dataset.tab;
+    renderChatList();
+  }
+
+  document.getElementById('searchInput').addEventListener('input', renderChatList);
+
+  const input = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  input.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    sendBtn.disabled = !this.value.trim();
+  });
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  });
+
+  function handleSend() {
+    if (typeof window.DEBAComms.onSend === 'function') {
+      return window.DEBAComms.onSend();
+    }
+    const text = input.value.trim();
+    if (!text) return;
+    const area = document.getElementById('messagesArea');
+    const typingMsg = document.getElementById('typingMsg');
+    const now = new Date();
+    const time = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const msgHTML = `<div class="message received"><div class="message-avatar">أ</div><div class="message-content"><div class="message-bubble">${text}</div><div class="message-meta"><span>${time}</span></div></div></div>`;
+    typingMsg.insertAdjacentHTML('beforebegin', msgHTML);
+    input.value = '';
+    input.style.height = 'auto';
+    sendBtn.disabled = true;
+    area.scrollTop = area.scrollHeight;
+    chats[0].lastMsg = text;
+    chats[0].lastTime = time;
+    renderChatList();
+
+    setTimeout(() => {
+      const replies = ['تمام، شكرًا لك! 👍','ممتاز، سنتفق على التفاصيل','حسنًا، سأعود لك خلال دقائق','إن شاء الله، تمام!'];
+      const reply = replies[Math.floor(Math.random() * replies.length)];
+      const replyTime = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const replyHTML = `<div class="message sent"><div class="message-avatar">S</div><div class="message-content"><div class="message-bubble">${reply}</div><div class="message-meta"><span>${replyTime}</span><span class="read-receipt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline><polyline points="16 6 7 17 2 12" transform="translate(4, 0)"></polyline></svg></span></div></div></div>`;
+      typingMsg.insertAdjacentHTML('beforebegin', replyHTML);
+      area.scrollTop = area.scrollHeight;
+      chats[0].lastMsg = reply;
+      chats[0].lastTime = replyTime;
+      renderChatList();
+    }, 2500);
+  }
+
+  function sendQuick(text) {
+    if (typeof window.DEBAComms.onQuick === 'function') {
+      return window.DEBAComms.onQuick(text);
+    }
+    input.value = text;
+    input.focus();
+    handleSend();
+  }
+
+  function handleOffer(action, offerMessageId) {
+    if (typeof window.DEBAComms.onOfferAction === 'function') {
+      return window.DEBAComms.onOfferAction(action, offerMessageId || null);
+    }
+    const messages = { accept: '✅ تم قبول عرض السعر', counter: '💰 فتح نافذة التفاوض على السعر', decline: '❌ تم رفض عرض السعر' };
+    showToast(messages[action] || 'تم تنفيذ الإجراء');
+  }
+
+  document.addEventListener('contextmenu', function(e) {
+    if (e.target.closest('.message-bubble')) {
+      e.preventDefault();
+      const menu = document.getElementById('contextMenu');
+      menu.style.left = e.pageX + 'px';
+      menu.style.top = e.pageY + 'px';
+      menu.classList.add('show');
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.context-menu')) document.getElementById('contextMenu').classList.remove('show');
+  });
+
+  function hideContext() { document.getElementById('contextMenu').classList.remove('show'); }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  function refreshChats() {
+    if (typeof window.DEBAComms.onRefresh === 'function') {
+      return window.DEBAComms.onRefresh();
+    }
+    showToast('🔄 تم تحديث المحادثات');
+    renderChatList();
+  }
+
+  const attachmentInput = document.getElementById('attachmentInput');
+  if (attachmentInput) {
+    attachmentInput.addEventListener('change', function() {
+      const file = this.files && this.files[0];
+      const kind = this.dataset.kind || 'file';
+      if (file && typeof window.DEBAComms.onFileSelected === 'function') {
+        window.DEBAComms.onFileSelected(file, kind);
+      }
+      this.value = '';
+    });
+  }
+
+  renderChatList();
+  sendBtn.disabled = true;
+  setTimeout(() => {
+    const area = document.getElementById('messagesArea');
+    area.scrollTop = area.scrollHeight;
+  }, 100);
+</script>
+
+</body>
+</html>

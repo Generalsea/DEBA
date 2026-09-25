@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
-import Header, { type HeaderCategory } from '@/components/Header'
-import ProfileDashboard, {
-  type ProfileAccountData,
+import AccountDashboard from '@/components/AccountDashboard'
+import { type ProfileAccountData,
   type ProfileOrder,
   type ProfileProduct,
   type ProfileFavorite,
@@ -26,6 +25,7 @@ type ProfileRow = {
   account_type: 'buyer' | 'seller'
   created_at: string
   updated_at: string
+  seller_store_key: string | null
 }
 
 const BUCKET = 'deba-product-media'
@@ -119,10 +119,12 @@ export default async function ProfilePage({
     pendingSellerProductCountResult,
     favoritesResult,
     favoriteCountResult,
+    chatParticipantsResult,
+    notificationsResult,
   ] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id,username,display_name,avatar_url,bio,city,governorate,is_public,account_type,created_at,updated_at')
+      .select('id,username,display_name,avatar_url,bio,city,governorate,is_public,account_type,seller_store_key,created_at,updated_at')
       .eq('id', userId)
       .maybeSingle(),
     supabase
@@ -186,6 +188,16 @@ export default async function ProfilePage({
       .from('favorites')
       .select('product_id', { count: 'exact', head: true })
       .eq('user_id', userId),
+    supabase
+      .from('chat_participants')
+      .select('room_id,last_read_at')
+      .eq('user_id', userId),
+    supabase
+      .from('notifications')
+      .select('id,type,title,body,href,read_at,created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20),
   ])
 
   if (profileResult.error) {
@@ -203,6 +215,34 @@ export default async function ProfilePage({
   const sellerOrders = (sellerOrdersResult.data || []) as OrderRow[]
   const sellerProducts = (sellerProductsResult.data || []) as ProductRow[]
   const favorites = (favoritesResult.data || []) as FavoriteRow[]
+  const chatParticipants = (chatParticipantsResult.data || []) as Array<{ room_id: string; last_read_at: string | null }>
+  const chatRoomIds = chatParticipants.map((item) => item.room_id)
+  const notifications = (notificationsResult.data || []).map((item) => ({
+    id: item.id,
+    type: item.type,
+    title: item.title,
+    body: item.body,
+    href: item.href,
+    readAt: item.read_at,
+    createdAt: item.created_at,
+  }))
+  let unreadMessages = 0
+  if (chatRoomIds.length) {
+    const { data: unreadRows } = await supabase
+      .from('messages')
+      .select('room_id,sender_id,created_at')
+      .in('room_id', chatRoomIds)
+      .neq('sender_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(500)
+
+    for (const message of unreadRows || []) {
+      const lastReadAt = chatParticipants.find((item) => item.room_id === message.room_id)?.last_read_at
+      if (!lastReadAt || new Date(message.created_at).getTime() > new Date(lastReadAt).getTime()) {
+        unreadMessages += 1
+      }
+    }
+  }
   const privateProfile = (privateResult.data || null) as PrivateRow | null
 
   const allOrderProductIds = Array.from(
@@ -229,7 +269,7 @@ export default async function ProfilePage({
       ? supabase
           .from('product_images')
           .select('product_id,storage_path,alt_text,sort_order,is_primary')
-          .in('product_id', sellerProducts.map((product) => product.id))
+          .in('product_id', allProductIds)
           .order('is_primary', { ascending: false })
           .order('sort_order', { ascending: true })
       : Promise.resolve({ data: [], error: null }),
@@ -281,25 +321,26 @@ export default async function ProfilePage({
     moderationStatus: product.moderation_status,
     conditionGrade: product.condition_grade,
     createdAt: product.created_at,
-    imageUrl: imageLookup.get(product.id)?.storage_path || null,
+    imageUrl: (() => { const path = imageLookup.get(product.id)?.storage_path; return path ? supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl : null })(),
   }))
 
-  const serializedFavorites: ProfileFavorite[] = favorites
-    .map((favorite) => {
-      const product = productLookup.get(favorite.product_id)
-      if (!product) return null
-      return {
-        productId: product.id,
-        title: product.title,
-        slug: product.slug,
-        price: normalizeMoney(product.price),
-        currency: product.currency || 'EGP',
-        conditionGrade: product.condition_grade,
-        status: product.status,
-        createdAt: favorite.created_at,
-      }
+  const serializedFavorites: ProfileFavorite[] = []
+  for (const favorite of favorites) {
+    const product = productLookup.get(favorite.product_id)
+    if (!product) continue
+    const imagePath = imageLookup.get(product.id)?.storage_path || null
+    serializedFavorites.push({
+      productId: product.id,
+      title: product.title,
+      slug: product.slug,
+      price: normalizeMoney(product.price),
+      currency: product.currency || 'EGP',
+      conditionGrade: product.condition_grade,
+      status: product.status,
+      createdAt: favorite.created_at,
+      imageUrl: imagePath ? supabase.storage.from(BUCKET).getPublicUrl(imagePath).data.publicUrl : null,
     })
-    .filter((item): item is ProfileFavorite => item !== null)
+  }
 
   let avatarUrl = profile.avatar_url
   if (avatarUrl && !/^https?:\/\//i.test(avatarUrl)) {
@@ -319,6 +360,7 @@ export default async function ProfilePage({
       governorate: profile.governorate,
       isPublic: profile.is_public,
       accountType: profile.account_type,
+      storeKey: profile.seller_store_key,
       createdAt: profile.created_at,
       phone: privateProfile?.phone || null,
       addressLine1: privateProfile?.address_line1 || null,
@@ -338,25 +380,27 @@ export default async function ProfilePage({
     sellerOrders: sellerOrders.map(serializeOrder),
     sellerProducts: serializedProducts,
     favorites: serializedFavorites,
+    unreadMessages,
+    notifications,
   }
 
   const requestedTab = (await searchParams)?.tab || 'overview'
+  const dashboardMap: Record<string, string> = {
+    overview: 'dashboard',
+    products: 'listings',
+    listings: 'listings',
+    favorites: 'favorites',
+    messages: 'messages',
+    chat: 'messages',
+    notifications: 'notifications',
+    profile: 'profile',
+    settings: 'settings',
+    help: 'help',
+  }
 
   return (
-    <>
-      <Header
-        categories={categories.map(
-          (item): HeaderCategory => ({
-            id: item.id,
-            nameAr: item.name_ar,
-            slug: item.slug,
-          }),
-        )}
-        favoriteCount={favorites.length}
-      />
-      <main className="deba-profile-page" dir="rtl">
-        <ProfileDashboard account={account} initialTab={requestedTab} />
-      </main>
-    </>
+    <main className="deba-profile-page" dir="rtl">
+      <AccountDashboard account={account} initialSection={dashboardMap[requestedTab] || 'dashboard'} />
+    </main>
   )
 }

@@ -9,7 +9,10 @@
     "test": "node --test scripts/contracts.test.mjs",
     "start": "next start",
     "seed:demo-catalog-images": "node scripts/seed-demo-catalog-images.mjs",
-    "catalog:seed": "node scripts/seed-demo-catalog.mjs"
+    "catalog:seed": "node scripts/seed-demo-catalog.mjs",
+    "e2e": "playwright test",
+    "e2e:list": "playwright test --list",
+    "e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
@@ -26,7 +29,8 @@
     "typescript": "7.0.2",
     "@tailwindcss/postcss": "4.3.3",
     "postcss": "8.5.28",
-    "tailwindcss": "4.3.3"
+    "tailwindcss": "4.3.3",
+    "@playwright/test": "1.63.0"
   },
   "engines": {
     "node": ">=22.14.0",

@@ -1,0 +1,36 @@
+name: DEBA Authenticated E2E
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authenticated-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DEBA_E2E_EMAIL: ${{ secrets.DEBA_E2E_EMAIL }}
+      DEBA_E2E_PASSWORD: ${{ secrets.DEBA_E2E_PASSWORD }}
+      DEBA_E2E_SEARCH_QUERY: ${{ secrets.DEBA_E2E_SEARCH_QUERY }}
+      DEBA_E2E_PRODUCT_SLUG: ${{ secrets.DEBA_E2E_PRODUCT_SLUG }}
+      DEBA_E2E_ALLOW_MUTATIONS: 'true'
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deba-playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore

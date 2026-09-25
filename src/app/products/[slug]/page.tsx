@@ -7,6 +7,7 @@ import {
   BadgeCheck,
   CheckCircle2,
   MapPin,
+  MessageCircle,
   Package,
   ShieldCheck,
   ShoppingBag,
@@ -503,6 +504,13 @@ export default async function ProductDetailPage({
                       <small>السعر ثابت — اختر الكمية وطريقة الاستلام ثم أكد طلبك</small>
                     </span>
                     <ArrowLeft size={20} />
+                  </Link>
+                  <Link
+                    href={'/chat?product=' + encodeURIComponent(product.id)}
+                    className="deba-purchase-chat"
+                  >
+                    <MessageCircle size={17} />
+                    <span>تواصل مع البائع</span>
                   </Link>
                 </div>
               ) : (
