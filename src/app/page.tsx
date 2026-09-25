@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { after } from 'next/server'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -26,6 +27,7 @@ import Header from '@/components/Header'
 import ClassifiedFilterBar from '@/components/ClassifiedFilterBar'
 import ClassifiedListingCard, { type ClassifiedListingItem } from '@/components/ClassifiedListingCard'
 import type { HeaderPromo } from '@/components/HeaderReelsRail'
+import { createAdminClient } from '@/utils/supabase/admin'
 import { createClient } from '@/utils/supabase/server'
 
 export const metadata: Metadata = {
@@ -48,6 +50,7 @@ type SearchFilters = {
   governorate?: string
   city?: string
   sort?: 'newest' | 'price_low' | 'price_high'
+  page?: number
 }
 
 type CategoryRow = {
@@ -189,6 +192,28 @@ function isSafeUrl(value: string) {
   return /^https?:\/\//i.test(value) || (/^\//.test(value) && !value.startsWith('//'))
 }
 
+function parsePage(value: string | undefined) {
+  if (!value) return 1
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed >= 1 ? Math.min(parsed, 10000) : 1
+}
+
+function buildSearchHref(filters: SearchFilters, page: number) {
+  const params = new URLSearchParams()
+  if (filters.q) params.set('q', filters.q)
+  if (filters.category && filters.category !== 'all') params.set('category', filters.category)
+  if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice))
+  if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice))
+  if (filters.condition) params.set('condition', filters.condition)
+  if (filters.governorate) params.set('governorate', filters.governorate)
+  if (filters.city) params.set('city', filters.city)
+  if (filters.sort && filters.sort !== 'newest') params.set('sort', filters.sort)
+  if (page > 1) params.set('page', String(page))
+
+  const queryString = params.toString()
+  return queryString ? '/?' + queryString : '/'
+}
+
 function resolveCondition(value: string | undefined) {
   if (!value) return undefined
   if (value === 'new') return ['new']
@@ -200,6 +225,8 @@ function resolveCondition(value: string | undefined) {
 async function loadHomeData(filters: SearchFilters) {
   const supabase = await createClient()
   const searchTerm = cleanSearch(filters.q)
+  const searchPage = parsePage(filters.page ? String(filters.page) : undefined)
+  const searchOffset = (searchPage - 1) * PRODUCT_LIMIT
   let categoryId: string | null = null
 
   if (filters.category && filters.category !== 'all') {
@@ -224,7 +251,6 @@ async function loadHomeData(filters: SearchFilters) {
     .not('owner_id', 'is', null)
     .gt('quantity', 0)
     .gt('price', 0)
-    .limit(PRODUCT_LIMIT)
 
   if (categoryId) productQuery = productQuery.eq('category_id', categoryId)
   if (filters.minPrice !== undefined) productQuery = productQuery.gte('price', filters.minPrice)
@@ -255,12 +281,15 @@ async function loadHomeData(filters: SearchFilters) {
       .order('created_at', { ascending: false })
   }
 
+  const browseProductQuery = productQuery.range(0, PRODUCT_LIMIT - 1)
+  const searchStartedAt = searchTerm ? performance.now() : null
+
   const productsResponse =
     searchTerm
       ? await supabase.rpc('search_marketplace_products', {
           p_query: searchTerm,
           p_limit: PRODUCT_LIMIT,
-          p_offset: 0,
+          p_offset: searchOffset,
           p_category_slug:
             filters.category && filters.category !== 'all' ? filters.category : null,
           p_min_price: filters.minPrice ?? null,
@@ -270,7 +299,7 @@ async function loadHomeData(filters: SearchFilters) {
           p_city: filters.city ?? null,
           p_sort: filters.sort ?? 'relevance',
         })
-      : await productQuery
+      : await browseProductQuery
 
   const [categoryResponse, productCountResponse, membersCountResponse, headerAdsResponse] =
     await Promise.all([
@@ -307,10 +336,20 @@ async function loadHomeData(filters: SearchFilters) {
   if (searchTerm && productsResponse.error) {
     console.error('DEBA FTS search RPC failed; falling back to ILIKE search', productsResponse.error)
     const pattern = '%' + searchTerm + '%'
-    resolvedProductsResponse = await productQuery.or(
-      'title.ilike.' + pattern + ',description.ilike.' + pattern,
-    )
+    resolvedProductsResponse = await productQuery
+      .or('title.ilike.' + pattern + ',description.ilike.' + pattern)
+      .range(searchOffset, searchOffset + PRODUCT_LIMIT - 1)
   }
+
+  const searchRpcSucceeded = Boolean(searchTerm && !productsResponse.error)
+  const searchRpcRows = (productsResponse.data || []) as Array<ProductRow & { total_count?: number | null }>
+  const searchTotalCount = searchTerm
+    ? searchRpcSucceeded
+      ? Number(searchRpcRows[0]?.total_count ?? 0)
+      : (resolvedProductsResponse.data || []).length
+    : null
+  const searchDurationMs =
+    searchStartedAt === null ? null : Math.max(0, Math.round(performance.now() - searchStartedAt))
 
   const categories = (categoryResponse.data || []) as CategoryRow[]
   const products = (resolvedProductsResponse.data || []) as ProductRow[]
@@ -388,6 +427,18 @@ async function loadHomeData(filters: SearchFilters) {
     imageByProduct,
     profileById,
     ratingByProduct,
+    searchTotalCount,
+    searchPage,
+    searchTelemetry:
+      searchTerm && searchDurationMs !== null
+        ? {
+            query: searchTerm,
+            resultCount: searchTotalCount ?? products.length,
+            durationMs: searchDurationMs,
+            categorySlug:
+              filters.category && filters.category !== 'all' ? filters.category : null,
+          }
+        : null,
     stats: {
       products: productCountResponse.count || 0,
       members: membersCountResponse.count || 0,
@@ -650,17 +701,27 @@ function ListingRail({
 function SearchResults({
   data,
   q,
+  page,
+  totalPages,
+  previousHref,
+  nextHref,
 }: {
   data: Awaited<ReturnType<typeof loadHomeData>>
   q?: string
+  page: number
+  totalPages: number
+  previousHref: string | null
+  nextHref: string | null
 }) {
+  const resultCount = data.searchTotalCount ?? data.products.length
+
   return (
     <section className="deba-classified-search-results">
       <div className="deba-classified-container">
         <div className="deba-classified-search-heading">
           <span>نتائج البحث</span>
           <h1>{q ? 'الإعلانات المطابقة لـ «' + q + '»' : 'تصفية الإعلانات'}</h1>
-          <p>{data.products.length.toLocaleString('ar-EG')} إعلانًا مطابقًا متاحًا للتصفح.</p>
+          <p>{resultCount.toLocaleString('ar-EG')} إعلانًا مطابقًا متاحًا للتصفح.</p>
         </div>
 
         <div className="deba-classified-results-grid">
@@ -683,6 +744,32 @@ function SearchResults({
             </div>
           )}
         </div>
+
+        {totalPages > 1 ? (
+          <nav className="deba-classified-pagination" aria-label="صفحات نتائج البحث">
+            {previousHref ? (
+              <Link href={previousHref} className="deba-classified-btn deba-classified-btn-secondary">
+                السابق
+              </Link>
+            ) : (
+              <span className="deba-classified-btn deba-classified-btn-secondary is-disabled" aria-disabled="true">
+                السابق
+              </span>
+            )}
+            <span className="deba-classified-pagination-status">
+              صفحة {page.toLocaleString('ar-EG')} من {totalPages.toLocaleString('ar-EG')}
+            </span>
+            {nextHref ? (
+              <Link href={nextHref} className="deba-classified-btn deba-classified-btn-primary">
+                التالي
+              </Link>
+            ) : (
+              <span className="deba-classified-btn deba-classified-btn-primary is-disabled" aria-disabled="true">
+                التالي
+              </span>
+            )}
+          </nav>
+        ) : null}
       </div>
     </section>
   )
@@ -824,6 +911,7 @@ export default async function HomePage({
     category?: SearchParamValue
     minPrice?: SearchParamValue
     maxPrice?: SearchParamValue
+    page?: SearchParamValue
     condition?: SearchParamValue
     governorate?: SearchParamValue
     city?: SearchParamValue
@@ -834,6 +922,7 @@ export default async function HomePage({
   const q = firstParam(params.q)
   const category = firstParam(params.category)
   const condition = firstParam(params.condition)
+  const pageValue = firstParam(params.page)
   const governorate = firstParam(params.governorate)
   const city = firstParam(params.city)
   const sortValue = firstParam(params.sort)
@@ -854,6 +943,7 @@ export default async function HomePage({
   const data = await loadHomeData({
     q,
     category,
+    page: parsePage(pageValue),
     condition: safeCondition,
     governorate: governorate?.trim().slice(0, 80) || undefined,
     city: city?.trim().slice(0, 100) || undefined,
@@ -861,6 +951,24 @@ export default async function HomePage({
     maxPrice: safeMaxPrice ?? undefined,
     sort: safeSort,
   })
+
+  if (data.searchTelemetry) {
+    const telemetry = data.searchTelemetry
+    after(async () => {
+      try {
+        const admin = createAdminClient()
+        const { error } = await admin.rpc('record_search_telemetry', {
+          p_query: telemetry.query,
+          p_result_count: telemetry.resultCount,
+          p_duration_ms: telemetry.durationMs,
+          p_category_slug: telemetry.categorySlug,
+        })
+        if (error) console.error('DEBA search telemetry write failed', error)
+      } catch (error) {
+        console.error('DEBA search telemetry callback failed', error)
+      }
+    })
+  }
 
   const hasResultsFilter = Boolean(
     q ||
@@ -908,7 +1016,20 @@ export default async function HomePage({
                 />
               </div>
             </section>
-            <SearchResults data={data} q={q} />
+            <SearchResults
+              data={data}
+              q={q}
+              page={data.searchPage}
+              totalPages={Math.max(1, Math.ceil((data.searchTotalCount ?? data.products.length) / PRODUCT_LIMIT))}
+              previousHref={
+                data.searchPage > 1 ? buildSearchHref({ q, category, minPrice: minPrice ?? undefined, maxPrice: safeMaxPrice ?? undefined, condition: safeCondition, governorate, city, sort: safeSort, page: data.searchPage }, data.searchPage - 1) : null
+              }
+              nextHref={
+                data.searchPage < Math.max(1, Math.ceil((data.searchTotalCount ?? data.products.length) / PRODUCT_LIMIT))
+                  ? buildSearchHref({ q, category, minPrice: minPrice ?? undefined, maxPrice: safeMaxPrice ?? undefined, condition: safeCondition, governorate, city, sort: safeSort, page: data.searchPage }, data.searchPage + 1)
+                  : null
+              }
+            />
           </>
         ) : (
           <>
