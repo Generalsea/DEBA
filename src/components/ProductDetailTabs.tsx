@@ -618,7 +618,7 @@ export default function ProductDetailTabs({
           {!reportOpen ? (
             <button
               type="button"
-              className="deba-detail-report-button"
+              data-testid="report-open" className="deba-detail-report-button"
               onClick={() => {
                 setReportOpen(true)
                 setReportStatus('')
@@ -630,7 +630,7 @@ export default function ProductDetailTabs({
             <div className="deba-detail-report-form">
               <label>
                 <span>سبب البلاغ</span>
-                <select value={reportReason} onChange={(event) => setReportReason(event.target.value)}>
+                <select data-testid="report-reason" value={reportReason} onChange={(event) => setReportReason(event.target.value)}>
                   <option value="scam">اشتباه احتيال</option>
                   <option value="misleading">وصف أو سعر مضلل</option>
                   <option value="prohibited">محتوى أو سلعة محظورة</option>
@@ -644,7 +644,7 @@ export default function ProductDetailTabs({
                 <textarea
                   value={reportDescription}
                   onChange={(event) => setReportDescription(event.target.value.slice(0, 2000))}
-                  placeholder="اكتب ما لاحظته..."
+                  data-testid="report-description" placeholder="اكتب ما لاحظته..."
                   maxLength={2000}
                   rows={4}
                 />
@@ -663,7 +663,7 @@ export default function ProductDetailTabs({
                 </button>
                 <button
                   type="button"
-                  className="deba-detail-report-submit"
+                  data-testid="report-submit" className="deba-detail-report-submit"
                   onClick={submitReport}
                   disabled={reportSubmitting}
                 >
