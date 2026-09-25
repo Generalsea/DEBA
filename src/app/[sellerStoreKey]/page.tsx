@@ -139,20 +139,11 @@ export default async function SellerStorePage({ params }: StorePageProps) {
   })
 
   const location = [seller.city, seller.governorate].filter(Boolean).join('، ')
-  const sellerReviewsResult = await supabase
-    .from('reviews')
-    .select('id,rating,title,body,created_at,reviewer_id,verified_purchase')
-    .eq('seller_id', seller.id)
-    .eq('target_type', 'seller')
-    .eq('status', 'published')
-    .order('created_at', { ascending: false })
-    .limit(6)
-
-  const reviewerIds = Array.from(new Set((sellerReviewsResult.data || []).map((review) => review.reviewer_id)))
-  const { data: reviewerProfiles } = reviewerIds.length
-    ? await supabase.from('profiles').select('id,display_name,username,avatar_url').in('id', reviewerIds)
-    : { data: [] as Array<{ id: string; display_name: string | null; username: string | null; avatar_url: string | null }> }
-  const reviewerMap = new Map((reviewerProfiles || []).map((profile) => [profile.id, profile]))
+  const { data: sellerReviewFeed } = await supabase.rpc('get_seller_review_feed', {
+    p_seller_id: seller.id,
+    p_limit: 6,
+  })
+  const sellerReviews = Array.isArray(sellerReviewFeed) ? sellerReviewFeed : []
   const avatar = imageUrl(supabase, seller.avatar_url || null)
 
   return (
@@ -191,7 +182,7 @@ export default async function SellerStorePage({ params }: StorePageProps) {
           </div>
         </section>
 
-        {ratingSummary.review_count ? (
+        {ratingSummary.review_count && sellerReviews.length ? (
           <section className="deba-store-reviews">
             <div className="deba-related-head">
               <div>
@@ -200,18 +191,22 @@ export default async function SellerStorePage({ params }: StorePageProps) {
               </div>
             </div>
             <div className="deba-store-review-grid">
-              {(sellerReviewsResult.data || []).map((review) => {
-                const reviewer = reviewerMap.get(review.reviewer_id)
-                const reviewerName = reviewer?.display_name || reviewer?.username || 'مستخدم DEBA'
+              {sellerReviews.map((review) => {
+                const reviewerName =
+                  review && typeof review === 'object' && review.reviewer?.display_name
+                    ? review.reviewer.display_name
+                    : review && typeof review === 'object' && review.reviewer?.username
+                      ? review.reviewer.username
+                      : 'مستخدم DEBA'
                 return (
-                  <article key={review.id} className="deba-store-review-card">
+                  <article key={String(review.id)} className="deba-store-review-card">
                     <div className="deba-store-review-head">
                       <strong>{reviewerName}</strong>
-                      <span><BadgeCheck size={12} /> {review.verified_purchase ? 'شراء موثق' : 'تقييم'}</span>
+                      <span><BadgeCheck size={12} /> {review.verifiedPurchase ? 'شراء موثق' : 'تقييم'}</span>
                     </div>
-                    <div className="deba-reviews-stars small" aria-label={review.rating + ' من 5'}>
+                    <div className="deba-reviews-stars small" aria-label={String(review.rating) + ' من 5'}>
                       {Array.from({ length: 5 }, (_, index) => (
-                        <Star key={index} size={13} fill={index < review.rating ? 'currentColor' : 'none'} />
+                        <Star key={index} size={13} fill={index < Number(review.rating) ? 'currentColor' : 'none'} />
                       ))}
                     </div>
                     {review.title ? <h3>{review.title}</h3> : null}
