@@ -19,3 +19,23 @@ A readiness item is marked PASS only when the repository or live environment pro
 ## Active production-readiness work
 
 Authenticated Playwright coverage and a database-enforced offer lifecycle are tracked as part of the transition toward production readiness.
+
+## Authenticated E2E execution guide
+
+The authenticated Playwright workflow uses a dedicated non-production test account and the following environment variables:
+
+- `DEBA_E2E_EMAIL`
+- `DEBA_E2E_PASSWORD`
+- `DEBA_E2E_SEARCH_QUERY`
+- `DEBA_E2E_PRODUCT_SLUG`
+- `DEBA_E2E_ALLOW_MUTATIONS=true`
+
+Local execution:
+
+```bash
+npm ci
+npx playwright install --with-deps chromium
+npm run e2e
+```
+
+CI execution: store the variables above as repository/environment secrets, then run `.github/workflows/authenticated-e2e.yml` manually. Use only a dedicated E2E account; never use production credentials.
