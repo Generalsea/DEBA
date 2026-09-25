@@ -129,6 +129,7 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         setAccount?: (viewer: Viewer) => void
         setChats?: (chats: LiveChat[]) => void
         setStats?: (stats: { conversations: number; activeOffers: number; responseRate: string }) => void
+        setProductState?: (state: 'loading' | 'empty' | 'error' | 'ready') => void
         setRoom?: (room: Room) => void
         renderMessages?: (messages: Message[], currentUserId: string | null) => void
         setMessagesLoading?: (loading: boolean) => void
