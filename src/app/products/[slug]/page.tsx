@@ -21,6 +21,7 @@ import FavoriteButton from '@/components/FavoriteButton'
 import CartAddButton from '@/components/CartAddButton'
 import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGallery'
 import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components/ProductDetailTabs'
+import ProductViewTracker from '@/components/ProductViewTracker'
 import { createClient } from '@/utils/supabase/server'
 
 // Next.js 16 currently has a non-ASCII dynamic-route cache-tag issue.
@@ -405,6 +406,7 @@ export default async function ProductDetailPage({
       />
 
       <main className="deba-detail-page" dir="rtl">
+        <ProductViewTracker productId={product.id} />
         <div className="deba-breadcrumbs">
           <Link href="/">الرئيسية</Link>
           <span>/</span>
