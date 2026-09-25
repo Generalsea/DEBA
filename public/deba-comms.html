@@ -619,6 +619,7 @@
   const chats = [];
   let currentTab = 'all';
   let otherParticipantTyping = false;
+  let activeProductMessage = null;
 
   window.DEBAComms = window.DEBAComms || {};
   function navigate(destination, event) {
@@ -731,6 +732,7 @@
   };
 
   window.DEBAComms.setRoom = function(room) {
+    activeProductMessage = null;
     const card = document.getElementById('productContextCard');
     window.DEBAComms.setTypingState(false);
     const listingTitleNode = document.querySelector('.listing-title');
@@ -835,6 +837,13 @@
 
     const imageUrl = typeof product.imageUrl === 'string' ? product.imageUrl.trim() : '';
     const previousImageUrl = image?.dataset.srcUrl || '';
+    activeProductMessage = {
+      title: title || 'إعلان DEBA',
+      price: displayPrice,
+      imageUrl: imageUrl || null,
+      location: location || product.governorate || 'مصر',
+      productId: room.product_id,
+    };
 
     if (!image || !placeholder) {
       window.DEBAComms.setProductState('error');
@@ -892,6 +901,66 @@
       : 'اليوم';
     divider.appendChild(label);
     area.appendChild(divider);
+
+    if (activeProductMessage?.productId) {
+      const productMessage = document.createElement('div');
+      productMessage.className = 'message received';
+      productMessage.dataset.kind = 'product-card';
+
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.textContent = 'DEBA';
+
+      const content = document.createElement('div');
+      content.className = 'message-content';
+
+      const card = document.createElement('div');
+      card.className = 'product-card-msg';
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', 'فتح الإعلان المرتبط بالمحادثة');
+      card.addEventListener('click', (event) => {
+        if (!(event.target instanceof HTMLElement) || !event.target.closest('button')) {
+          if (typeof window.DEBAComms.onProductOpen === 'function') window.DEBAComms.onProductOpen();
+        }
+      });
+      card.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          if (typeof window.DEBAComms.onProductOpen === 'function') window.DEBAComms.onProductOpen();
+        }
+      });
+
+      const cardImage = document.createElement('img');
+      cardImage.alt = activeProductMessage.title;
+      if (activeProductMessage.imageUrl) {
+        cardImage.src = activeProductMessage.imageUrl;
+      } else {
+        cardImage.hidden = true;
+      }
+
+      const body = document.createElement('div');
+      body.className = 'product-card-msg-body';
+
+      const titleNode = document.createElement('div');
+      titleNode.className = 'product-card-msg-title';
+      titleNode.textContent = activeProductMessage.title;
+
+      const priceNode = document.createElement('div');
+      priceNode.className = 'product-card-msg-price';
+      priceNode.textContent = activeProductMessage.price;
+
+      const metaNode = document.createElement('div');
+      metaNode.className = 'product-card-msg-meta';
+      metaNode.textContent = (activeProductMessage.location || 'مصر') + ' · إعلان مرتبط';
+
+      body.append(titleNode, priceNode, metaNode);
+      if (activeProductMessage.imageUrl) card.appendChild(cardImage);
+      card.appendChild(body);
+      content.appendChild(card);
+      productMessage.append(avatar, content);
+      area.appendChild(productMessage);
+    }
 
     if (!items.length) {
       const empty = document.createElement('div');
