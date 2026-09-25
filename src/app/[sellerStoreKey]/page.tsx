@@ -166,7 +166,13 @@ export default async function SellerStorePage({ params }: StorePageProps) {
               {avatar ? <img src={avatar} alt="" width={58} height={58} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : seller.display_name.charAt(0)}
             </div>
             <div style={{ minWidth: 0 }}>
-              <h1 style={{ marginTop: 0 }}>{seller.display_name}</h1>
+              <h1 style={{ marginTop: 0 }}>
+                {seller.username ? (
+                  <Link href={'/members/' + encodeURIComponent(seller.username)}>
+                    {seller.display_name}
+                  </Link>
+                ) : seller.display_name}
+              </h1>
               <div className="deba-store-meta">
                 {ratingSummary.verified_seller ? <span><BadgeCheck size={14} /> بائع موثق</span> : <span><ShieldCheck size={14} /> حساب بائع DEBA</span>}
                 {location ? <span><MapPin size={14} /> {location}</span> : null}
