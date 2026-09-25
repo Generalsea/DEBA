@@ -112,21 +112,47 @@ export async function GET() {
       new Set((rooms || []).map((room) => room.product_id).filter(Boolean)),
     ) as string[]
 
-    const { data: products } = productIds.length
+    const { data: products, error: productsError } = productIds.length
       ? await supabase
           .from('products')
-          .select(
-            'id,title,slug,price,currency,city,governorate,condition_grade,category:categories!products_category_id_fkey(name_ar,name_en)',
-          )
+          .select('id,title,slug,price,currency,city,governorate,condition_grade,category_id')
           .in('id', productIds)
-      : { data: [] as Array<Record<string, unknown>> }
+      : { data: [] as Array<Record<string, unknown>>, error: null }
 
-    const { data: productImages } = productIds.length
+    if (productsError) {
+      console.error('DEBA chat product context load failed', productsError)
+      return NextResponse.json({ error: 'تعذر تحميل بيانات الإعلانات.' }, { status: 500 })
+    }
+
+    const categoryIds = Array.from(
+      new Set((products || []).map((product) => product.category_id).filter(Boolean)),
+    ) as string[]
+
+    const { data: categories, error: categoriesError } = categoryIds.length
+      ? await supabase
+          .from('categories')
+          .select('id,name_ar,name_en')
+          .in('id', categoryIds)
+      : { data: [] as Array<Record<string, unknown>>, error: null }
+
+    if (categoriesError) {
+      console.error('DEBA chat product categories load failed', categoriesError)
+    }
+
+    const categoryMap = new Map(
+      (categories || []).map((category) => [category.id, category]),
+    )
+
+    const { data: productImages, error: productImagesError } = productIds.length
       ? await supabase
           .from('product_images')
           .select('product_id,storage_path,alt_text,sort_order,is_primary')
           .in('product_id', productIds)
-      : { data: [] as Array<Record<string, unknown>> }
+      : { data: [] as Array<Record<string, unknown>>, error: null }
+
+    if (productImagesError) {
+      console.error('DEBA chat product media load failed', productImagesError)
+    }
 
     const productImageMap = new Map<string, Record<string, unknown>>()
     for (const image of productImages || []) {
@@ -148,11 +174,9 @@ export async function GET() {
 
     const productMap = new Map(
       (products || []).map((product) => {
-        const category = product.category
-        const categoryRecord =
-          category && typeof category === 'object'
-            ? (category as Record<string, unknown>)
-            : null
+        const categoryRecord = product.category_id
+          ? categoryMap.get(product.category_id) || null
+          : null
         const image = productImageMap.get(product.id)
         const storagePath = typeof image?.storage_path === 'string' ? image.storage_path : null
         const imageUrl = storagePath
