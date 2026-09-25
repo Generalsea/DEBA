@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/client'
 
 type Product = {
@@ -123,6 +124,12 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
 
     let disposed = false
     let pollingTimer: number | null = null
+    let realtimeChannel: RealtimeChannel | null = null
+    let realtimeRoomId: string | null = null
+    let typingStopTimer: number | null = null
+    let lastTypingBroadcastAt = 0
+    let lastTypingValue = false
+    const supabase = createClient()
 
     const frameWindow = () => frame.contentWindow as (Window & {
       DEBAComms?: {
@@ -133,11 +140,13 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         setRoom?: (room: Room) => void
         renderMessages?: (messages: Message[], currentUserId: string | null) => void
         setMessagesLoading?: (loading: boolean) => void
+        setTypingState?: (typing: boolean) => void
         onOpenChat?: (roomId: string) => void | Promise<void>
         onProductOpen?: () => void | Promise<void>
         onNavigate?: (destination: 'home' | 'profile' | 'product') => void | Promise<void>
         onSend?: () => void | Promise<void>
         onQuick?: (text: string) => void | Promise<void>
+        onTyping?: (typing: boolean) => void | Promise<void>
         onRefresh?: () => void | Promise<void>
         onAttach?: (kind: 'image' | 'file') => void | Promise<void>
         onFileSelected?: (file: File, kind: 'image' | 'file') => void | Promise<void>
@@ -201,6 +210,112 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
       })
     }
 
+    const clearTypingTimer = () => {
+      if (typingStopTimer != null) {
+        window.clearTimeout(typingStopTimer)
+        typingStopTimer = null
+      }
+    }
+
+    const leaveRealtime = async () => {
+      clearTypingTimer()
+      if (!realtimeChannel) {
+        realtimeRoomId = null
+        return
+      }
+
+      const channel = realtimeChannel
+      realtimeChannel = null
+      realtimeRoomId = null
+      await supabase.removeChannel(channel)
+    }
+
+    const publishTyping = async (typing: boolean, force = false) => {
+      const channel = realtimeChannel
+      const userId = userIdRef.current
+      if (!channel || !userId || disposed) return
+
+      const now = Date.now()
+      if (!force && typing && lastTypingValue && now - lastTypingBroadcastAt < 700) return
+      if (!force && !typing && !lastTypingValue) return
+
+      lastTypingBroadcastAt = now
+      lastTypingValue = typing
+      try {
+        const status = await channel.send({
+          type: 'broadcast',
+          event: 'typing',
+          payload: { userId, typing },
+        })
+        if (status === 'error') console.error('DEBA typing broadcast failed')
+      } catch (error) {
+        console.error('DEBA typing broadcast failed', error)
+      }
+    }
+
+    const handleTyping = (typing: boolean) => {
+      if (!roomIdRef.current || !realtimeChannel) return
+
+      clearTypingTimer()
+      if (!typing) {
+        void publishTyping(false, true)
+        return
+      }
+
+      void publishTyping(true)
+      typingStopTimer = window.setTimeout(() => {
+        typingStopTimer = null
+        void publishTyping(false, true)
+      }, 1200)
+    }
+
+    const subscribeToRoom = async (roomId: string) => {
+      if (realtimeChannel && realtimeRoomId === roomId) return
+
+      await leaveRealtime()
+      if (disposed || !userIdRef.current) return
+
+      const channel = supabase
+        .channel('deba-chat:' + roomId, { config: { private: true } })
+        .on('broadcast', { event: 'typing' }, (payload) => {
+          const typingPayload = payload.payload as { userId?: unknown; typing?: unknown }
+          if (typingPayload.userId !== userIdRef.current) {
+            frameWindow()?.DEBAComms?.setTypingState?.(typingPayload.typing === true)
+          }
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: 'room_id=eq.' + roomId,
+          },
+          (payload) => {
+            if (disposed || roomIdRef.current !== roomId) return
+            const incoming = payload.new as Partial<Message>
+            if (incoming.sender_id !== userIdRef.current) {
+              clearTypingTimer()
+              frameWindow()?.DEBAComms?.setTypingState?.(false)
+            }
+            void loadMessages(roomId).catch(() => {
+              // Polling remains as a fallback for transient Realtime delivery failures.
+            })
+            void refreshRooms(false).catch(() => {
+              // Keep the current chat surface alive on a transient room refresh failure.
+            })
+          },
+        )
+        .subscribe((status, error) => {
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.error('DEBA chat Realtime channel failed', error || status)
+          }
+        })
+
+      realtimeChannel = channel
+      realtimeRoomId = roomId
+    }
+
     const loadMessages = async (roomId: string) => {
       const response = await fetch('/api/chat/rooms/' + encodeURIComponent(roomId) + '/messages?limit=100', {
         cache: 'no-store',
@@ -219,7 +334,13 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         return
       }
 
+      if (roomIdRef.current && roomIdRef.current !== roomId) {
+        await publishTyping(false, true)
+      }
       roomIdRef.current = roomId
+      clearTypingTimer()
+      frameWindow()?.DEBAComms?.setTypingState?.(false)
+      await subscribeToRoom(roomId)
       renderRooms(roomsRef.current.map((item) => ({ ...item })))
       frameWindow()?.DEBAComms?.setRoom?.(room)
       try {
@@ -467,6 +588,8 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
       if (sendButton) sendButton.disabled = true
 
       try {
+        clearTypingTimer()
+        void publishTyping(false, true)
         const response = await fetch('/api/chat/rooms/' + encodeURIComponent(roomId) + '/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -546,6 +669,7 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
       bridge.onLocation = shareLocation
       bridge.onOffer = createOffer
       bridge.onOfferAction = offerAction
+      bridge.onTyping = handleTyping
       bridge.onQuick = async (text) => {
         const input = frame.contentDocument?.getElementById('messageInput') as HTMLTextAreaElement | null
         if (!input) return
@@ -557,7 +681,6 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
       bridge.onRefresh = () => refreshRooms(false)
 
       try {
-        const supabase = createClient()
         const { data } = await supabase.auth.getClaims()
         userIdRef.current = typeof data?.claims?.sub === 'string' ? data.claims.sub : null
 
@@ -599,7 +722,15 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
     return () => {
       disposed = true
       frame.removeEventListener('load', onLoad)
+      clearTypingTimer()
+      void publishTyping(false, true)
       if (pollingTimer != null) window.clearInterval(pollingTimer)
+      if (realtimeChannel) {
+        const channel = realtimeChannel
+        realtimeChannel = null
+        realtimeRoomId = null
+        void supabase.removeChannel(channel)
+      }
     }
   }, [initialProduct])
 

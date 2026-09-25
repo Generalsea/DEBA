@@ -176,8 +176,9 @@
   .security-banner strong { color: var(--text); font-weight: 700; }
 
   .product-context { padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg-subtle); }
-  .product-context-card { display: flex; gap: 14px; padding: 12px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all var(--ease); cursor: pointer; }
-  .product-context-card:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+  .product-context-card { display: flex; gap: 16px; padding: 14px; background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-subtle) 100%); border: 1px solid var(--border); border-radius: var(--radius-xl); transition: all var(--ease); cursor: pointer; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+  .product-context-card::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 4px; background: linear-gradient(180deg, var(--primary) 0%, #FFB08D 100%); border-radius: 4px; }
+  .product-context-card:hover { border-color: var(--primary); box-shadow: var(--shadow-md); transform: translateY(-1px); }
 .product-context-card[data-state="loading"] { cursor: default; }
 .product-context-card[data-state="loading"]:hover { border-color: var(--border); box-shadow: none; transform: none; }
 .product-context-state { display: flex; align-items: center; gap: 14px; min-height: 96px; }
@@ -193,20 +194,28 @@
 .product-context-empty, .product-context-error { justify-content: flex-start; }
 .product-context-empty-icon { width: 44px; height: 44px; border-radius: var(--radius-full); background: var(--bg-subtle); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); font-weight: 800; flex-shrink: 0; }
 .product-context-error .product-context-empty-icon { color: var(--danger); background: var(--danger-bg); border-color: transparent; }
-.product-context-ready { display: flex; gap: 14px; }
-.product-thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg-subtle); color: var(--text-tertiary); font: 800 13px/1 var(--font-en); letter-spacing: 1.5px; }
-  .product-thumb { width: 72px; height: 72px; border-radius: var(--radius-md); overflow: hidden; flex-shrink: 0; background: var(--bg-subtle); position: relative; }
+.product-context-ready { display: flex; gap: 16px; align-items: stretch; width: 100%; }
+  .product-context-kicker { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--primary); font-weight: 800; margin-bottom: 2px; }
+  .product-context-kicker svg { width: 13px; height: 13px; }
+  .product-context-note { font-size: 10.5px; color: var(--text-tertiary); line-height: 1.5; margin-top: 2px; }
+  .product-context-live { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: var(--radius-full); background: var(--success-bg); color: var(--success); font-size: 9.5px; font-weight: 800; white-space: nowrap; }
+  .product-context-live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .product-thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--bg-subtle), var(--bg-hover)); color: var(--text-tertiary); font: 900 13px/1 var(--font-en); letter-spacing: 1.5px; }
+  .product-thumb { width: 96px; height: 88px; border-radius: var(--radius-lg); overflow: hidden; flex-shrink: 0; background: var(--bg-subtle); position: relative; border: 1px solid var(--border-light); box-shadow: var(--shadow-xs); }
   .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .product-thumb .badge { position: absolute; top: 4px; right: 4px; background: var(--primary); color: white; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-full); }
+    .product-thumb .badge { position: absolute; top: 6px; right: 6px; background: rgba(10,14,26,0.78); color: white; font-size: 8.5px; font-weight: 800; padding: 3px 7px; border-radius: var(--radius-full); backdrop-filter: blur(8px); }
   .product-details { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
   .product-title { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .product-meta { font-size: 12px; color: var(--text-tertiary); display: flex; align-items: center; gap: 8px; }
   .product-meta .dot { width: 3px; height: 3px; background: var(--text-muted); border-radius: 50%; }
-  .product-price-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+  .product-price-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; }
   .product-price { font-size: 16px; font-weight: 800; color: var(--primary); }
   .product-price .currency { font-size: 11px; font-weight: 600; color: var(--text-tertiary); margin-right: 2px; }
   .view-listing-btn { padding: 6px 12px; background: var(--primary-soft); color: var(--primary); border-radius: var(--radius-full); font-size: 12px; font-weight: 600; transition: all var(--ease); }
   .view-listing-btn:hover { background: var(--primary); color: white; }
+  .seller-label.typing { color: var(--primary); font-weight: 800; display: inline-flex; align-items: center; gap: 6px; }
+  .seller-label.typing::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); animation: sellerTypingPulse 1s ease-in-out infinite; }
+  @keyframes sellerTypingPulse { 0%, 100% { transform: scale(.75); opacity: .45; } 50% { transform: scale(1); opacity: 1; } }
 
   .messages-area { flex: 1; overflow-y: auto; padding: 24px 20px; background: var(--bg-chat); display: flex; flex-direction: column; gap: 4px; scroll-behavior: smooth; }
   .messages-area::-webkit-scrollbar { width: 6px; }
@@ -405,7 +414,7 @@
             <div style="font-size: 11px; color: var(--text-tertiary);">العودة للإعلان</div>
             <div style="display:flex;gap:6px;align-items:center;">
               <span class="listing-title">جارٍ تحميل الإعلان</span>
-              <span class="listing-price">— 180 جنيه</span>
+              <span class="listing-price">جارٍ تحميل السعر</span>
             </div>
           </div>
         </button>
@@ -415,7 +424,7 @@
             <span class="online-dot"></span>
           </div>
           <div class="seller-meta">
-            <div class="seller-label">شريك المحادثة</div>
+            <div class="seller-label" id="sellerLabel">شريك المحادثة</div>
             <div class="seller-name">
               جارٍ تحميل المحادثة
               <svg class="verified-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -460,7 +469,7 @@
       </div>
 
       <div class="product-context">
-        <div class="product-context-card" id="productContextCard" data-state="loading" aria-busy="true">
+        <div class="product-context-card" id="productContextCard" data-state="loading" aria-busy="true" role="button" tabindex="0" onclick="if (!event.target.closest('button')) return navigate('product', event)">
           <div class="product-context-state product-context-loading" id="productContextLoading">
             <div class="product-loading-thumb" aria-hidden="true"></div>
             <div class="product-loading-copy" aria-hidden="true">
@@ -482,11 +491,16 @@
               <span class="badge" id="productStatusBadge">إعلان مرتبط</span>
             </div>
             <div class="product-details">
+              <div class="product-context-kicker">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-8-4-8 4 8 4Z"></path><path d="M4 12l8 4 8-4"></path><path d="M4 17l8 4 8-4"></path></svg>
+                <span>السلعة محل التفاوض</span>
+              </div>
               <div class="product-title" id="productTitle"></div>
               <div class="product-meta" id="productMeta"></div>
+              <div class="product-context-note">التفاوض والرسائل مرتبطة بهذا الإعلان مباشرة داخل DEBA.</div>
               <div class="product-price-row">
-                <div class="product-price" id="productPrice"></div>
-                <button class="view-listing-btn" type="button" onclick="return navigate('product', event)">عرض الإعلان</button>
+                <div style="display:flex;flex-direction:column;gap:2px;min-width:0;"><div class="product-price" id="productPrice"></div><span class="product-context-note">السعر الحالي للإعلان</span></div>
+                <div style="display:flex;align-items:center;gap:8px;"><span class="product-context-live">مرتبط بالمحادثة</span><button class="view-listing-btn" type="button" onclick="return navigate('product', event)">عرض الإعلان</button></div>
               </div>
             </div>
           </div>
@@ -604,6 +618,7 @@
 <script>
   const chats = [];
   let currentTab = 'all';
+  let otherParticipantTyping = false;
 
   window.DEBAComms = window.DEBAComms || {};
   function navigate(destination, event) {
@@ -629,6 +644,24 @@
     card.dataset.state = state;
     card.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
   }
+
+  window.DEBAComms.setTypingState = function(typing) {
+    otherParticipantTyping = Boolean(typing);
+    const typingRow = document.getElementById('typingMsg');
+    if (typingRow) {
+      typingRow.hidden = !otherParticipantTyping;
+      typingRow.setAttribute('aria-hidden', otherParticipantTyping ? 'false' : 'true');
+    }
+    const sellerLabel = document.getElementById('sellerLabel');
+    if (sellerLabel) {
+      sellerLabel.textContent = otherParticipantTyping ? 'يكتب الآن...' : 'شريك المحادثة';
+      sellerLabel.classList.toggle('typing', otherParticipantTyping);
+    }
+    if (otherParticipantTyping) {
+      const area = document.getElementById('messagesArea');
+      if (area) area.scrollTop = area.scrollHeight;
+    }
+  };
 
   window.DEBAComms.setMessagesLoading = function(loading) {
     const area = document.getElementById('messagesArea');
@@ -699,6 +732,9 @@
 
   window.DEBAComms.setRoom = function(room) {
     const card = document.getElementById('productContextCard');
+    window.DEBAComms.setTypingState(false);
+    const listingTitleNode = document.querySelector('.listing-title');
+    const listingPriceNode = document.querySelector('.listing-price');
     const image = document.getElementById('productThumbImage');
     const placeholder = document.getElementById('productThumbPlaceholder');
     const titleNode = document.getElementById('productTitle');
@@ -709,6 +745,8 @@
     const locationNode = document.querySelector('.location-badge span');
 
     if (!room) {
+      if (listingTitleNode) listingTitleNode.textContent = 'لا توجد محادثة محددة';
+      if (listingPriceNode) listingPriceNode.textContent = '—';
       if (sellerNameNode) sellerNameNode.textContent = 'لا توجد محادثة محددة';
       if (sellerAvatar) {
         const existing = sellerAvatar.querySelector('img');
@@ -739,6 +777,8 @@
     }
 
     if (!room.product_id) {
+      if (listingTitleNode) listingTitleNode.textContent = 'محادثة بدون إعلان';
+      if (listingPriceNode) listingPriceNode.textContent = '—';
       if (locationNode) locationNode.textContent = 'التسوق في مصر';
       window.DEBAComms.setProductState('empty');
       if (titleNode) titleNode.textContent = '';
@@ -767,6 +807,8 @@
     const currency = product.currency && product.currency !== 'EGP' ? String(product.currency) : 'جنيه';
     const displayPrice = price === 'السعر عند التواصل' ? price : price + ' ' + currency;
     const location = product.city || product.governorate || '';
+    if (listingTitleNode) listingTitleNode.textContent = title || 'إعلان DEBA';
+    if (listingPriceNode) listingPriceNode.textContent = displayPrice;
     const category = product.categoryName || '';
     const condition = product.conditionGrade || '';
 
@@ -967,6 +1009,8 @@
       const typing = document.createElement('div');
       typing.className = 'message received';
       typing.id = 'typingMsg';
+      typing.hidden = !otherParticipantTyping;
+      typing.setAttribute('aria-hidden', otherParticipantTyping ? 'false' : 'true');
       typing.innerHTML = '<div class="message-avatar">أ</div><div class="message-content"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
       area.appendChild(typing);
     }
@@ -1054,7 +1098,13 @@
   input.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-    sendBtn.disabled = !this.value.trim();
+    const hasText = Boolean(this.value.trim());
+    sendBtn.disabled = !hasText;
+    if (typeof window.DEBAComms.onTyping === 'function') window.DEBAComms.onTyping(hasText);
+  });
+
+  input.addEventListener('blur', function() {
+    if (typeof window.DEBAComms.onTyping === 'function') window.DEBAComms.onTyping(false);
   });
 
   input.addEventListener('keydown', function(e) {
