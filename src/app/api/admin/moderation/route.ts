@@ -71,7 +71,7 @@ export async function GET() {
         .select(
           'id,reporter_id,product_id,reported_user_id,reason,description,status,resolution_note,created_at,updated_at',
         )
-        .eq('status', 'open')
+        .in('status', ['open', 'under_review'])
         .order('created_at', { ascending: true })
         .limit(100),
       admin
@@ -361,7 +361,11 @@ export async function POST(request: Request) {
 
       afterData = updated
       entityType = 'review'
-    } else if (action === 'resolve_report' || action === 'dismiss_report') {
+    } else if (
+      action === 'review_report' ||
+      action === 'resolve_report' ||
+      action === 'dismiss_report'
+    ) {
       table = 'report'
       const { data: report, error } = await admin
         .from('reports')
@@ -374,21 +378,43 @@ export async function POST(request: Request) {
       }
 
       beforeData = report
-      const { data: updated, error: updateError } = await admin
-        .from('reports')
-        .update({
-          status: action === 'resolve_report' ? 'resolved' : 'dismissed',
-          resolution_note: note || null,
-        })
-        .eq('id', id)
-        .select('id,status,resolution_note,product_id,reported_user_id')
-        .single()
+
+      const nextStatus =
+        action === 'review_report'
+          ? 'under_review'
+          : action === 'resolve_report'
+            ? 'resolved'
+            : 'dismissed'
+
+      const { data: updated, error: updateError } = await supabase.rpc(
+        'admin_update_report_status',
+        {
+          p_report_id: id,
+          p_next_status: nextStatus,
+          p_note: note || null,
+        },
+      )
 
       if (updateError || !updated) {
-        console.error('DEBA report moderation update failed', updateError)
+        console.error('DEBA report lifecycle update failed', updateError)
+        const message = updateError?.message || 'تعذر تحديث حالة البلاغ.'
+        const statusCode =
+          /not found/i.test(message)
+            ? 404
+            : /42501|only open|review the report/i.test(message)
+              ? 409
+              : 500
+
         return NextResponse.json(
-          { error: 'تعذر تحديث حالة البلاغ.' },
-          { status: 500 },
+          {
+            error:
+              statusCode === 409
+                ? 'انتقال حالة البلاغ غير مسموح من حالته الحالية.'
+                : statusCode === 404
+                  ? 'البلاغ غير موجود.'
+                  : 'تعذر تحديث حالة البلاغ.',
+          },
+          { status: statusCode },
         )
       }
 
