@@ -700,7 +700,6 @@
 
   window.DEBAComms.setProductState = function(state) {
     const card = document.getElementById('productContextCard');
-    if (card) card.dataset.hasProduct = room && room.product_id ? 'true' : 'false';
     if (!card) return;
 
     const states = {
