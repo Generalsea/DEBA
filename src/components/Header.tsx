@@ -508,6 +508,7 @@ export default function Header({
                 </div>
 
                 <input
+                  data-testid="marketplace-search"
                   name="q"
                   value={query}
                   onChange={(event) => {
