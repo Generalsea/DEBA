@@ -10,14 +10,6 @@ const ALLOWED_REASONS = new Set([
   'other',
 ])
 
-const REASON_LABELS: Record<string, string> = {
-  spam: 'إعلان مزعج أو مكرر',
-  fraud: 'اشتباه احتيال',
-  prohibited_item: 'محتوى أو سلعة محظورة',
-  misleading: 'وصف أو سعر مضلل',
-  other: 'سبب آخر',
-}
-
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
