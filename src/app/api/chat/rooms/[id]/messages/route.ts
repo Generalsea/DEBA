@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { consumeApiRateLimit } from '@/utils/rateLimit'
 
 type Context = { params: Promise<{ id: string }> }
 type MessageType = 'text' | 'image' | 'offer' | 'system'
@@ -304,6 +305,20 @@ export async function POST(request: Request, context: Context) {
     const supabase = await createClient()
     const { data: userData } = await supabase.auth.getUser()
     if (!userData.user) return NextResponse.json({ error: 'يجب تسجيل الدخول.' }, { status: 401 })
+
+    const rateLimit = await consumeApiRateLimit(
+      supabase,
+      userData.user.id,
+      'chat:send',
+      30,
+      60,
+    )
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'أرسلت رسائل كثيرة خلال وقت قصير. حاول بعد قليل.' },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.windowSeconds) } },
+      )
+    }
 
     const { id: roomId } = await context.params
     if (!roomId) return NextResponse.json({ error: 'معرّف المحادثة مطلوب.' }, { status: 400 })
