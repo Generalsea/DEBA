@@ -398,7 +398,7 @@ export default function LoginPage() {
                 <label className="form-label" htmlFor="loginEmail">البريد الإلكتروني</label>
                 <div className="form-input-wrapper">
                   <input
-                    id="loginEmail"
+                    data-testid="login-email" id="loginEmail"
                     type="email"
                     className={'form-input ' + (fieldErrors.email ? 'error' : '')}
                     value={email}
@@ -419,7 +419,7 @@ export default function LoginPage() {
                 <label className="form-label" htmlFor="loginPassword">كلمة المرور</label>
                 <div className="form-input-wrapper">
                   <input
-                    id="loginPassword"
+                    data-testid="login-password" id="loginPassword"
                     type={showPassword ? 'text' : 'password'}
                     className={'form-input ' + (fieldErrors.password ? 'error' : '')}
                     value={password}
@@ -468,7 +468,7 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              <button type="submit" className="submit-btn" disabled={isPending}>
+              <button data-testid="login-submit" type="submit" className="submit-btn" disabled={isPending}>
                 {isPending ? (
                   <div className="btn-loader" aria-label="جارٍ المعالجة" />
                 ) : (
