@@ -13711,3 +13711,20 @@ html[data-theme="dark"] .deba-comms-security-banner-sm {
     font-size: 25px;
   }
 }
+
+.deba-seller-review-form {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid var(--deba-border);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 10% 10%, var(--deba-brand-soft), transparent 30%),
+    var(--deba-surface);
+}
+
+.deba-seller-review-note {
+  margin: 8px 0 0;
+  color: var(--deba-text-3);
+  font-size: 9px;
+  line-height: 1.7;
+}
