@@ -14,7 +14,7 @@
 The Phase 2 application and database hardening is present on `main`, and the live database is healthy. The production launch gate is not yet a clean PASS because three externally observable conditions remain unresolved:
 
 1. Supabase Auth leaked-password protection is still disabled.
-2. Critical application rate limiting has coverage, but the shared application helper is fail-open on limiter errors, and public search has no equivalent application-level limiter.
+2. Critical application rate limiting has coverage; the branch now hardens the shared application helper to fail closed on limiter errors, while public search still has no request-aware abuse limiter.
 3. A production Vercel deployment/domain is not accessible through the current environment, so the complete deployed-path walkthrough cannot be independently attested.
 
 No production business data was fabricated or mutated for this gate.
@@ -72,11 +72,11 @@ Current endpoint coverage:
 
 | Surface | Current limit | Coverage | Gate |
 |---|---:|---|---|
-| Listing reports | 5 / hour / authenticated user | `src/app/api/reports/route.ts` | **BLOCKED** by fail-open helper behavior |
-| Chat / offer mutations | 30 / minute / authenticated user | `src/app/api/chat/rooms/[id]/messages/route.ts` | **BLOCKED** by fail-open helper behavior |
+| Listing reports | 5 / hour / authenticated user | `src/app/api/reports/route.ts` | **REMEDIATION COMMITTED; merge + CI required** |
+| Chat / offer mutations | 30 / minute / authenticated user | `src/app/api/chat/rooms/[id]/messages/route.ts` | **REMEDIATION COMMITTED; merge + CI required** |
 | Public search RPC | none at application layer | `search_marketplace_products` | **BLOCKED** |
 
-The shared helper currently returns `allowed: true` when the rate-limit RPC itself errors. That is fail-open behavior and is not suitable as the final production security posture for critical mutation paths.
+On `main`, the shared helper returned `allowed: true` when the rate-limit RPC itself errored. A fail-closed remediation was committed on the Phase 3 readiness branch; it must pass CI and merge before this control is considered closed.
 
 The public search path also has no equivalent application-layer limiter. Supabase's documented `db_pre_request` write-counter pattern cannot directly rate-limit GET/HEAD requests; the search path therefore needs an explicit application/edge/WAF control if it is to carry a production abuse ceiling.
 
