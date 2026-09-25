@@ -259,7 +259,7 @@ test('search quality hardening preserves exact and phrase priority, brand intent
   assert.match(migration, /deba_detect_search_brands/)
   assert.match(migration, /filtered\.normalized_title = normalized_query/)
   assert.match(migration, /position\([\s\S]+normalized_query[\s\S]+normalized_title/)
-  assert.match(migration, /brand-intent filtering/i)
+  assert.match(migration, /brand-intent isolation/i)
   assert.match(migration, /total_count bigint/)
   assert.match(migration, /count\(\*\) over\(\)/i)
   assert.match(migration, /search_telemetry_daily/)
