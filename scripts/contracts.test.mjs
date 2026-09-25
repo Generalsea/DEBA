@@ -176,6 +176,8 @@ test('marketplace hardening exposes location, seller stores, chat, and optimisti
   assert.match(chatSurface, /product-card-msg/)
   assert.match(chatSurface, /activeProductMessage/)
   assert.match(chatSurface, /dataset\.kind = 'product-card'/)
+  assert.match(chatSurface, /message\.message_type === 'offer'/)
+  assert.match(chatSurface, /liveProductMessage && !liveProductMessageInserted && message\.message_type === 'offer'/)
   assert.match(chatSurface, /عرض الإعلان/)
   assert.match(chatSurface, /offer-btn accept/)
   assert.match(chatSurface, /offer-btn counter/)
