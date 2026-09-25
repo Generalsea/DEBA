@@ -126,27 +126,17 @@ async function insertMessage(
 
   const finalMetadata = { ...metadata, risk_flags: riskFlags }
 
-  const { data, error } = await supabase
-    .from('messages')
-    .insert({
-      room_id: roomId,
-      sender_id: userId,
-      message_type: messageType,
-      body,
-      metadata: finalMetadata,
-    })
-    .select('id,room_id,sender_id,message_type,body,metadata,created_at')
-    .single()
+  const { data, error } = await supabase.rpc('send_chat_message', {
+    p_room_id: roomId,
+    p_message_type: messageType,
+    p_body: body,
+    p_metadata: finalMetadata,
+  })
 
   if (error) {
-    console.error('DEBA message send failed', error)
+    console.error('DEBA message RPC failed', error)
     return { error: NextResponse.json({ error: 'تعذر إرسال الرسالة.' }, { status: 403 }) }
   }
-
-  await supabase
-    .from('chat_rooms')
-    .update({ updated_at: new Date().toISOString() })
-    .eq('id', roomId)
 
   try {
     const forwardedFor = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || ''
