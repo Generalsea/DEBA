@@ -2579,6 +2579,15 @@ export type Database = {
       }
       get_seller_analytics: { Args: never; Returns: Json }
       mark_chat_read: { Args: { p_room_id: string }; Returns: Json }
+      record_search_telemetry: {
+        Args: {
+          p_category_slug?: string
+          p_duration_ms: number
+          p_query: string
+          p_result_count: number
+        }
+        Returns: undefined
+      }
       search_marketplace_products: {
         Args: {
           p_category_slug?: string
@@ -2608,6 +2617,7 @@ export type Database = {
           relevance: number
           slug: string
           title: string
+          total_count: number
         }[]
       }
       send_chat_message: {
