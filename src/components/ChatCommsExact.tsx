@@ -386,19 +386,52 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         showToast('لا توجد محادثة حقيقية مفتوحة.')
         return
       }
+      if (!offerMessageId) {
+        showToast('لا يمكن تنفيذ الإجراء على هذا العرض.')
+        return
+      }
 
       try {
-        await postJsonMessage(roomId, {
-          messageType: 'system',
-          metadata: {
-            kind: 'offer_action',
-            action,
-            offerMessageId,
-          },
-        })
+        if (action === 'counter') {
+          const rawAmount = window.prompt('أدخل قيمة العرض المقابل بالجنيه', '170')
+          if (rawAmount == null) return
+
+          const amount = Number(rawAmount.replace(/,/g, ''))
+          if (!Number.isFinite(amount) || amount <= 0) {
+            showToast('💰 قيمة العرض المقابل غير صحيحة.')
+            return
+          }
+
+          const note = window.prompt(
+            'اكتب ملاحظة العرض المقابل',
+            'أقترح ' + amount + ' جنيه مع نفس طريقة الاستلام.',
+          )
+          if (note == null) return
+
+          await postJsonMessage(roomId, {
+            messageType: 'system',
+            metadata: {
+              kind: 'offer_action',
+              action,
+              offerMessageId,
+              amount,
+              note: note.trim().slice(0, 1000),
+            },
+          })
+        } else {
+          await postJsonMessage(roomId, {
+            messageType: 'system',
+            metadata: {
+              kind: 'offer_action',
+              action,
+              offerMessageId,
+            },
+          })
+        }
+
         const labels = {
           accept: '✅ تم قبول عرض السعر',
-          counter: '💰 تم طلب التفاوض على العرض',
+          counter: '💰 تم إرسال العرض المقابل',
           decline: '❌ تم رفض عرض السعر',
         }
         showToast(labels[action])
