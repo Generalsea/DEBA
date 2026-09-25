@@ -1,0 +1,1 @@
+-- Kept as a migration-history marker. The foundational RPC qualifies all product/category columns.
