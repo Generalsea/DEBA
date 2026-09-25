@@ -55,7 +55,7 @@ export async function GET() {
         .select(
           'id,title,slug,owner_id,price,currency,listing_type,status,moderation_status,details_schema_version,created_at,updated_at',
         )
-        .eq('moderation_status', 'pending')
+        .in('moderation_status', ['pending', 'needs_changes'])
         .order('created_at', { ascending: true })
         .limit(100),
       admin
