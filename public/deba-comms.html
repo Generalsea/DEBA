@@ -698,6 +698,13 @@
     return false;
   }
 
+  function formatMoney(value, currency = 'EGP') {
+    const amount = Number(value);
+    if (!Number.isFinite(amount)) return 'السعر عند التواصل';
+    const formatted = new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(amount);
+    return formatted + ' ' + (currency === 'EGP' ? 'جنيه' : currency);
+  }
+
   window.DEBAComms.setProductState = function(state) {
     const card = document.getElementById('productContextCard');
     if (!card) return;
