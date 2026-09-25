@@ -178,6 +178,23 @@
   .product-context { padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg-subtle); }
   .product-context-card { display: flex; gap: 14px; padding: 12px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all var(--ease); cursor: pointer; }
   .product-context-card:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.product-context-card[data-state="loading"] { cursor: default; }
+.product-context-card[data-state="loading"]:hover { border-color: var(--border); box-shadow: none; transform: none; }
+.product-context-state { display: flex; align-items: center; gap: 14px; min-height: 96px; }
+.product-context-state > div:last-child { display: flex; flex-direction: column; gap: 4px; }
+.product-context-state strong { font-size: 13px; color: var(--text); }
+.product-context-state span { font-size: 11.5px; color: var(--text-tertiary); line-height: 1.5; }
+.product-loading-thumb { width: 72px; height: 72px; border-radius: var(--radius-md); background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-hover) 37%, var(--bg-subtle) 63%); background-size: 400% 100%; animation: productSkeleton 1.4s ease infinite; flex-shrink: 0; }
+.product-loading-copy { flex: 1; }
+.product-loading-copy span { display: block; width: 100%; height: 10px; border-radius: 999px; background: var(--bg-subtle); animation: productSkeleton 1.4s ease infinite; }
+.product-loading-copy span:nth-child(2) { width: 72%; }
+.product-loading-copy span:nth-child(3) { width: 48%; }
+@keyframes productSkeleton { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+.product-context-empty, .product-context-error { justify-content: flex-start; }
+.product-context-empty-icon { width: 44px; height: 44px; border-radius: var(--radius-full); background: var(--bg-subtle); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); font-weight: 800; flex-shrink: 0; }
+.product-context-error .product-context-empty-icon { color: var(--danger); background: var(--danger-bg); border-color: transparent; }
+.product-context-ready { display: flex; gap: 14px; }
+.product-thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg-subtle); color: var(--text-tertiary); font: 800 13px/1 var(--font-en); letter-spacing: 1.5px; }
   .product-thumb { width: 72px; height: 72px; border-radius: var(--radius-md); overflow: hidden; flex-shrink: 0; background: var(--bg-subtle); position: relative; }
   .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
   .product-thumb .badge { position: absolute; top: 4px; right: 4px; background: var(--primary); color: white; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-full); }
@@ -195,6 +212,10 @@
   .messages-area::-webkit-scrollbar { width: 6px; }
   .messages-area::-webkit-scrollbar-track { background: transparent; }
   .messages-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.messages-state { display: flex; flex-direction: column; gap: 12px; width: min(72%, 340px); margin: auto 0 auto auto; padding: 16px 0; }
+.message-skeleton { height: 42px; border-radius: 18px; background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-hover) 37%, var(--bg-elevated) 63%); background-size: 400% 100%; animation: productSkeleton 1.4s ease infinite; border: 1px solid var(--border); }
+.message-skeleton-short { width: 68%; }
+.message-skeleton-long { width: 92%; }
   .date-divider { display: flex; align-items: center; gap: 16px; margin: 16px 0; }
   .date-divider::before, .date-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .date-divider-label { padding: 6px 14px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-full); font-size: 11.5px; font-weight: 600; color: var(--text-tertiary); white-space: nowrap; box-shadow: var(--shadow-xs); font-family: var(--font-en); }
