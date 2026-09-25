@@ -8,6 +8,7 @@ type ActionBody = {
     | 'reject_product'
     | 'publish_review'
     | 'hide_review'
+    | 'review_report'
     | 'resolve_report'
     | 'dismiss_report'
     | 'review_dispute'
