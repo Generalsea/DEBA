@@ -40,6 +40,7 @@ type Queue = {
     id: string
     reason: string
     description: string | null
+    status: string
     created_at: string
     reporter: { display_name: string | null; username: string | null } | null
     reportedUser: { display_name: string | null; username: string | null } | null
