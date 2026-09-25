@@ -1,0 +1,1 @@
+-- Security-definer/search-path hardening is included in the foundational migration.
