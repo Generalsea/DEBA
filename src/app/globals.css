@@ -5858,6 +5858,19 @@ textarea {
   line-height: 1.6;
 }
 
+.deba-admin-inline-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--deba-border);
+  border-radius: 999px;
+  background: var(--deba-surface-2);
+  color: var(--deba-text-2);
+  font-size: 9px;
+  font-weight: 900;
+}
+
 .deba-admin-card-actions {
   display: flex;
   align-items: center;
