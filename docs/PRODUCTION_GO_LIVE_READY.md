@@ -2,19 +2,19 @@
 
 **Assessment date:** 2026-09-25  
 **Repository:** `Generalsea/DEBA`  
-**Release baseline:** `main` @ `a509d9b6ac34e8fe97e7f813499d0fbcfe5e692f`  
+**Release baseline:** `main` @ `50fee79b9429ebef27a880203a2ecc9638f4ad26` (PR #18 squash merge)  
 **Supabase project:** `gkwpjtbrecoesxyoybto`  
 **Supabase status:** `ACTIVE_HEALTHY`  
 **PostgreSQL:** `17.6.1.166`
 
 ## Executive decision
 
-**GO-LIVE GATE: BLOCKED**
+**RELEASE CANDIDATE 1.0 — CONDITIONAL / GO-LIVE GATE: BLOCKED**
 
-The Phase 2 application and database hardening is present on `main`, and the live database is healthy. The production launch gate is not yet a clean PASS because three externally observable conditions remain unresolved:
+The Phase 2 application and database hardening plus the Phase 3 fail-closed limiter remediation are now merged to `main`, and the live database is healthy. The repository qualifies as **Release Candidate 1.0 (conditional)**, but the production launch gate remains blocked because three externally observable conditions remain unresolved:
 
 1. Supabase Auth leaked-password protection is still disabled.
-2. Critical application rate limiting has coverage; the branch now hardens the shared application helper to fail closed on limiter errors, while public search still has no request-aware abuse limiter.
+2. Public search still has no request-aware abuse limiter at the application/edge/WAF layer.
 3. A production Vercel deployment/domain is not accessible through the current environment, so the complete deployed-path walkthrough cannot be independently attested.
 
 No production business data was fabricated or mutated for this gate.
@@ -62,7 +62,7 @@ This preserves the transaction-bound review model and the protected moderation l
 
 ### 1.3 Rate-limit storage and primitive
 
-**Status: PARTIAL / RELEASE BLOCKER**
+**Status: PARTIAL — public-search abuse control remains open**
 
 The live database contains the shared `api_rate_limits` table with RLS enabled and no direct read/write access for `anon` or `authenticated`.
 
@@ -72,11 +72,11 @@ Current endpoint coverage:
 
 | Surface | Current limit | Coverage | Gate |
 |---|---:|---|---|
-| Listing reports | 5 / hour / authenticated user | `src/app/api/reports/route.ts` | **REMEDIATION COMMITTED; merge + CI required** |
-| Chat / offer mutations | 30 / minute / authenticated user | `src/app/api/chat/rooms/[id]/messages/route.ts` | **REMEDIATION COMMITTED; merge + CI required** |
+| Listing reports | 5 / hour / authenticated user | `src/app/api/reports/route.ts` | **PASS — fail-closed helper merged** |
+| Chat / offer mutations | 30 / minute / authenticated user | `src/app/api/chat/rooms/[id]/messages/route.ts` | **PASS — fail-closed helper merged** |
 | Public search RPC | none at application layer | `search_marketplace_products` | **BLOCKED** |
 
-On `main`, the shared helper returned `allowed: true` when the rate-limit RPC itself errored. A fail-closed remediation was committed on the Phase 3 readiness branch; it must pass CI and merge before this control is considered closed.
+The shared helper now fails closed when the rate-limit RPC errors. PR #18 carried this remediation, GitHub Actions returned Green on the exact Head `79105f3c872add83f4fd7c50a01b460b88de98c4`, and the change was squash-merged to `main` as `50fee79b9429ebef27a880203a2ecc9638f4ad26`.
 
 The public search path also has no equivalent application-layer limiter. Supabase's documented `db_pre_request` write-counter pattern cannot directly rate-limit GET/HEAD requests; the search path therefore needs an explicit application/edge/WAF control if it is to carry a production abuse ceiling.
 
@@ -158,11 +158,24 @@ This is an environment/access limitation, not evidence that the application rout
 
 ## 5. CI / repository release evidence
 
-**Status: PASS by prior PR evidence; current post-merge push status not independently exposed**
+**Status: PASS — PR #18 release checks Green; post-merge push check is connector-limited**
 
 PR #17 was merged into `main` at:
 
 `a509d9b6ac34e8fe97e7f813499d0fbcfe5e692f`
+
+PR #18 (`chore/phase-3-go-live-readiness-20260925`) was merged by squash into `main` as:
+
+`50fee79b9429ebef27a880203a2ecc9638f4ad26`
+
+The exact PR #18 Head `79105f3c872add83f4fd7c50a01b460b88de98c4` passed both GitHub Actions workflows:
+
+- `DEBA CI` verify run `36188349439`: PASS
+- `DEBA CI` quality run `36188349522`: PASS
+- Typecheck: PASS
+- Contract tests: PASS
+- Playwright collection: PASS
+- Build: PASS
 
 Prior PR validation recorded:
 
@@ -186,8 +199,8 @@ The current connected GitHub status endpoint exposes no status entries for the m
 | Auto-pause trigger | PASS |
 | DB performance baseline | PASS |
 | Auth leaked-password protection | **PLATFORM_ACTION_REQUIRED** |
-| Reports rate limiting fail-closed | **REMEDIATION IN BRANCH; CI PENDING** |
-| Offer mutation rate limiting fail-closed | **REMEDIATION IN BRANCH; CI PENDING** |
+| Reports rate limiting fail-closed | **PASS — merged and CI-verified** |
+| Offer mutation rate limiting fail-closed | **PASS — merged and CI-verified** |
 | Public search abuse-rate control | **BLOCKER** |
 | Deployed Vercel route walkthrough | **BLOCKED / environment access** |
 | No fabricated production test data | PASS |
@@ -197,16 +210,15 @@ The current connected GitHub status endpoint exposes no status entries for the m
 Before declaring the official public launch:
 
 1. Enable Supabase leaked-password protection and rerun Security Advisor.
-2. Change the shared rate-limit helper to fail closed on limiter errors.
-3. Add an enforceable production abuse limit for public search (application/edge/WAF or an equivalent request-aware control).
-4. Run the authenticated Playwright suite against the real deployed production/staging URL using a dedicated non-production test account.
-5. Re-run the complete launch checklist and capture the resulting production URL and HTTP/browser timings.
+2. Add an enforceable production abuse limit for public search (application/edge/WAF or an equivalent request-aware control).
+3. Run the authenticated Playwright suite against the real deployed production/staging URL using a dedicated non-production test account.
+4. Re-run the complete launch checklist and capture the resulting production URL and HTTP/browser timings.
 
 ## Final attestation
 
-At **2026-09-25**, DEBA remains **not yet cleared for an official Go-Live announcement** under an evidence-first production gate. The fail-closed limiter remediation is committed on PR #18 but is not considered closed until CI returns Green and the change is merged to `main`.
+At **2026-09-25**, DEBA is now at **Release Candidate 1.0 — conditional** under the evidence-first production gate. PR #18 is merged to `main`, and its exact Head passed both GitHub Actions workflows with Typecheck, Contract Tests, Playwright Collection, and Build all Green.
 
-The database trust/privacy controls and database performance baseline are healthy. The remaining blockers are explicit and actionable: one Supabase environment security setting, production-grade fail-closed rate limiting, a public-search abuse ceiling, and independent verification of the deployed application URL.
+The database trust/privacy controls, database performance baseline, and fail-closed application rate limiting are verified. The remaining launch blockers are explicit and actionable: one Supabase Auth security setting, a public-search abuse ceiling, and independent verification of the deployed application URL.
 
 Supabase security guidance:
 https://supabase.com/docs/guides/api/securing-your-api
