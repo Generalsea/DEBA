@@ -344,3 +344,14 @@ test('product view telemetry keeps direct table access denied and indexed', asyn
   assert.match(migration, /using \(false\)/)
   assert.match(migration, /with check \(false\)/)
 })
+
+test('seller partial edits preserve unedited description and location fields', async () => {
+  const migration = await read(
+    'supabase/migrations/20260925201036_preserve_seller_listing_location_on_partial_edit_20260925.sql',
+  )
+
+  assert.match(migration, /when p_description is null then v_product\.description/)
+  assert.match(migration, /when p_city is null then v_product\.city/)
+  assert.match(migration, /when p_governorate is null then v_product\.governorate/)
+  assert.match(migration, /when p_district is null then v_product\.district/)
+})
