@@ -201,6 +201,8 @@ test('marketplace hardening exposes location, seller stores, chat, and optimisti
   assert.match(chatSurface, /conversation-empty-state/)
   assert.match(chatSurface, /product-card-msg-media/)
   assert.match(chatSurface, /window\.DEBAComms\.setProductState = function\(state\)/)
+  assert.doesNotMatch(chatSurface, /dataset\.hasProduct = room && room\.product_id/)
+  assert.match(chatSurface, /window\.DEBAComms\.setProductState\('loading'\)/)
   assert.match(chatSurface, /product-context-ready/)
   assert.match(chatSurface, /offer-card/)
   assert.match(chatSurface, /offer-btn accept/)
