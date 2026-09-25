@@ -1,0 +1,27 @@
+name: DEBA Vercel Deployment Diagnostic
+
+on:
+  push:
+    branches: [chore/vercel-deployment-diagnostic]
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-vercel-failure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      FAILED_DEPLOYMENT_ID: dpl_B4BriTjCKGxD1hSQGvgQZf3gZoTS
+    steps:
+      - name: Verify token availability
+        shell: bash
+        run: |
+          if [ -z "${VERCEL_TOKEN:-}" ]; then
+            echo "VERCEL_TOKEN repository secret is not configured or not available to this workflow."
+            exit 2
+          fi
+
+      - name: Inspect failed Vercel deployment
+        run: npx --yes vercel@latest inspect "${FAILED_DEPLOYMENT_ID}" --logs --token "${VERCEL_TOKEN}"
