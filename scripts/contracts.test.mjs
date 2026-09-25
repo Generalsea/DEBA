@@ -417,6 +417,8 @@ test('verified seller ratings are only writable through transaction-bound review
   assert.match(form, /targetId: sellerId/)
   assert.match(form, /Idempotency-Key/)
   assert.match(api, /rpc\('create_review'/)
+  assert.match(api, /targetType !== 'product' && targetType !== 'seller'/)
+  assert.match(api, /p_target_type: targetType/)
 })
 
 test('direct report row mutations are revoked for public API roles', async () => {
