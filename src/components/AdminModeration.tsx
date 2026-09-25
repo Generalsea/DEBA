@@ -108,6 +108,7 @@ type Action =
   | 'reject_product'
   | 'publish_review'
   | 'hide_review'
+  | 'review_report'
   | 'resolve_report'
   | 'dismiss_report'
   | 'review_dispute'
@@ -561,24 +562,42 @@ export default function AdminModeration() {
                     </div>
                   </div>
                   <div className="deba-admin-card-actions">
-                    <button
-                      type="button"
-                      className="primary"
-                      disabled={busy !== null}
-                      onClick={() => void act('resolve_report', report.id, 'تمت مراجعة البلاغ واتخاذ الإجراء المناسب.')}
-                    >
-                      {busy === report.id + ':resolve_report' ? <Loader2 size={15} className="deba-spin" /> : <CheckCircle2 size={15} />}
-                      معالجة
-                    </button>
-                    <button
-                      type="button"
-                      className="danger"
-                      disabled={busy !== null}
-                      onClick={() => void act('dismiss_report', report.id, 'لم يثبت وجود مخالفة بعد المراجعة.')}
-                    >
-                      {busy === report.id + ':dismiss_report' ? <Loader2 size={15} className="deba-spin" /> : <XCircle size={15} />}
-                      إغلاق
-                    </button>
+                    <span className="deba-admin-inline-status">
+                      {report.status === 'under_review' ? 'قيد المراجعة' : 'جديد'}
+                    </span>
+                    {report.status === 'open' ? (
+                      <button
+                        type="button"
+                        className="primary"
+                        disabled={busy !== null}
+                        onClick={() => void act('review_report', report.id, 'بدأت مراجعة البلاغ.')}
+                      >
+                        {busy === report.id + ':review_report' ? <Loader2 size={15} className="deba-spin" /> : <FileSearch size={15} />}
+                        بدء المراجعة
+                      </button>
+                    ) : null}
+                    {report.status === 'under_review' ? (
+                      <>
+                        <button
+                          type="button"
+                          className="primary"
+                          disabled={busy !== null}
+                          onClick={() => void act('resolve_report', report.id, 'تمت مراجعة البلاغ واتخاذ الإجراء المناسب.')}
+                        >
+                          {busy === report.id + ':resolve_report' ? <Loader2 size={15} className="deba-spin" /> : <CheckCircle2 size={15} />}
+                          حل البلاغ
+                        </button>
+                        <button
+                          type="button"
+                          className="danger"
+                          disabled={busy !== null}
+                          onClick={() => void act('dismiss_report', report.id, 'لم يثبت وجود مخالفة بعد المراجعة.')}
+                        >
+                          {busy === report.id + ':dismiss_report' ? <Loader2 size={15} className="deba-spin" /> : <XCircle size={15} />}
+                          رفض البلاغ
+                        </button>
+                      </>
+                    ) : null}
                   </div>
                 </article>
               ))
