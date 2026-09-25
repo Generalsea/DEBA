@@ -96,6 +96,18 @@ type ReviewRow = {
   rating: number
 }
 
+type HeaderPromoRow = {
+  id: string
+  title: string
+  subtitle: string | null
+  media_type: 'image' | 'video'
+  media_url: string
+  poster_url: string | null
+  target_url: string
+  cta_label: string | null
+  alt_text: string | null
+}
+
 const CONDITION_LABELS: Record<string, string> = {
   new: 'جديد',
   like_new: 'كالجديد',
@@ -348,7 +360,8 @@ async function loadHomeData(filters: SearchFilters) {
     ratingByProduct.set(review.product_id, current)
   }
 
-  const headerAds: HeaderPromo[] = (headerAdsResponse.data || []).flatMap((row) => {
+  const headerPromoRows = (headerAdsResponse.data || []) as unknown as HeaderPromoRow[]
+  const headerAds: HeaderPromo[] = headerPromoRows.flatMap((row) => {
     if (row.media_type !== 'image' && row.media_type !== 'video') return []
     if (!row.media_url || !row.target_url || !row.title) return []
     if (!isSafeUrl(row.media_url) || !isSafeUrl(row.target_url)) return []
