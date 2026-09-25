@@ -167,7 +167,7 @@ test('marketplace hardening exposes location, seller stores, chat, and optimisti
   assert.match(chatMembershipMigration, /drop policy if exists "chat_participants_insert_self"/)
   assert.match(chatMembershipMigration, /revoke insert on public\.chat_participants from anon, authenticated/)
   assert.match(favorite, /deba:favorite-changed/)
-  assert.match(favorite, /setIsFavorite(!previous)/)
+  assert.match(favorite, /setIsFavorite\(!previous\)/)
   assert.match(migration, /profiles_seller_store_key_uidx/)
   assert.match(migration, /chat_security_events/)
 })
