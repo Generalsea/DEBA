@@ -13405,3 +13405,14 @@ html[data-theme="dark"] .deba-comms-security-banner-sm {
   opacity: 0.45;
   pointer-events: none;
 }
+
+.deba-detail-faq-list {
+  display: grid;
+  gap: 8px;
+}
+
+.deba-detail-faq-list details {
+  border: 1px solid var(--deba-border);
+  border-radius: 12px;
+  background: var(--deba-surface-2);
+}
