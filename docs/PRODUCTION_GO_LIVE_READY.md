@@ -23,7 +23,7 @@ No production business data was fabricated or mutated for this gate.
 
 ### 1.1 Supabase Auth — leaked password protection
 
-**Status: BLOCKER**
+**Status: PLATFORM_ACTION_REQUIRED**
 
 Live Supabase Security Advisor reports exactly one warning:
 
@@ -37,7 +37,7 @@ Supabase documents this control as an Auth/password-security setting that reject
 Remediation:
 https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
 
-**Required production action:** enable leaked-password protection in Supabase **Authentication → Settings / Password Security**, then rerun Security Advisor and remove this exception from the release gate.
+**Required platform action:** enable leaked-password protection in Supabase **Authentication → Settings / Password Security**. After enabling it, rerun Security Advisor; the expected result for this gate is zero Security Advisor WARN findings. Until then, this item remains `PLATFORM_ACTION_REQUIRED`, not PASS.
 
 The current connected Supabase tooling does not expose an Auth-project-settings mutation operation, so this environmental setting was not changed programmatically during this run.
 
@@ -138,7 +138,15 @@ Repository inspection confirms the relevant application paths exist, including:
 - Report submission and moderation lifecycle.
 - Authenticated Playwright coverage and production build scripts.
 
-A complete **deployed** walkthrough could not be independently completed because no Vercel team/project is exposed to the current connected environment, and the repository still contains a placeholder `NEXT_PUBLIC_SITE_URL` value in `.env.example`.
+A complete **deployed** walkthrough could not be independently completed because no Vercel team/project is exposed to the current connected environment. The production deployment must set `NEXT_PUBLIC_SITE_URL` to the canonical HTTPS application origin and the value must match the URL used by Auth callbacks/redirects and production verification.
+
+### POST-DEPLOYMENT VERIFICATION STEP
+
+After the first production deployment, set the Vercel production environment variable:
+
+`NEXT_PUBLIC_SITE_URL=https://<canonical-production-domain>`
+
+Then redeploy if the deployment does not automatically pick up the environment change. Verify from the deployed app that the canonical origin is used consistently for production links and Auth callback/redirect configuration. Run the authenticated Playwright suite against that exact HTTPS origin using the dedicated non-production E2E account.
 
 The following candidate Vercel URLs were also not resolvable through the connected deployment access:
 
@@ -177,9 +185,9 @@ The current connected GitHub status endpoint exposes no status entries for the m
 | Moderation lifecycle | PASS |
 | Auto-pause trigger | PASS |
 | DB performance baseline | PASS |
-| Auth leaked-password protection | **BLOCKER** |
-| Reports rate limiting fail-closed | **BLOCKER** |
-| Offer mutation rate limiting fail-closed | **BLOCKER** |
+| Auth leaked-password protection | **PLATFORM_ACTION_REQUIRED** |
+| Reports rate limiting fail-closed | **REMEDIATION IN BRANCH; CI PENDING** |
+| Offer mutation rate limiting fail-closed | **REMEDIATION IN BRANCH; CI PENDING** |
 | Public search abuse-rate control | **BLOCKER** |
 | Deployed Vercel route walkthrough | **BLOCKED / environment access** |
 | No fabricated production test data | PASS |
@@ -196,7 +204,7 @@ Before declaring the official public launch:
 
 ## Final attestation
 
-At **2026-09-25**, DEBA is **not yet cleared for an official Go-Live announcement** under an evidence-first production gate.
+At **2026-09-25**, DEBA remains **not yet cleared for an official Go-Live announcement** under an evidence-first production gate. The fail-closed limiter remediation is committed on PR #18 but is not considered closed until CI returns Green and the change is merged to `main`.
 
 The database trust/privacy controls and database performance baseline are healthy. The remaining blockers are explicit and actionable: one Supabase environment security setting, production-grade fail-closed rate limiting, a public-search abuse ceiling, and independent verification of the deployed application URL.
 
