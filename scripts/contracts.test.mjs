@@ -426,3 +426,24 @@ test('direct report row mutations are revoked for public API roles', async () =>
 
   assert.match(migration, /revoke update, delete on public\.reports from anon, authenticated/)
 })
+
+test('public review feeds expose safe columns instead of direct review table reads', async () => {
+  const reviewApi = await read('src/app/api/reviews/route.ts')
+  const store = await read('src/app/[sellerStoreKey]/page.tsx')
+  const migration = await read(
+    'supabase/migrations/20260925202524_safe_public_review_feeds_20260925.sql',
+  )
+  const limitFix = await read(
+    'supabase/migrations/20260925202541_fix_seller_review_feed_limit_20260925.sql',
+  )
+
+  assert.match(reviewApi, /get_product_review_feed/)
+  assert.doesNotMatch(reviewApi, /from\(['"]reviews['"]\)/)
+  assert.match(store, /get_seller_review_feed/)
+  assert.doesNotMatch(store, /from\(['"]reviews['"]\)/)
+  assert.match(migration, /revoke select on public\.reviews from anon, authenticated/)
+  assert.match(migration, /get_product_review_feed/)
+  assert.match(migration, /verifiedPurchase/)
+  assert.match(migration, /case when coalesce\(p\.is_public,false\)/)
+  assert.match(limitFix, /limit greatest\(1, least\(coalesce\(p_limit,6\), 12\)\)/)
+})
