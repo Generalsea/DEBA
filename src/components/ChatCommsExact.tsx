@@ -131,6 +131,7 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         setStats?: (stats: { conversations: number; activeOffers: number; responseRate: string }) => void
         setRoom?: (room: Room) => void
         renderMessages?: (messages: Message[], currentUserId: string | null) => void
+        setMessagesLoading?: (loading: boolean) => void
         onOpenChat?: (roomId: string) => void | Promise<void>
         onProductOpen?: () => void | Promise<void>
         onNavigate?: (destination: 'home' | 'profile' | 'product') => void | Promise<void>
@@ -205,6 +206,7 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
       })
       const data = await response.json() as { messages?: Message[]; error?: string }
       if (!response.ok) throw new Error(data.error || 'تعذر تحميل الرسائل.')
+      frameWindow()?.DEBAComms?.setMessagesLoading?.(false)
       frameWindow()?.DEBAComms?.renderMessages?.(data.messages || [], userIdRef.current)
       return data.messages || []
     }
@@ -242,6 +244,8 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
           await openLiveRoom(rooms[0].id)
         } else if (!rooms.length) {
           roomIdRef.current = null
+          frameWindow()?.DEBAComms?.setProductState?.(initialProduct ? 'error' : 'empty')
+          frameWindow()?.DEBAComms?.setMessagesLoading?.(false)
           frameWindow()?.DEBAComms?.renderMessages?.([], userIdRef.current)
         }
       } finally {
@@ -557,8 +561,7 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         userIdRef.current = typeof data?.claims?.sub === 'string' ? data.claims.sub : null
 
         frameWindow()?.DEBAComms?.setChats?.([])
-        frameWindow()?.DEBAComms?.renderMessages?.([], userIdRef.current)
-
+        frameWindow()?.DEBAComms?.setMessagesLoading?.(true)
         if (initialProduct) {
           roomIdRef.current = await createProductRoom()
         }
@@ -569,6 +572,8 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
           await openLiveRoom(roomIdRef.current)
         }
       } catch (error) {
+        frameWindow()?.DEBAComms?.setMessagesLoading?.(false)
+        if (initialProduct) frameWindow()?.DEBAComms?.setProductState?.('error')
         showToast(error instanceof Error ? error.message : 'تعذر تحميل مركز المحادثات.')
       }
 
