@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DEBA Comms — تواصل مع songtone1 | شليور لاسلكي 18V</title>
+<title>DEBA Comms — مركز المحادثات</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -178,6 +178,23 @@
   .product-context { padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg-subtle); }
   .product-context-card { display: flex; gap: 14px; padding: 12px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all var(--ease); cursor: pointer; }
   .product-context-card:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.product-context-card[data-state="loading"] { cursor: default; }
+.product-context-card[data-state="loading"]:hover { border-color: var(--border); box-shadow: none; transform: none; }
+.product-context-state { display: flex; align-items: center; gap: 14px; min-height: 96px; }
+.product-context-state > div:last-child { display: flex; flex-direction: column; gap: 4px; }
+.product-context-state strong { font-size: 13px; color: var(--text); }
+.product-context-state span { font-size: 11.5px; color: var(--text-tertiary); line-height: 1.5; }
+.product-loading-thumb { width: 72px; height: 72px; border-radius: var(--radius-md); background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-hover) 37%, var(--bg-subtle) 63%); background-size: 400% 100%; animation: productSkeleton 1.4s ease infinite; flex-shrink: 0; }
+.product-loading-copy { flex: 1; }
+.product-loading-copy span { display: block; width: 100%; height: 10px; border-radius: 999px; background: var(--bg-subtle); animation: productSkeleton 1.4s ease infinite; }
+.product-loading-copy span:nth-child(2) { width: 72%; }
+.product-loading-copy span:nth-child(3) { width: 48%; }
+@keyframes productSkeleton { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+.product-context-empty, .product-context-error { justify-content: flex-start; }
+.product-context-empty-icon { width: 44px; height: 44px; border-radius: var(--radius-full); background: var(--bg-subtle); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); font-weight: 800; flex-shrink: 0; }
+.product-context-error .product-context-empty-icon { color: var(--danger); background: var(--danger-bg); border-color: transparent; }
+.product-context-ready { display: flex; gap: 14px; }
+.product-thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg-subtle); color: var(--text-tertiary); font: 800 13px/1 var(--font-en); letter-spacing: 1.5px; }
   .product-thumb { width: 72px; height: 72px; border-radius: var(--radius-md); overflow: hidden; flex-shrink: 0; background: var(--bg-subtle); position: relative; }
   .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
   .product-thumb .badge { position: absolute; top: 4px; right: 4px; background: var(--primary); color: white; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-full); }
@@ -195,6 +212,10 @@
   .messages-area::-webkit-scrollbar { width: 6px; }
   .messages-area::-webkit-scrollbar-track { background: transparent; }
   .messages-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.messages-state { display: flex; flex-direction: column; gap: 12px; width: min(72%, 340px); margin: auto 0 auto auto; padding: 16px 0; }
+.message-skeleton { height: 42px; border-radius: 18px; background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-hover) 37%, var(--bg-elevated) 63%); background-size: 400% 100%; animation: productSkeleton 1.4s ease infinite; border: 1px solid var(--border); }
+.message-skeleton-short { width: 68%; }
+.message-skeleton-long { width: 92%; }
   .date-divider { display: flex; align-items: center; gap: 16px; margin: 16px 0; }
   .date-divider::before, .date-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .date-divider-label { padding: 6px 14px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-full); font-size: 11.5px; font-weight: 600; color: var(--text-tertiary); white-space: nowrap; box-shadow: var(--shadow-xs); font-family: var(--font-en); }
@@ -340,7 +361,7 @@
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
           <circle cx="12" cy="10" r="3"></circle>
         </svg>
-        <span>التسوق في مصر · القاهرة، القاهرة</span>
+        <span>التسوق في مصر</span>
       </div>
       <div class="header-help">
         <a href="#">المساعدة</a>
@@ -350,7 +371,7 @@
     </div>
     <div class="header-left">
       <div class="account-area">
-        <a class="account-link" id="accountLink" href="/profile" aria-label="حسابي">
+        <a class="account-link" id="accountLink" href="#" aria-label="حسابي" onclick="return navigate('profile', event)">
           <div class="account-avatar" id="accountAvatar">
             <span id="accountInitials">أ</span>
             <span class="account-online-dot"></span>
@@ -363,7 +384,7 @@
         </a>
       </div>
 
-      <a class="logo brand-home-link" href="/" aria-label="العودة إلى الصفحة الرئيسية">
+      <a class="logo brand-home-link" href="#" aria-label="العودة إلى الصفحة الرئيسية" onclick="return navigate('home', event)">
         <div class="logo-mark">D</div>
         <div>
           <div>DEBA</div>
@@ -376,14 +397,14 @@
   <div class="main-content">
     <div class="chat-panel">
       <div class="chat-topbar">
-        <button class="listing-back" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/'">
+        <button class="listing-back" type="button" onclick="return navigate('product', event)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
           <div>
             <div style="font-size: 11px; color: var(--text-tertiary);">العودة للإعلان</div>
             <div style="display:flex;gap:6px;align-items:center;">
-              <span class="listing-title">شليور لاسلكي 18V</span>
+              <span class="listing-title">جارٍ تحميل الإعلان</span>
               <span class="listing-price">— 180 جنيه</span>
             </div>
           </div>
@@ -391,13 +412,12 @@
 
         <div class="seller-info-bar">
           <div class="seller-avatar-sm">
-            S
             <span class="online-dot"></span>
           </div>
           <div class="seller-meta">
             <div class="seller-label">شريك المحادثة</div>
             <div class="seller-name">
-              songtone1
+              جارٍ تحميل المحادثة
               <svg class="verified-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2L14.09 4.26L17 3.27L17.74 6.26L20.73 7L19.74 9.91L22 12L19.74 14.09L20.73 17L17.74 17.74L17 20.73L14.09 19.74L12 22L9.91 19.74L7 20.73L6.26 17.74L3.27 17L4.26 14.09L2 12L4.26 9.91L3.27 7L6.26 6.26L7 3.27L9.91 4.26L12 2Z"/>
                 <path d="M10 12L11.5 13.5L14 10" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -440,142 +460,45 @@
       </div>
 
       <div class="product-context">
-        <div class="product-context-card" id="productContextCard" onclick="window.DEBAComms && typeof window.DEBAComms.onProductOpen === 'function' ? window.DEBAComms.onProductOpen() : null">
-          <div class="product-thumb">
-            <img src="https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=200&h=200&fit=crop" alt="شليور">
-            <span class="badge">إعلان نشط</span>
-          </div>
-          <div class="product-details">
-            <div class="product-title">شليور لاسلكي 18V — تجربة DEBA</div>
-            <div class="product-meta">
-              <span>أدوات ومعدات</span>
-              <span class="dot"></span>
-              <span>القاهرة</span>
-              <span class="dot"></span>
-              <span>مستعمل · حالة ممتازة</span>
+        <div class="product-context-card" id="productContextCard" data-state="loading" aria-busy="true">
+          <div class="product-context-state product-context-loading" id="productContextLoading">
+            <div class="product-loading-thumb" aria-hidden="true"></div>
+            <div class="product-loading-copy" aria-hidden="true">
+              <span></span><span></span><span></span>
             </div>
-            <div class="product-price-row">
-              <div class="product-price">180 <span class="currency">جنيه</span></div>
-              <button class="view-listing-btn">عرض الإعلان</button>
+          </div>
+          <div class="product-context-state product-context-empty" id="productContextEmpty" hidden>
+            <div class="product-context-empty-icon" aria-hidden="true">💬</div>
+            <div><strong>لا يوجد إعلان مرتبط بالمحادثة</strong><span>يمكن متابعة المحادثة بدون بطاقة إعلان.</span></div>
+          </div>
+          <div class="product-context-state product-context-error" id="productContextError" hidden>
+            <div class="product-context-empty-icon" aria-hidden="true">!</div>
+            <div><strong>تعذر تحميل بيانات الإعلان</strong><span>أعد تحميل المحادثة للمحاولة مرة أخرى.</span></div>
+          </div>
+          <div class="product-context-ready" id="productContextReady" hidden>
+            <div class="product-thumb">
+              <div class="product-thumb-placeholder" id="productThumbPlaceholder" aria-hidden="true">DEBA</div>
+              <img id="productThumbImage" alt="" hidden>
+              <span class="badge" id="productStatusBadge">إعلان مرتبط</span>
+            </div>
+            <div class="product-details">
+              <div class="product-title" id="productTitle"></div>
+              <div class="product-meta" id="productMeta"></div>
+              <div class="product-price-row">
+                <div class="product-price" id="productPrice"></div>
+                <button class="view-listing-btn" type="button" onclick="return navigate('product', event)">عرض الإعلان</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      <div class="messages-area" id="messagesArea">
-        <div class="date-divider">
-          <div class="date-divider-label">اليوم · 14:32</div>
-        </div>
-
-        <div class="message sent">
-          <div class="message-avatar">S</div>
-          <div class="message-content">
-            <div class="message-bubble">السلام عليكم، أنا مهتم بالشليور اللاسلكي. هل لا يزال متاحًا؟</div>
-            <div class="message-meta">
-              <span>14:32</span>
-              <span class="read-receipt">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                  <polyline points="16 6 7 17 2 12" transform="translate(4, 0)"></polyline>
-                </svg>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div class="message received">
-          <div class="message-avatar">أ</div>
-          <div class="message-content">
-            <div class="message-bubble">وعليكم السلام ورحمة الله! نعم متاح، استخدمته شوية بس في حالة ممتازة. معاه بطاريتين وشاحن أصلي.</div>
-            <div class="message-meta"><span>14:35</span></div>
-          </div>
-        </div>
-
-        <div class="message sent">
-          <div class="message-avatar">S</div>
-          <div class="message-content">
-            <div class="message-bubble">ممتاز! هل يمكن رؤية صور إضافية للبطاريات؟ وهل السعر قابل للتفاوض؟</div>
-            <div class="message-meta">
-              <span>14:36</span>
-              <span class="read-receipt">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                  <polyline points="16 6 7 17 2 12" transform="translate(4, 0)"></polyline>
-                </svg>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div class="message received">
-          <div class="message-avatar">أ</div>
-          <div class="message-content">
-            <div class="product-card-msg">
-              <img src="https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=400&h=300&fit=crop" alt="">
-              <div class="product-card-msg-body">
-                <div class="product-card-msg-title">شليور لاسلكي 18V + بطاريتين</div>
-                <div class="product-card-msg-price">180 جنيه</div>
-                <div class="product-card-msg-meta">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  القاهرة · إعلان مرتبط
-                </div>
-              </div>
-            </div>
-            <div class="message-meta"><span>14:38</span></div>
-          </div>
-        </div>
-
-        <div class="message received">
-          <div class="message-avatar">أ</div>
-          <div class="message-content">
-            <div class="offer-card">
-              <div class="offer-header">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="12" y1="1" x2="12" y2="23"></line>
-                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                </svg>
-                عرض سعر من البائع
-              </div>
-              <div class="offer-amount">160 جنيه</div>
-              <div class="offer-note">يمكنني تخفيض السعر إلى 160 جنيه إذا استلمته اليوم من المعادي.</div>
-              <div class="offer-actions">
-                <button class="offer-btn accept" onclick="handleOffer('accept')">قبول</button>
-                <button class="offer-btn counter" onclick="handleOffer('counter')">تفاوض</button>
-                <button class="offer-btn decline" onclick="handleOffer('decline')">رفض</button>
-              </div>
-            </div>
-            <div class="message-meta"><span>14:40</span></div>
-          </div>
-        </div>
-
-        <div class="message sent">
-          <div class="message-avatar">S</div>
-          <div class="message-content">
-            <div class="message-bubble">شكرًا على الصور! السعر معقول. هل يمكن الاستلام من مدينة نصر بدل المعادي؟</div>
-            <div class="message-meta">
-              <span>14:42</span>
-              <span class="read-receipt">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                  <polyline points="16 6 7 17 2 12" transform="translate(4, 0)"></polyline>
-                </svg>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div class="message received" id="typingMsg">
-          <div class="message-avatar">أ</div>
-          <div class="message-content">
-            <div class="typing-indicator">
-              <div class="typing-dot"></div>
-              <div class="typing-dot"></div>
-              <div class="typing-dot"></div>
-            </div>
-          </div>
+      <div class="messages-area" id="messagesArea" aria-live="polite" aria-busy="true">
+        <div class="messages-state messages-loading" id="messagesLoading">
+          <div class="message-skeleton message-skeleton-short"></div>
+          <div class="message-skeleton message-skeleton-long"></div>
+          <div class="message-skeleton message-skeleton-short"></div>
         </div>
       </div>
-
       <div class="quick-replies">
         <button class="quick-reply" onclick="sendQuick('هل السعر قابل للتفاوض؟')">💰 هل السعر قابل للتفاوض؟</button>
         <button class="quick-reply" onclick="sendQuick('أين يمكن الاستلام؟')">📍 أين يمكن الاستلام؟</button>
@@ -651,16 +574,16 @@
 
       <div class="tabs">
         <button class="tab active" data-tab="all" onclick="switchTab(this)">الكل</button>
-        <button class="tab" data-tab="unread" onclick="switchTab(this)">غير مقروءة <span class="tab-badge">2</span></button>
+        <button class="tab" data-tab="unread" onclick="switchTab(this)">غير مقروءة</button>
         <button class="tab" data-tab="offers" onclick="switchTab(this)">عروض</button>
       </div>
 
       <div class="chat-list" id="chatList"></div>
 
       <div class="sidebar-stats">
-        <div class="stat-item"><div class="stat-value">12</div><div class="stat-label">محادثة</div></div>
-        <div class="stat-item"><div class="stat-value">3</div><div class="stat-label">عروض نشطة</div></div>
-        <div class="stat-item"><div class="stat-value">98%</div><div class="stat-label">معدل الرد</div></div>
+        <div class="stat-item"><div class="stat-value">0</div><div class="stat-label">محادثة</div></div>
+        <div class="stat-item"><div class="stat-value">0</div><div class="stat-label">عروض نشطة</div></div>
+        <div class="stat-item"><div class="stat-value">—</div><div class="stat-label">معدل الرد</div></div>
       </div>
     </aside>
   </div>
@@ -679,17 +602,44 @@
 </div>
 
 <script>
-  const chats = [
-    { id: 1, name: 'songtone1', avatar: 'S', gradient: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)', online: true, verified: true, unread: 0, lastTime: '14:42', lastMsg: 'شكرًا على الصور! السعر معقول...', product: { title: 'شليور لاسلكي 18V', price: '180 جنيه', img: 'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=100&h=100&fit=crop' }, active: true },
-    { id: 2, name: 'أحمد محمد', avatar: 'أ', gradient: 'linear-gradient(135deg, #667EEA 0%, #764BA2 100%)', online: true, verified: true, unread: 2, lastTime: '12:15', lastMsg: 'هل الساعة لا تزال متاحة؟', product: { title: 'ساعة ذكية متعددة الوظائف', price: '2,450 جنيه', img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&h=100&fit=crop' } },
-    { id: 3, name: 'فاطمة حسن', avatar: 'ف', gradient: 'linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%)', online: false, verified: false, unread: 1, lastTime: 'أمس', lastMsg: 'شكرًا جزيلاً لك!', product: { title: 'سماعات لاسلكية', price: '1,850 جنيه', img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop' } },
-    { id: 4, name: 'يوسف إبراهيم', avatar: 'ي', gradient: 'linear-gradient(135deg, #43E97B 0%, #38F9D7 100%)', online: false, verified: true, unread: 0, lastTime: 'أمس', lastMsg: 'هل يمكن خفض السعر قليلاً؟', product: { title: 'لابتوب للأعمال', price: '15,500 جنيه', img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=100&h=100&fit=crop' } },
-    { id: 5, name: 'نور الدين', avatar: 'ن', gradient: 'linear-gradient(135deg, #FA709A 0%, #FEE140 100%)', online: true, verified: false, unread: 0, lastTime: 'منذ يومين', lastMsg: 'تم الاستلام، شكرًا!', product: null },
-    { id: 6, name: 'كريم سامي', avatar: 'ك', gradient: 'linear-gradient(135deg, #A8EDEA 0%, #FED6E3 100%)', online: false, verified: false, unread: 0, lastTime: 'منذ 3 أيام', lastMsg: 'أرسلت لك الصور', product: { title: 'كاميرا احترافية', price: '8,900 جنيه', img: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=100&h=100&fit=crop' } }
-  ];
+  const chats = [];
   let currentTab = 'all';
 
   window.DEBAComms = window.DEBAComms || {};
+  function navigate(destination, event) {
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+    if (typeof window.DEBAComms.onNavigate === 'function') {
+      return window.DEBAComms.onNavigate(destination);
+    }
+    return false;
+  }
+
+  window.DEBAComms.setProductState = function(state) {
+    const card = document.getElementById('productContextCard');
+    if (!card) return;
+    const states = {
+      loading: document.getElementById('productContextLoading'),
+      empty: document.getElementById('productContextEmpty'),
+      error: document.getElementById('productContextError'),
+      ready: document.getElementById('productContextReady'),
+    };
+    Object.entries(states).forEach(([key, node]) => {
+      if (node) node.hidden = key !== state;
+    });
+    card.dataset.state = state;
+    card.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
+  }
+
+  window.DEBAComms.setMessagesLoading = function(loading) {
+    const area = document.getElementById('messagesArea');
+    const loadingNode = document.getElementById('messagesLoading');
+    if (!area || !loadingNode) return;
+    loadingNode.hidden = !loading;
+    area.setAttribute('aria-busy', loading ? 'true' : 'false');
+  };
+
+  window.DEBAComms.setProductState('loading');
+
   window.DEBAComms.setAccount = function(viewer) {
     if (!viewer) return;
 
@@ -748,71 +698,148 @@
   };
 
   window.DEBAComms.setRoom = function(room) {
-    if (!room) return;
-    const product = room.product || {};
-    const person = room.counterparty || {};
-    const title = product.title || 'شليور لاسلكي 18V';
-    const numericPrice = Number(product.price);
-    const price = Number.isFinite(numericPrice)
-      ? new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(numericPrice)
-      : '180';
-    const currency = product.currency && product.currency !== 'EGP' ? product.currency : 'جنيه';
-    const displayPrice = price + ' ' + currency;
-    const location = product.city || product.governorate || 'القاهرة، القاهرة';
+    const card = document.getElementById('productContextCard');
+    const image = document.getElementById('productThumbImage');
+    const placeholder = document.getElementById('productThumbPlaceholder');
+    const titleNode = document.getElementById('productTitle');
+    const priceNode = document.getElementById('productPrice');
+    const metaNode = document.getElementById('productMeta');
+    const sellerNameNode = document.querySelector('.seller-name');
+    const sellerAvatar = document.querySelector('.seller-avatar-sm');
+    const locationNode = document.querySelector('.location-badge span');
 
-    document.querySelectorAll('.listing-title').forEach(node => node.textContent = title);
-    document.querySelectorAll('.listing-price').forEach(node => node.textContent = '— ' + displayPrice);
-
-    const productTitle = document.querySelector('.product-title');
-    if (productTitle) productTitle.textContent = title;
-
-    const productPrice = document.querySelector('.product-price');
-    if (productPrice) productPrice.innerHTML = price + ' <span class="currency">' + currency + '</span>';
-
-    const meta = document.querySelector('.product-meta');
-    if (meta) {
-      meta.innerHTML =
-        '<span>' + (product.categoryName || 'أدوات ومعدات') + '</span>' +
-        '<span class="dot"></span>' +
-        '<span>' + location + '</span>' +
-        '<span class="dot"></span>' +
-        '<span>' + (product.conditionGrade || 'مستعمل · حالة ممتازة') + '</span>';
+    if (!room) {
+      if (sellerNameNode) sellerNameNode.textContent = 'لا توجد محادثة محددة';
+      if (sellerAvatar) {
+        const existing = sellerAvatar.querySelector('img');
+        if (existing) existing.remove();
+      }
+      if (locationNode) locationNode.textContent = 'التسوق في مصر';
+      window.DEBAComms.setProductState('empty');
+      return;
     }
 
-    document.querySelectorAll('.product-thumb img').forEach(image => {
-      if (product.imageUrl) image.src = product.imageUrl;
-    });
-
-    const sellerName = person.display_name || person.username || 'songtone1';
-    const sellerNameNode = document.querySelector('.seller-name');
+    const person = room.counterparty || {};
     if (sellerNameNode) {
       const verified = sellerNameNode.querySelector('svg');
-      sellerNameNode.textContent = sellerName;
+      sellerNameNode.textContent = person.display_name || person.username || 'عضو DEBA';
       if (verified) sellerNameNode.appendChild(verified);
     }
 
-    const sellerAvatar = document.querySelector('.seller-avatar-sm');
     if (sellerAvatar) {
-      sellerAvatar.style.background = 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)';
+      const existing = sellerAvatar.querySelector('img');
       if (person.avatar_url) {
-        let image = sellerAvatar.querySelector('img');
-        if (!image) {
-          image = document.createElement('img');
-          sellerAvatar.prepend(image);
-        }
-        image.src = person.avatar_url;
-        image.alt = '';
+        const avatarImage = existing || document.createElement('img');
+        avatarImage.src = String(person.avatar_url);
+        avatarImage.alt = '';
+        if (!existing) sellerAvatar.prepend(avatarImage);
+      } else if (existing) {
+        existing.remove();
       }
     }
 
-    const locationNode = document.querySelector('.location-badge span');
-    if (locationNode) locationNode.textContent = 'التسوق في مصر · ' + location;
+    if (!room.product_id) {
+      if (locationNode) locationNode.textContent = 'التسوق في مصر';
+      window.DEBAComms.setProductState('empty');
+      if (titleNode) titleNode.textContent = '';
+      if (priceNode) priceNode.textContent = '';
+      if (metaNode) metaNode.textContent = '';
+      if (image) {
+        image.hidden = true;
+        image.removeAttribute('src');
+        delete image.dataset.srcUrl;
+      }
+      if (placeholder) placeholder.hidden = false;
+      return;
+    }
+
+    if (!room.product) {
+      window.DEBAComms.setProductState('error');
+      return;
+    }
+
+    const product = room.product;
+    const title = typeof product.title === 'string' ? product.title.trim() : '';
+    const numericPrice = Number(product.price);
+    const price = Number.isFinite(numericPrice)
+      ? new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(numericPrice)
+      : 'السعر عند التواصل';
+    const currency = product.currency && product.currency !== 'EGP' ? String(product.currency) : 'جنيه';
+    const displayPrice = price === 'السعر عند التواصل' ? price : price + ' ' + currency;
+    const location = product.city || product.governorate || '';
+    const category = product.categoryName || '';
+    const condition = product.conditionGrade || '';
+
+    if (!titleNode || !metaNode || !priceNode || !card) {
+      window.DEBAComms.setProductState('error');
+      return;
+    }
+
+    titleNode.textContent = title || 'إعلان DEBA';
+    priceNode.textContent = displayPrice;
+    metaNode.innerHTML = '';
+    [category, location, condition].filter(Boolean).forEach((part, index) => {
+      if (index > 0) {
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        metaNode.appendChild(dot);
+      }
+      const span = document.createElement('span');
+      span.textContent = part;
+      metaNode.appendChild(span);
+    });
+
+    if (locationNode) locationNode.textContent = 'التسوق في مصر' + (location ? ' · ' + location : '');
+
+    const imageUrl = typeof product.imageUrl === 'string' ? product.imageUrl.trim() : '';
+    const previousImageUrl = image?.dataset.srcUrl || '';
+
+    if (!image || !placeholder) {
+      window.DEBAComms.setProductState('error');
+      return;
+    }
+
+    if (!imageUrl) {
+      image.hidden = true;
+      image.removeAttribute('src');
+      delete image.dataset.srcUrl;
+      placeholder.hidden = false;
+      window.DEBAComms.setProductState('ready');
+      return;
+    }
+
+    if (previousImageUrl !== imageUrl) {
+      placeholder.hidden = false;
+      image.hidden = true;
+      image.dataset.srcUrl = imageUrl;
+      image.onload = () => {
+        image.hidden = false;
+        placeholder.hidden = true;
+        window.DEBAComms.setProductState('ready');
+      };
+      image.onerror = () => {
+        image.hidden = true;
+        placeholder.hidden = false;
+        window.DEBAComms.setProductState('ready');
+      };
+      window.DEBAComms.setProductState('loading');
+      image.src = imageUrl;
+    } else if (image.complete && image.naturalWidth > 0) {
+      image.hidden = false;
+      placeholder.hidden = true;
+      window.DEBAComms.setProductState('ready');
+    } else {
+      window.DEBAComms.setProductState('loading');
+    }
   };
 
   window.DEBAComms.renderMessages = function(items, currentUserId) {
     const area = document.getElementById('messagesArea');
     if (!area) return;
 
+    const loadingNode = document.getElementById('messagesLoading');
+    if (loadingNode) loadingNode.remove();
+    area.setAttribute('aria-busy', 'false');
     area.innerHTML = '';
     const divider = document.createElement('div');
     divider.className = 'date-divider';
@@ -973,9 +1000,10 @@
   }
 
   function createOffer() {
-    if (typeof window.DEBAComms.onOffer === 'function') return window.DEBAComms.onOffer();
-    const amount = window.prompt('أدخل قيمة العرض بالجنيه');
-    if (amount) showToast('💰 تم إعداد عرض بقيمة ' + amount + ' جنيه');
+    if (typeof window.DEBAComms.onOffer === 'function') {
+      return window.DEBAComms.onOffer();
+    }
+    showToast('العروض المباشرة غير متاحة حاليًا.');
   }
 
   function renderChatList() {
@@ -983,7 +1011,7 @@
     const search = document.getElementById('searchInput').value.toLowerCase();
     const filtered = chats.filter(c => {
       const matchSearch = c.name.toLowerCase().includes(search) || c.lastMsg.toLowerCase().includes(search);
-      const matchTab = currentTab === 'all' || (currentTab === 'unread' && c.unread > 0) || (currentTab === 'offers' && c.product);
+      const matchTab = currentTab === 'all' || (currentTab === 'unread' && c.unread > 0) || (currentTab === 'offers' && c.hasOffers);
       return matchSearch && matchTab;
     });
 
@@ -1008,13 +1036,7 @@
     if (typeof window.DEBAComms.onOpenChat === 'function') {
       return window.DEBAComms.onOpenChat(String(id));
     }
-    const chat = chats.find(c => String(c.id) === String(id));
-    if (!chat) return;
-    chats.forEach(c => c.active = false);
-    chat.active = true;
-    chat.unread = 0;
-    renderChatList();
-    showToast(`💬 فتح محادثة مع ${chat.name}`);
+    showToast('المحادثة الحية غير متصلة حاليًا.');
   }
 
   function switchTab(el) {
@@ -1046,33 +1068,7 @@
     if (typeof window.DEBAComms.onSend === 'function') {
       return window.DEBAComms.onSend();
     }
-    const text = input.value.trim();
-    if (!text) return;
-    const area = document.getElementById('messagesArea');
-    const typingMsg = document.getElementById('typingMsg');
-    const now = new Date();
-    const time = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: false });
-    const msgHTML = `<div class="message received"><div class="message-avatar">أ</div><div class="message-content"><div class="message-bubble">${text}</div><div class="message-meta"><span>${time}</span></div></div></div>`;
-    typingMsg.insertAdjacentHTML('beforebegin', msgHTML);
-    input.value = '';
-    input.style.height = 'auto';
-    sendBtn.disabled = true;
-    area.scrollTop = area.scrollHeight;
-    chats[0].lastMsg = text;
-    chats[0].lastTime = time;
-    renderChatList();
-
-    setTimeout(() => {
-      const replies = ['تمام، شكرًا لك! 👍','ممتاز، سنتفق على التفاصيل','حسنًا، سأعود لك خلال دقائق','إن شاء الله، تمام!'];
-      const reply = replies[Math.floor(Math.random() * replies.length)];
-      const replyTime = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: false });
-      const replyHTML = `<div class="message sent"><div class="message-avatar">S</div><div class="message-content"><div class="message-bubble">${reply}</div><div class="message-meta"><span>${replyTime}</span><span class="read-receipt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline><polyline points="16 6 7 17 2 12" transform="translate(4, 0)"></polyline></svg></span></div></div></div>`;
-      typingMsg.insertAdjacentHTML('beforebegin', replyHTML);
-      area.scrollTop = area.scrollHeight;
-      chats[0].lastMsg = reply;
-      chats[0].lastTime = replyTime;
-      renderChatList();
-    }, 2500);
+    showToast('المحادثة الحية غير متصلة حاليًا.');
   }
 
   function sendQuick(text) {

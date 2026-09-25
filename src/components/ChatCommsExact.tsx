@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 
 type Product = {
@@ -109,6 +110,7 @@ function formatPrice(product: Product | null | undefined) {
 }
 
 export default function ChatCommsExact({ initialProduct }: { initialProduct: string }) {
+  const router = useRouter()
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const roomIdRef = useRef<string | null>(null)
   const userIdRef = useRef<string | null>(null)
@@ -127,10 +129,13 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         setAccount?: (viewer: Viewer) => void
         setChats?: (chats: LiveChat[]) => void
         setStats?: (stats: { conversations: number; activeOffers: number; responseRate: string }) => void
+        setProductState?: (state: 'loading' | 'empty' | 'error' | 'ready') => void
         setRoom?: (room: Room) => void
         renderMessages?: (messages: Message[], currentUserId: string | null) => void
+        setMessagesLoading?: (loading: boolean) => void
         onOpenChat?: (roomId: string) => void | Promise<void>
         onProductOpen?: () => void | Promise<void>
+        onNavigate?: (destination: 'home' | 'profile' | 'product') => void | Promise<void>
         onSend?: () => void | Promise<void>
         onQuick?: (text: string) => void | Promise<void>
         onRefresh?: () => void | Promise<void>
@@ -202,6 +207,7 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
       })
       const data = await response.json() as { messages?: Message[]; error?: string }
       if (!response.ok) throw new Error(data.error || 'تعذر تحميل الرسائل.')
+      frameWindow()?.DEBAComms?.setMessagesLoading?.(false)
       frameWindow()?.DEBAComms?.renderMessages?.(data.messages || [], userIdRef.current)
       return data.messages || []
     }
@@ -239,6 +245,8 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
           await openLiveRoom(rooms[0].id)
         } else if (!rooms.length) {
           roomIdRef.current = null
+          frameWindow()?.DEBAComms?.setProductState?.(initialProduct ? 'error' : 'empty')
+          frameWindow()?.DEBAComms?.setMessagesLoading?.(false)
           frameWindow()?.DEBAComms?.renderMessages?.([], userIdRef.current)
         }
       } finally {
@@ -485,17 +493,38 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
       }
     }
 
+    const navigate = async (destination: 'home' | 'profile' | 'product') => {
+      if (destination === 'home') {
+        router.push('/')
+        return
+      }
+
+      if (destination === 'profile') {
+        router.push('/profile')
+        return
+      }
+
+      const room = roomIdRef.current
+        ? roomsRef.current.find((item) => item.id === roomIdRef.current)
+        : null
+      const slug = room?.product?.slug
+
+      if (!slug) {
+        showToast('لا يوجد إعلان مرتبط بهذه المحادثة.')
+        return
+      }
+
+      router.push('/products/' + encodeURIComponent(slug))
+    }
+
     const installBridge = async () => {
       const win = frameWindow()
       const bridge = win?.DEBAComms
       if (!win || !bridge || disposed) return
 
       bridge.onOpenChat = openLiveRoom
-      bridge.onProductOpen = () => {
-        const room = roomIdRef.current ? roomsRef.current.find((item) => item.id === roomIdRef.current) : null
-        const slug = room?.product?.slug
-        window.location.href = slug ? '/products/' + encodeURIComponent(slug) : '/'
-      }
+      bridge.onProductOpen = () => navigate('product')
+      bridge.onNavigate = navigate
       bridge.onSend = sendMessage
       bridge.onAttach = (kind) => {
         const input = frame.contentDocument?.getElementById('attachmentInput') as HTMLInputElement | null
@@ -533,8 +562,7 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         userIdRef.current = typeof data?.claims?.sub === 'string' ? data.claims.sub : null
 
         frameWindow()?.DEBAComms?.setChats?.([])
-        frameWindow()?.DEBAComms?.renderMessages?.([], userIdRef.current)
-
+        frameWindow()?.DEBAComms?.setMessagesLoading?.(true)
         if (initialProduct) {
           roomIdRef.current = await createProductRoom()
         }
@@ -545,6 +573,8 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
           await openLiveRoom(roomIdRef.current)
         }
       } catch (error) {
+        frameWindow()?.DEBAComms?.setMessagesLoading?.(false)
+        if (initialProduct) frameWindow()?.DEBAComms?.setProductState?.('error')
         showToast(error instanceof Error ? error.message : 'تعذر تحميل مركز المحادثات.')
       }
 
@@ -577,7 +607,7 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
     <iframe
       ref={iframeRef}
       title="DEBA Comms"
-      src={'/deba-comms.html' + (initialProduct ? '?product=' + encodeURIComponent(initialProduct) : '')}
+      src="/deba-comms.html"
       style={{
         position: 'fixed',
         inset: 0,
