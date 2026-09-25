@@ -4,7 +4,8 @@ import { createClient } from '@/utils/supabase/server'
 type Context = { params: Promise<{ id: string }> }
 type MessageType = 'text' | 'image' | 'offer' | 'system'
 
-const CHAT_MEDIA_BUCKET = 'deba-product-media'
+const CHAT_MEDIA_BUCKET = 'deba-chat-media'
+const MEDIA_SIGNED_URL_TTL_SECONDS = 60 * 60
 const MAX_MESSAGE_LENGTH = 4000
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024
 const MAX_FILE_BYTES = 12 * 1024 * 1024
@@ -29,6 +30,64 @@ function safeFileName(value: string) {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 120) || 'file'
+}
+
+type ChatMessageRow = {
+  id: string
+  room_id: string
+  sender_id: string
+  message_type: MessageType
+  body: string | null
+  metadata: Record<string, unknown> | null
+  created_at: string
+}
+
+async function addSignedMediaUrls(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  messages: ChatMessageRow[],
+) {
+  const storagePaths = Array.from(
+    new Set(
+      messages
+        .map((message) => message.metadata?.storagePath)
+        .filter((value): value is string => typeof value === 'string' && value.length > 0),
+    ),
+  )
+
+  if (!storagePaths.length) return messages
+
+  const { data, error } = await supabase.storage
+    .from(CHAT_MEDIA_BUCKET)
+    .createSignedUrls(storagePaths, MEDIA_SIGNED_URL_TTL_SECONDS)
+
+  if (error) {
+    console.error('DEBA chat signed media URL generation failed', error)
+    return messages
+  }
+
+  const signedUrlByPath = new Map(
+    (data || [])
+      .filter((entry): entry is { path: string; signedUrl: string } =>
+        typeof entry?.path === 'string' && typeof entry?.signedUrl === 'string',
+      )
+      .map((entry) => [entry.path, entry.signedUrl]),
+  )
+
+  return messages.map((message) => {
+    const storagePath = message.metadata?.storagePath
+    if (typeof storagePath !== 'string') return message
+
+    const signedUrl = signedUrlByPath.get(storagePath)
+    if (!signedUrl) return message
+
+    return {
+      ...message,
+      metadata: {
+        ...(message.metadata || {}),
+        url: signedUrl,
+      },
+    }
+  })
 }
 
 async function getAuthenticatedRoom(
@@ -161,11 +220,9 @@ async function handleMultipart(
     return NextResponse.json({ error: 'تعذر رفع الملف الآن.' }, { status: 403 })
   }
 
-  const publicUrl = supabase.storage.from(CHAT_MEDIA_BUCKET).getPublicUrl(storagePath).data.publicUrl
   const messageType: MessageType = isImage ? 'image' : 'system'
   const metadata = {
     kind: isImage ? 'image' : 'file',
-    url: publicUrl,
     storagePath,
     fileName: file.name,
     mimeType: file.type,
@@ -187,7 +244,11 @@ async function handleMultipart(
     return result.error
   }
 
-  return NextResponse.json({ message: result.data, riskFlags: [] }, { status: 201 })
+  const [message] = await addSignedMediaUrls(supabase, [
+    result.data as ChatMessageRow,
+  ])
+
+  return NextResponse.json({ message, riskFlags: [] }, { status: 201 })
 }
 
 function validateLocation(value: unknown) {
@@ -236,7 +297,12 @@ export async function GET(request: Request, context: Context) {
 
     await supabase.rpc('mark_chat_read', { p_room_id: roomId })
 
-    return NextResponse.json({ messages: (data || []).reverse() })
+    const messages = await addSignedMediaUrls(
+      supabase,
+      ((data || []).reverse()) as ChatMessageRow[],
+    )
+
+    return NextResponse.json({ messages })
   } catch (error) {
     console.error('DEBA messages GET failed', error)
     return NextResponse.json({ error: 'تعذر تحميل الرسائل.' }, { status: 500 })
