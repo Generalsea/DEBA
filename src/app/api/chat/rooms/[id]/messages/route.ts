@@ -66,11 +66,11 @@ async function addSignedMediaUrls(
   }
 
   const signedUrlByPath = new Map(
-    (data || [])
-      .filter((entry): entry is { path: string; signedUrl: string } =>
-        typeof entry?.path === 'string' && typeof entry?.signedUrl === 'string',
-      )
-      .map((entry) => [entry.path, entry.signedUrl]),
+    (data || []).flatMap((entry) =>
+      typeof entry?.path === 'string' && typeof entry?.signedUrl === 'string'
+        ? [[entry.path, entry.signedUrl] as const]
+        : [],
+    ),
   )
 
   return messages.map((message) => {
