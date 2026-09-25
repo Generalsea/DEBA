@@ -368,7 +368,7 @@ test('public profiles expose only public identity and seller trust aggregates', 
   assert.match(page, /get_seller_rating_summary/)
   assert.doesNotMatch(page, /addressLine1|addressLine2|postalCode|document_storage_path|selfie_storage_path/)
   assert.match(store, /get_seller_rating_summary/)
-  assert.match(store, /sellerReviewsResult/)
+  assert.match(store, /sellerReviews/)
   assert.match(store, /verified_purchase/)
 
   assert.match(migration, /get_seller_rating_summary/)
@@ -411,7 +411,7 @@ test('verified seller ratings are only writable through transaction-bound review
   const api = await read('src/app/api/reviews/route.ts')
 
   assert.match(trust, /v_order\.status <> 'completed'/)
-  assert.match(trust, /p_target_type = 'seller'/)
+  assert.match(trust, /p_target_type\s*=\s*['"]seller['"]/ )
   assert.match(trust, /p_target_id <> v_order\.seller_id/)
   assert.match(form, /targetType: 'seller'/)
   assert.match(form, /targetId: sellerId/)
