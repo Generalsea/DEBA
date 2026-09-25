@@ -2464,6 +2464,132 @@ textarea {
 .deba-detail-check-list,
 .deba-detail-policy-grid,
 .deba-detail-safety-grid,
+.deba-detail-report-card {
+  margin-top: 12px;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--deba-border);
+  border-radius: 14px;
+  background: var(--deba-surface);
+  box-shadow: var(--deba-shadow-sm);
+}
+
+.deba-detail-report-copy {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.deba-detail-report-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--deba-red-soft, rgba(220, 53, 69, .1));
+  color: var(--deba-red, #dc3545);
+}
+
+.deba-detail-report-copy strong {
+  display: block;
+  color: var(--deba-text);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.deba-detail-report-copy p,
+.deba-detail-report-status {
+  margin: 4px 0 0;
+  color: var(--deba-text-3);
+  font-size: 9.5px;
+  line-height: 1.7;
+}
+
+.deba-detail-report-button,
+.deba-detail-report-submit,
+.deba-detail-report-secondary {
+  min-height: 38px;
+  padding: 0 13px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.deba-detail-report-button,
+.deba-detail-report-submit {
+  background: var(--deba-brand);
+  color: #fff;
+}
+
+.deba-detail-report-button:hover,
+.deba-detail-report-submit:hover {
+  background: var(--deba-brand-strong);
+}
+
+.deba-detail-report-secondary {
+  border: 1px solid var(--deba-border);
+  background: var(--deba-surface-2);
+  color: var(--deba-text);
+}
+
+.deba-detail-report-button {
+  justify-self: start;
+}
+
+.deba-detail-report-form {
+  display: grid;
+  gap: 10px;
+}
+
+.deba-detail-report-form label {
+  display: grid;
+  gap: 5px;
+}
+
+.deba-detail-report-form label > span {
+  color: var(--deba-text-2);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.deba-detail-report-form label > span small {
+  color: var(--deba-text-3);
+  font-weight: 700;
+}
+
+.deba-detail-report-form select,
+.deba-detail-report-form textarea {
+  width: 100%;
+  border: 1px solid var(--deba-border);
+  border-radius: 10px;
+  background: var(--deba-surface-2);
+  color: var(--deba-text);
+  padding: 9px 10px;
+  font: inherit;
+  font-size: 10px;
+  outline: none;
+}
+
+.deba-detail-report-form select:focus,
+.deba-detail-report-form textarea:focus {
+  border-color: var(--deba-brand);
+  box-shadow: 0 0 0 3px var(--deba-brand-soft);
+}
+
+.deba-detail-report-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.deba-detail-report-status {
+  color: var(--deba-text-2);
+}
+
 .deba-detail-faq-list {
   display: grid;
   gap: 8px;
