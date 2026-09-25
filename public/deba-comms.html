@@ -358,6 +358,38 @@
   }
   *:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+
+  /* DEBA COMMS — visual parity with the approved reference */
+  .product-context-card { display:flex; gap:14px; padding:12px; min-height:96px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); align-items:stretch; }
+  .product-context-state { display:flex; align-items:center; gap:14px; width:100%; min-height:72px; }
+  .product-context-ready { display:flex; gap:14px; align-items:stretch; width:100%; }
+  .product-context-empty, .product-context-error { justify-content:flex-start; }
+  .product-context-card[data-state="ready"] { cursor:pointer; }
+  .product-context-card[data-state="loading"] { cursor:default; }
+  .product-thumb { width:72px; height:72px; border-radius:var(--radius-md); overflow:hidden; flex:0 0 auto; background:var(--bg-subtle); position:relative; }
+  .product-thumb img { width:100%; height:100%; object-fit:cover; }
+  .product-thumb-placeholder { display:flex; align-items:center; justify-content:center; width:100%; height:100%; background:linear-gradient(135deg,var(--bg-subtle),var(--bg-hover)); color:var(--text-tertiary); font:800 12px/1 var(--font-en); letter-spacing:1px; }
+  .product-context-error .product-thumb-placeholder { color:var(--danger); background:var(--danger-bg); }
+  .product-details { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .product-price-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:auto; }
+  .chat-dialog-backdrop { position:fixed; inset:0; z-index:2000; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(10,14,26,.35); backdrop-filter:blur(6px); }
+  .chat-dialog-backdrop[hidden] { display:none !important; }
+  .chat-dialog { width:min(480px,100%); max-height:min(78vh,680px); overflow:auto; background:var(--bg-elevated); border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow-xl); }
+  .chat-dialog-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; border-bottom:1px solid var(--border); }
+  .chat-dialog-kicker { color:var(--primary); font:800 10px/1 var(--font-en); letter-spacing:1.4px; }
+  .chat-dialog-header h2 { margin:6px 0 0; font-size:18px; }
+  .chat-dialog-close { width:36px; height:36px; border-radius:50%; background:var(--bg-subtle); border:1px solid var(--border); font-size:24px; line-height:1; }
+  .chat-dialog-body { padding:20px; color:var(--text-secondary); line-height:1.7; }
+  .chat-dialog-grid { display:grid; gap:10px; }
+  .chat-dialog-item { padding:12px 14px; border:1px solid var(--border); border-radius:14px; background:var(--bg-subtle); }
+  .chat-dialog-item strong { display:block; color:var(--text); font-size:13px; margin-bottom:2px; }
+  .chat-dialog-item span { color:var(--text-secondary); font-size:12px; }
+  .chat-dialog-actions { display:flex; flex-wrap:wrap; gap:8px; padding:0 20px 20px; }
+  .chat-dialog-action { flex:1; min-width:120px; padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:var(--bg-subtle); font-weight:700; }
+  .chat-dialog-action.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
+  .chat-dialog-action.danger { color:var(--danger); background:var(--danger-bg); border-color:transparent; }
+  .chat-item-product-thumb-fallback { width:20px; height:20px; border-radius:4px; display:grid; place-items:center; flex:0 0 auto; background:var(--bg-subtle); color:var(--text-tertiary); font:800 8px/1 var(--font-en); }
+
 </style>
 </head>
 <body>
@@ -373,9 +405,9 @@
         <span>التسوق في مصر</span>
       </div>
       <div class="header-help">
-        <a href="#">المساعدة</a>
+        <a href="#" onclick="return showHelpDialog(event)">المساعدة</a>
         <span class="divider"></span>
-        <a href="#">إعلان من نحن</a>
+        <a href="#" onclick="return showAboutDialog(event)">إعلان من نحن</a>
       </div>
     </div>
     <div class="header-left">
@@ -436,19 +468,19 @@
         </div>
 
         <div class="topbar-actions">
-          <button class="icon-btn" title="مكالمة صوتية" onclick="showToast(' بدء مكالمة صوتية')">
+          <button class="icon-btn" title="مكالمة صوتية" onclick="return showCallDialog(event)" data-testid="chat-call">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
             </svg>
           </button>
-          <button class="icon-btn" title="معلومات" onclick="showToast('ℹ️ معلومات البائع')">
+          <button class="icon-btn" title="معلومات" onclick="return showChatInfo(event)" data-testid="chat-info">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="12" y1="16" x2="12" y2="12"></line>
               <line x1="12" y1="8" x2="12.01" y2="8"></line>
             </svg>
           </button>
-          <button class="icon-btn" title="المزيد" onclick="showToast('⚙️ خيارات إضافية')">
+          <button class="icon-btn" title="المزيد" onclick="return showMoreActions(event)" data-testid="chat-more">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="1" />
               <circle cx="19" cy="12" r="1" />
@@ -469,38 +501,37 @@
       </div>
 
       <div class="product-context">
-        <div class="product-context-card" id="productContextCard" data-state="loading" aria-busy="true" role="button" tabindex="0" onclick="if (!event.target.closest('button')) return navigate('product', event)">
+        <div class="product-context-card" id="productContextCard" data-state="loading" aria-busy="true" role="button" tabindex="0" onclick="return navigate('product', event)">
           <div class="product-context-state product-context-loading" id="productContextLoading">
             <div class="product-loading-thumb" aria-hidden="true"></div>
-            <div class="product-loading-copy" aria-hidden="true">
-              <span></span><span></span><span></span>
-            </div>
+            <div class="product-loading-copy" aria-hidden="true"><span></span><span></span><span></span></div>
           </div>
           <div class="product-context-state product-context-empty" id="productContextEmpty" hidden>
-            <div class="product-context-empty-icon" aria-hidden="true">💬</div>
-            <div><strong>لا يوجد إعلان مرتبط بالمحادثة</strong><span>يمكن متابعة المحادثة بدون بطاقة إعلان.</span></div>
+            <div class="product-thumb product-thumb-placeholder" id="productThumbEmptyPlaceholder" aria-hidden="true">DEBA</div>
+            <div class="product-details">
+              <div class="product-title">لا يوجد إعلان محدد</div>
+              <div class="product-meta"><span>يمكن متابعة المحادثة داخل DEBA.</span></div>
+            </div>
           </div>
           <div class="product-context-state product-context-error" id="productContextError" hidden>
-            <div class="product-context-empty-icon" aria-hidden="true">!</div>
-            <div><strong>تعذر تحميل بيانات الإعلان</strong><span>أعد تحميل المحادثة للمحاولة مرة أخرى.</span></div>
+            <div class="product-thumb product-thumb-placeholder" aria-hidden="true">!</div>
+            <div class="product-details">
+              <div class="product-title">تعذر تحميل الإعلان</div>
+              <div class="product-meta"><span>أعد تحديث المحادثة للمحاولة مرة أخرى.</span></div>
+            </div>
           </div>
           <div class="product-context-ready" id="productContextReady" hidden>
             <div class="product-thumb">
               <div class="product-thumb-placeholder" id="productThumbPlaceholder" aria-hidden="true">DEBA</div>
               <img id="productThumbImage" alt="" hidden>
-              <span class="badge" id="productStatusBadge">إعلان مرتبط</span>
+              <span class="badge" id="productStatusBadge">إعلان نشط</span>
             </div>
             <div class="product-details">
-              <div class="product-context-kicker">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-8-4-8 4 8 4Z"></path><path d="M4 12l8 4 8-4"></path><path d="M4 17l8 4 8-4"></path></svg>
-                <span>السلعة محل التفاوض</span>
-              </div>
               <div class="product-title" id="productTitle"></div>
               <div class="product-meta" id="productMeta"></div>
-              <div class="product-context-note">التفاوض والرسائل مرتبطة بهذا الإعلان مباشرة داخل DEBA.</div>
               <div class="product-price-row">
-                <div style="display:flex;flex-direction:column;gap:2px;min-width:0;"><div class="product-price" id="productPrice"></div><span class="product-context-note">السعر الحالي للإعلان</span></div>
-                <div style="display:flex;align-items:center;gap:8px;"><span class="product-context-live">مرتبط بالمحادثة</span><button class="view-listing-btn" type="button" onclick="return navigate('product', event)">عرض الإعلان</button></div>
+                <div class="product-price" id="productPrice"></div>
+                <button class="view-listing-btn" type="button" onclick="return navigate('product', event)" data-testid="chat-view-product">عرض الإعلان</button>
               </div>
             </div>
           </div>
@@ -614,7 +645,23 @@
   <div class="context-divider"></div>
   <button class="context-item danger" onclick="showToast('🗑️ تم الحذف'); hideContext()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>حذف</span></button>
 </div>
+<input id="attachmentInput" type="file" hidden aria-hidden="true">
 
+<div class="chat-dialog-backdrop" id="chatDialog" hidden>
+  <div class="chat-dialog" role="dialog" aria-modal="true" aria-labelledby="chatDialogTitle">
+    <div class="chat-dialog-header">
+      <div>
+        <div class="chat-dialog-kicker">DEBA COMMS</div>
+        <h2 id="chatDialogTitle">تفاصيل المحادثة</h2>
+      </div>
+      <button type="button" class="chat-dialog-close" onclick="closeChatDialog()" aria-label="إغلاق">×</button>
+    </div>
+    <div class="chat-dialog-body" id="chatDialogBody"></div>
+    <div class="chat-dialog-actions" id="chatDialogActions"></div>
+  </div>
+</div>
+
+<script>
 <script>
   const chats = [];
   let currentTab = 'all';
@@ -760,6 +807,11 @@
     }
 
     const person = room.counterparty || {};
+    activeConversation.sellerName = person.display_name || person.username || 'عضو DEBA';
+    activeConversation.username = person.username || '';
+    activeConversation.location = [room.product?.city, room.product?.governorate].filter(Boolean).join('، ');
+    activeConversation.productTitle = room.product?.title || '';
+    activeConversation.productPrice = room.product ? formatMoney(room.product.price, room.product.currency || 'EGP') : '';
     if (sellerNameNode) {
       const verified = sellerNameNode.querySelector('svg');
       sellerNameNode.textContent = person.display_name || person.username || 'عضو DEBA';
@@ -796,7 +848,25 @@
     }
 
     if (!room.product) {
-      window.DEBAComms.setProductState('error');
+      if (listingTitleNode) listingTitleNode.textContent = 'إعلان DEBA';
+      if (listingPriceNode) listingPriceNode.textContent = 'السعر عند التواصل';
+      if (titleNode) titleNode.textContent = 'الإعلان المرتبط بالمحادثة';
+      if (priceNode) priceNode.textContent = 'السعر عند التواصل';
+      if (metaNode) metaNode.innerHTML = '<span>إعلان مرتبط</span>';
+      activeProductMessage = {
+        title: 'الإعلان المرتبط بالمحادثة',
+        price: 'السعر عند التواصل',
+        imageUrl: null,
+        location: 'مصر',
+        productId: room.product_id,
+      };
+      if (image) {
+        image.hidden = true;
+        image.removeAttribute('src');
+        delete image.dataset.srcUrl;
+      }
+      if (placeholder) placeholder.hidden = false;
+      window.DEBAComms.setProductState('ready');
       return;
     }
 
@@ -902,68 +972,6 @@
     divider.appendChild(label);
     area.appendChild(divider);
 
-    let liveProductMessage = null;
-    let liveProductMessageInserted = false;
-
-    if (activeProductMessage?.productId) {
-      liveProductMessage = document.createElement('div');
-      liveProductMessage.className = 'message received';
-      liveProductMessage.dataset.kind = 'product-card';
-
-      const avatar = document.createElement('div');
-      avatar.className = 'message-avatar';
-      avatar.textContent = 'أ';
-
-      const content = document.createElement('div');
-      content.className = 'message-content';
-
-      const card = document.createElement('div');
-      card.className = 'product-card-msg';
-      card.tabIndex = 0;
-      card.setAttribute('role', 'button');
-      card.setAttribute('aria-label', 'فتح الإعلان المرتبط بالمحادثة');
-      card.addEventListener('click', (event) => {
-        if (!(event.target instanceof HTMLElement) || !event.target.closest('button')) {
-          if (typeof window.DEBAComms.onProductOpen === 'function') window.DEBAComms.onProductOpen();
-        }
-      });
-      card.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          if (typeof window.DEBAComms.onProductOpen === 'function') window.DEBAComms.onProductOpen();
-        }
-      });
-
-      const cardImage = document.createElement('img');
-      cardImage.alt = activeProductMessage.title;
-      if (activeProductMessage.imageUrl) {
-        cardImage.src = activeProductMessage.imageUrl;
-      } else {
-        cardImage.hidden = true;
-      }
-
-      const body = document.createElement('div');
-      body.className = 'product-card-msg-body';
-
-      const titleNode = document.createElement('div');
-      titleNode.className = 'product-card-msg-title';
-      titleNode.textContent = activeProductMessage.title;
-
-      const priceNode = document.createElement('div');
-      priceNode.className = 'product-card-msg-price';
-      priceNode.textContent = activeProductMessage.price;
-
-      const metaNode = document.createElement('div');
-      metaNode.className = 'product-card-msg-meta';
-      metaNode.textContent = (activeProductMessage.location || 'مصر') + ' · إعلان مرتبط';
-
-      body.append(titleNode, priceNode, metaNode);
-      if (activeProductMessage.imageUrl) card.appendChild(cardImage);
-      card.appendChild(body);
-      content.appendChild(card);
-      liveProductMessage.append(avatar, content);
-    }
-
     if (!items.length) {
       const empty = document.createElement('div');
       empty.style.cssText = 'padding:32px 16px;text-align:center;color:var(--text-tertiary);';
@@ -972,11 +980,6 @@
     }
 
     items.forEach(message => {
-      if (liveProductMessage && !liveProductMessageInserted && message.message_type === 'offer') {
-        area.appendChild(liveProductMessage);
-        liveProductMessageInserted = true;
-      }
-
       const mine = Boolean(currentUserId && message.sender_id === currentUserId);
       const row = document.createElement('div');
       row.className = 'message ' + (mine ? 'sent' : 'received');
@@ -1081,11 +1084,6 @@
       area.appendChild(row);
     });
 
-    if (liveProductMessage && !liveProductMessageInserted) {
-      area.appendChild(liveProductMessage);
-      liveProductMessageInserted = true;
-    }
-
     if (items.length) {
       const typing = document.createElement('div');
       typing.className = 'message received';
@@ -1135,7 +1133,7 @@
     const list = document.getElementById('chatList');
     const search = document.getElementById('searchInput').value.toLowerCase();
     const filtered = chats.filter(c => {
-      const matchSearch = c.name.toLowerCase().includes(search) || c.lastMsg.toLowerCase().includes(search);
+      const matchSearch = String(c.name || "").toLowerCase().includes(search) || String(c.lastMsg || "").toLowerCase().includes(search);
       const matchTab = currentTab === 'all' || (currentTab === 'unread' && c.unread > 0) || (currentTab === 'offers' && c.hasOffers);
       return matchSearch && matchTab;
     });
@@ -1242,6 +1240,115 @@
     setTimeout(() => toast.classList.remove('show'), 2500);
   }
 
+  let activeConversation = {
+    sellerName: 'شريك المحادثة',
+    username: '',
+    location: '',
+    productTitle: '',
+    productPrice: '',
+  };
+
+  function closeChatDialog() {
+    const dialog = document.getElementById('chatDialog');
+    if (dialog) dialog.hidden = true;
+  }
+
+  function showDialog(title, bodyHtml, actions = []) {
+    const dialog = document.getElementById('chatDialog');
+    const titleNode = document.getElementById('chatDialogTitle');
+    const bodyNode = document.getElementById('chatDialogBody');
+    const actionsNode = document.getElementById('chatDialogActions');
+    if (!dialog || !titleNode || !bodyNode || !actionsNode) return false;
+
+    titleNode.textContent = title;
+    bodyNode.innerHTML = bodyHtml;
+    actionsNode.innerHTML = '';
+    actions.forEach((action) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'chat-dialog-action ' + (action.tone || '');
+      button.textContent = action.label;
+      button.addEventListener('click', () => {
+        if (typeof action.run === 'function') action.run();
+      });
+      actionsNode.appendChild(button);
+    });
+    dialog.hidden = false;
+    return false;
+  }
+
+  function showCallDialog(event) {
+    if (event) event.preventDefault();
+    return showDialog(
+      'المكالمة الصوتية',
+      '<div class="chat-dialog-grid">' +
+        '<div class="chat-dialog-item"><strong>المحادثة الحالية</strong><span>' + escapeHtml(activeConversation.sellerName) + '</span></div>' +
+        '<div class="chat-dialog-item"><strong>الحالة</strong><span>المراسلة الحية متاحة الآن. ميزة المكالمات الصوتية ليست موصولة بخدمة اتصال في النسخة الحالية.</span></div>' +
+      '</div>',
+      [{ label:'إغلاق', tone:'primary', run:closeChatDialog }],
+    );
+  }
+
+  function showChatInfo(event) {
+    if (event) event.preventDefault();
+    return showDialog(
+      'معلومات المحادثة',
+      '<div class="chat-dialog-grid">' +
+        '<div class="chat-dialog-item"><strong>الشريك</strong><span>' + escapeHtml(activeConversation.sellerName) + (activeConversation.username ? ' · @' + escapeHtml(activeConversation.username) : '') + '</span></div>' +
+        '<div class="chat-dialog-item"><strong>الموقع</strong><span>' + escapeHtml(activeConversation.location || 'غير محدد') + '</span></div>' +
+        '<div class="chat-dialog-item"><strong>الإعلان المرتبط</strong><span>' + escapeHtml(activeConversation.productTitle || 'لا يوجد إعلان') + (activeConversation.productPrice ? ' · ' + escapeHtml(activeConversation.productPrice) : '') + '</span></div>' +
+      '</div>',
+      [
+        { label:'عرض الإعلان', tone:'primary', run:() => { closeChatDialog(); navigate('product'); } },
+        { label:'إغلاق', run:closeChatDialog },
+      ],
+    );
+  }
+
+  function showMoreActions(event) {
+    if (event) event.preventDefault();
+    return showDialog(
+      'خيارات المحادثة',
+      '<div class="chat-dialog-grid">' +
+        '<div class="chat-dialog-item"><strong>تحديث</strong><span>إعادة تحميل الرسائل وحالة المحادثة من المصدر الحي.</span></div>' +
+        '<div class="chat-dialog-item"><strong>البيانات</strong><span>المحتوى المعروض هنا مرتبط بالمحادثة الفعلية داخل DEBA.</span></div>' +
+      '</div>',
+      [
+        { label:'تحديث الآن', tone:'primary', run:() => { closeChatDialog(); refreshChats(); } },
+        { label:'عرض الإعلان', run:() => { closeChatDialog(); navigate('product'); } },
+        { label:'إغلاق', run:closeChatDialog },
+      ],
+    );
+  }
+
+  function showHelpDialog(event) {
+    if (event) event.preventDefault();
+    return showDialog(
+      'المساعدة',
+      '<div class="chat-dialog-grid">' +
+        '<div class="chat-dialog-item"><strong>إرسال رسالة</strong><span>اكتب رسالتك ثم اضغط زر الإرسال أو Enter.</span></div>' +
+        '<div class="chat-dialog-item"><strong>عرض سعر</strong><span>اضغط رمز العملة لإنشاء عرض مرتبط بالمحادثة.</span></div>' +
+        '<div class="chat-dialog-item"><strong>مؤشر الكتابة</strong><span>يظهر للطرف الآخر مباشرة أثناء الكتابة في المحادثة.</span></div>' +
+      '</div>',
+      [{ label:'فهمت', tone:'primary', run:closeChatDialog }],
+    );
+  }
+
+  function showAboutDialog(event) {
+    if (event) event.preventDefault();
+    return showDialog(
+      'عن DEBA',
+      '<div class="chat-dialog-item"><strong>DEBA COMMS</strong><span>مساحة تفاوض ورسائل مرتبطة بالإعلان، مع الحفاظ على البيانات الحية وإشارات الأمان الخاصة بالمنصة.</span></div>',
+      [{ label:'إغلاق', tone:'primary', run:closeChatDialog }],
+    );
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[char] || char));
+  }
+
   function refreshChats() {
     if (typeof window.DEBAComms.onRefresh === 'function') {
       return window.DEBAComms.onRefresh();
@@ -1261,6 +1368,16 @@
       this.value = '';
     });
   }
+
+  const chatDialog = document.getElementById('chatDialog');
+  if (chatDialog) {
+    chatDialog.addEventListener('click', (event) => {
+      if (event.target === chatDialog) closeChatDialog();
+    });
+  }
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeChatDialog();
+  });
 
   renderChatList();
   sendBtn.disabled = true;
