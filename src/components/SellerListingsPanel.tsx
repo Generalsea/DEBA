@@ -42,9 +42,6 @@ type EditDraft = {
   title: string
   price: string
   quantity: string
-  city: string
-  governorate: string
-  district: string
 }
 
 function toPublicImageUrl(supabase: ReturnType<typeof createClient>, path: string | null) {
@@ -225,9 +222,6 @@ export default function SellerListingsPanel({ initialProducts, isSeller }: Props
       title: product.title,
       price: String(product.price),
       quantity: String(product.quantity),
-      city: '',
-      governorate: '',
-      district: '',
     })
   }
 
@@ -244,9 +238,9 @@ export default function SellerListingsPanel({ initialProducts, isSeller }: Props
       p_description: null,
       p_price: Number(editDraft.price),
       p_quantity: Number(editDraft.quantity),
-      p_city: editDraft.city,
-      p_governorate: editDraft.governorate,
-      p_district: editDraft.district,
+      p_city: null,
+      p_governorate: null,
+      p_district: null,
     })
 
     if (rpcError) {
@@ -389,9 +383,7 @@ export default function SellerListingsPanel({ initialProducts, isSeller }: Props
                       <label><span>العنوان</span><input value={editDraft.title} onChange={(event) => setEditDraft((current) => current ? { ...current, title: event.target.value } : current)} maxLength={120} /></label>
                       <label><span>السعر (جنيه)</span><input type="number" min="1" step="0.01" value={editDraft.price} onChange={(event) => setEditDraft((current) => current ? { ...current, price: event.target.value } : current)} /></label>
                       <label><span>الكمية</span><input type="number" min="0" step="1" value={editDraft.quantity} onChange={(event) => setEditDraft((current) => current ? { ...current, quantity: event.target.value } : current)} /></label>
-                      <label><span>المحافظة</span><input value={editDraft.governorate} onChange={(event) => setEditDraft((current) => current ? { ...current, governorate: event.target.value } : current)} maxLength={100} /></label>
-                      <label><span>المدينة</span><input value={editDraft.city} onChange={(event) => setEditDraft((current) => current ? { ...current, city: event.target.value } : current)} maxLength={100} /></label>
-                      <label><span>الحي</span><input value={editDraft.district} onChange={(event) => setEditDraft((current) => current ? { ...current, district: event.target.value } : current)} maxLength={100} /></label>
+                      <div className={styles.editorHint}>تعديل العنوان أو السعر أو الكمية يعيد الإعلان تلقائيًا إلى دورة المراجعة. بيانات الموقع والوصف غير المعروضة محفوظة كما هي.</div>
                       <div className={styles.editorActions}>
                         <button type="button" className={styles.primaryButton} onClick={() => void saveEdit(product.id)} disabled={busyId === product.id + ':edit'}>
                           {busyId === product.id + ':edit' ? <Loader2 size={15} className="deba-spin" /> : <CheckCircle2 size={15} />}
