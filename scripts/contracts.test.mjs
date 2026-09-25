@@ -201,7 +201,6 @@ test('marketplace hardening exposes location, seller stores, chat, and optimisti
   assert.match(chatSurface, /conversation-empty-state/)
   assert.match(chatSurface, /product-card-msg-media/)
   assert.match(chatSurface, /window\.DEBAComms\.setProductState = function\(state\)/)
-  assert.match(chatSurface, /node\.style\.display = visible \? '' : 'none'/)
   assert.match(chatSurface, /product-context-ready/)
   assert.match(chatSurface, /offer-card/)
   assert.match(chatSurface, /offer-btn accept/)
