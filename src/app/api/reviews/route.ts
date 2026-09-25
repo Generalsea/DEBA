@@ -121,6 +121,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as ReviewBody
     const orderId = clean(body.orderId, 64)
     const targetId = clean(body.targetId, 64)
+    const targetType = body.targetType
     const title = clean(body.title, 120)
     const reviewBody = clean(body.body, 2000)
     const idempotencyKey =
@@ -135,7 +136,7 @@ export async function POST(request: Request) {
     if (
       !orderId ||
       !targetId ||
-      body.targetType !== 'product' ||
+      (targetType !== 'product' && targetType !== 'seller') ||
       rating < 1 ||
       rating > 5 ||
       idempotencyKey.length < 16 ||
@@ -156,7 +157,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase.rpc('create_review', {
       p_order_id: orderId,
-      p_target_type: 'product',
+      p_target_type: targetType,
       p_target_id: targetId,
       p_rating: rating,
       p_title: title || null,
