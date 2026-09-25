@@ -107,7 +107,7 @@ export default function ProductCard({ item, priority = false, compact = false }:
       : null
 
   return (
-    <article className={'deba-market-card' + (compact ? ' is-compact' : '') + (unavailable ? ' is-unavailable' : '')}>
+    <article data-testid="product-card" className={'deba-market-card' + (compact ? ' is-compact' : '') + (unavailable ? ' is-unavailable' : '')}>
       <div className="deba-market-card-media">
         <Link
           href={'/products/' + encodeURIComponent(item.slug)}
