@@ -273,3 +273,85 @@ test('search quality hardening preserves exact and phrase priority, brand intent
   assert.match(page, /deba-classified-pagination/)
   assert.match(types, /total_count: number/)
 })
+
+
+test('seller dashboard and listing lifecycle are RPC-driven with private view telemetry', async () => {
+  const migration = await read(
+    'supabase/migrations/20260925200517_seller_dashboard_listing_lifecycle_20260925.sql',
+  )
+  const viewFix = await read(
+    'supabase/migrations/20260925200528_fix_product_view_rpc_volatility_20260925.sql',
+  )
+  const partialEdit = await read(
+    'supabase/migrations/20260925200553_preserve_seller_listing_description_on_partial_edit_20260925.sql',
+  )
+  const panel = await read('src/components/SellerListingsPanel.tsx')
+  const sellForm = await read('src/app/sell/ProductListingForm.tsx')
+  const tracker = await read('src/components/ProductViewTracker.tsx')
+  const viewRoute = await read('src/app/api/products/[id]/view/route.ts')
+  const productPage = await read('src/app/products/[slug]/page.tsx')
+
+  assert.match(migration, /'paused'::text/)
+  assert.match(migration, /product_views/)
+  assert.match(migration, /private\.get_seller_dashboard/)
+  assert.match(migration, /private\.update_seller_listing_status/)
+  assert.match(migration, /guard_seller_product_lifecycle/)
+  assert.match(migration, /SELLER_PRODUCT_LIFECYCLE_USE_RPC/)
+  assert.match(migration, /status = 'draft'/)
+  assert.match(migration, /moderation_status = 'pending'/)
+  assert.match(migration, /revoke execute on function public\.get_seller_dashboard/)
+  assert.match(migration, /grant execute on function public\.update_seller_listing_status/)
+  assert.match(viewFix, /language plpgsql\s*volatile/)
+  assert.match(viewFix, /language sql\s*volatile/)
+  assert.match(partialEdit, /when p_description is null then v_product\.description/)
+
+  assert.match(panel, /get_seller_dashboard/)
+  assert.match(panel, /update_seller_listing_status/)
+  assert.match(panel, /update_seller_listing/)
+  assert.doesNotMatch(panel, /from\(['"]products['"]\)\s*\.update/)
+  assert.match(sellForm, /update_seller_listing_status/)
+  assert.doesNotMatch(sellForm, /from\(['"]products['"]\)\s*\.update/)
+  assert.match(tracker, /api\/products\//)
+  assert.match(viewRoute, /deba_visitor_id/)
+  assert.match(viewRoute, /record_product_view/)
+  assert.match(productPage, /ProductViewTracker/)
+})
+
+test('seller lifecycle private functions expose only required execute roles', async () => {
+  const migration = await read(
+    'supabase/migrations/20260925200827_restrict_seller_lifecycle_private_function_exec_20260925.sql',
+  )
+
+  assert.match(migration, /revoke execute on function private\.record_product_view/)
+  assert.match(migration, /grant execute on function private\.record_product_view.*anon, authenticated/s)
+  assert.match(migration, /revoke execute on function private\.get_seller_dashboard/)
+  assert.match(migration, /grant execute on function private\.get_seller_dashboard.*authenticated/s)
+  assert.match(migration, /revoke execute on function private\.update_seller_listing_status/)
+  assert.match(migration, /grant execute on function private\.update_seller_listing_status.*authenticated/s)
+  assert.match(migration, /revoke execute on function private\.update_seller_listing\(/)
+  assert.match(migration, /grant execute on function private\.update_seller_listing\(.*authenticated/s)
+  assert.match(migration, /revoke execute on function private\.guard_seller_product_lifecycle/)
+})
+
+test('product view telemetry keeps direct table access denied and indexed', async () => {
+  const migration = await read(
+    'supabase/migrations/20260925200916_harden_product_view_telemetry_access_20260925.sql',
+  )
+
+  assert.match(migration, /product_views_viewer_id_idx/)
+  assert.match(migration, /product_views_no_direct_select/)
+  assert.match(migration, /product_views_no_direct_insert/)
+  assert.match(migration, /using \(false\)/)
+  assert.match(migration, /with check \(false\)/)
+})
+
+test('seller partial edits preserve unedited description and location fields', async () => {
+  const migration = await read(
+    'supabase/migrations/20260925201036_preserve_seller_listing_location_on_partial_edit_20260925.sql',
+  )
+
+  assert.match(migration, /when p_description is null then v_product\.description/)
+  assert.match(migration, /when p_city is null then v_product\.city/)
+  assert.match(migration, /when p_governorate is null then v_product\.governorate/)
+  assert.match(migration, /when p_district is null then v_product\.district/)
+})

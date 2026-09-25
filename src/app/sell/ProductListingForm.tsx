@@ -364,16 +364,16 @@ export default function ProductListingForm({ categories, definitions }: Props) {
         throw uploadError
       }
 
-      const { error: publishError } = await supabase
-        .from('products')
-        .update({ status: 'published' })
-        .eq('id', product.id)
+      const { error: reviewError } = await supabase.rpc('update_seller_listing_status', {
+        p_product_id: product.id,
+        p_action: 'submit_for_review',
+      })
 
-      if (publishError) {
+      if (reviewError) {
         setNotice({
           type: 'error',
           message:
-            'تم تجهيز الإعلان كمسودة، لكن فشل النشر النهائي. ' + getFriendlyError(publishError.message),
+            'تم تجهيز الإعلان كمسودة، لكن تعذر إرساله للمراجعة. ' + getFriendlyError(reviewError.message),
         })
         setIsSubmitting(false)
         return

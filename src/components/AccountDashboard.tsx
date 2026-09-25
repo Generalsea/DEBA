@@ -28,6 +28,7 @@ import { createClient } from '@/utils/supabase/client'
 import EgyptLocationPicker from '@/components/EgyptLocationPicker'
 import DebaLogo from '@/components/DebaLogo'
 import type { ProfileAccountData } from '@/components/ProfileDashboard'
+import SellerListingsPanel from '@/components/SellerListingsPanel'
 
 type NotificationRow = NonNullable<ProfileAccountData['notifications']>[number]
 
@@ -538,25 +539,10 @@ export default function AccountDashboard({ account, initialSection }: Props) {
           </section>
 
           <section className={'content-section ' + (active === 'listings' ? 'active' : '')}>
-            <div className="card">
-              <div className="card-header">
-                <h3 className="card-title">إعلاناتي ({account.stats.sellerProducts})</h3>
-                <Link className="btn btn-primary btn-sm" href="/sell"><Plus size={16} /> إعلان جديد</Link>
-              </div>
-              <div className="card-body" style={{ padding: 0 }}>
-                <div className="dashboard-table-scroll">
-                  <table className="listings-table">
-                    <thead><tr><th>الإعلان</th><th>السعر</th><th>الحالة</th><th>الكمية</th><th>النشر</th><th>إجراءات</th></tr></thead>
-                    <tbody>
-                      {account.sellerProducts.map((item) => {
-                        const state = statusLabel(item.status, item.moderationStatus)
-                        return <tr key={item.id}><td><div className="listing-item"><div className="listing-thumb">{item.imageUrl ? <img src={item.imageUrl} alt="" /> : null}</div><div className="listing-details"><h4>{item.title}</h4><p>{item.conditionGrade || 'حالة غير محددة'}</p></div></div></td><td><strong>{formatMoney(item.price,item.currency)}</strong></td><td><span className={'status-badge ' + state.cls}><span className="status-dot-small" />{state.text}</span></td><td>{item.quantity}</td><td>{formatDate(item.createdAt)}</td><td><Link href={'/products/' + encodeURIComponent(item.slug)} className="btn btn-ghost btn-sm">عرض</Link></td></tr>
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+            <SellerListingsPanel
+              initialProducts={account.sellerProducts}
+              isSeller={account.profile.accountType === 'seller'}
+            />
           </section>
 
           <section className={'content-section ' + (active === 'favorites' ? 'active' : '')}>

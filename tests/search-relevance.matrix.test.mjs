@@ -175,30 +175,44 @@ test('DEBA search relevance matrix: 20+ exact/transliteration/typo/multi-token/z
     Math.ceil(orderedDurations.length * p) - 1,
   )]
 
-  const matched = evaluations.filter((item) => item.matchAt5).length
-  const top1 = evaluations.filter((item) => item.top1Match).length
-  const judged = evaluations.filter((item) => item.expected.length > 0).length
-  const judgedPrecision = evaluations.filter((item) => item.precisionAt5 !== null)
+  const judged = evaluations.filter((item) => item.expected.length > 0)
+  const zeroResult = evaluations.filter((item) => item.expected.length === 0)
+  const positiveHitsAtK = judged.filter((item) => item.matchAt5).length
+  const positiveTop1 = judged.filter((item) => item.top1Match).length
+  const positiveOnlyMRR = judged.length
+    ? judged.reduce((sum, item) => sum + item.reciprocalRank, 0) / judged.length
+    : null
+  const zeroResultRate = matrix.length
+    ? zeroResult.length / matrix.length
+    : null
+  const unexpectedPositiveZeroResults = judged.filter((item) => !item.slugs.length).length
+  const judgedPrecision = judged.filter((item) => item.precisionAt5 !== null)
 
   console.log(JSON.stringify({
     coverage: {
       totalCases: matrix.length,
-      judgedPositiveCases: judged,
+      judgedPositiveCases: judged.length,
       exactOrTransliteratedOrTypo: matrix.filter((item) =>
         ['exact', 'transliteration', 'typo'].includes(item.class),
       ).length,
       multiTokenCases: matrix.filter((item) =>
         ['brand+category', 'multi-token'].includes(item.class),
       ).length,
-      zeroResultCases: matrix.filter((item) => item.class === 'zero-result').length,
+      zeroResultCases: zeroResult.length,
     },
     quality: {
-      matchAccuracyAt5: matched / matrix.length,
-      top1MatchAccuracy: top1 / matrix.length,
-      meanPrecisionAt5: judgedPrecision.length
-        ? judgedPrecision.reduce((sum, item) => sum + item.precisionAt5, 0) / judgedPrecision.length
+      hitAtK: judged.length ? positiveHitsAtK / judged.length : null,
+      top1MatchAccuracy: judged.length ? positiveTop1 / judged.length : null,
+      positiveOnlyMRR,
+      zeroResultRate,
+      unexpectedPositiveZeroResultRate: judged.length
+        ? unexpectedPositiveZeroResults / judged.length
         : null,
-      mrr: evaluations.reduce((sum, item) => sum + item.reciprocalRank, 0) / evaluations.length,
+      diagnostics: {
+        meanPrecisionAt5: judgedPrecision.length
+          ? judgedPrecision.reduce((sum, item) => sum + item.precisionAt5, 0) / judgedPrecision.length
+          : null,
+      },
     },
     latencyMs: {
       samples: durations.length,
