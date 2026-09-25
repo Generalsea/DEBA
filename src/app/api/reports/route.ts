@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { consumeApiRateLimit } from '@/utils/rateLimit'
 
 const ALLOWED_REASONS = new Set([
   'spam',
@@ -26,6 +27,20 @@ export async function POST(request: Request) {
 
     if (!userData.user) {
       return NextResponse.json({ error: 'يجب تسجيل الدخول للإبلاغ عن إعلان.' }, { status: 401 })
+    }
+
+    const rateLimit = await consumeApiRateLimit(
+      supabase,
+      userData.user.id,
+      'reports:create',
+      5,
+      3600,
+    )
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'تم تجاوز حد البلاغات مؤقتًا. حاول لاحقًا.' },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.windowSeconds) } },
+      )
     }
 
     const body = (await request.json().catch(() => null)) as {
