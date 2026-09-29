@@ -58,5 +58,8 @@ jobs:
       - name: Contract tests
         run: npm test
 
+      - name: Phase 4.2 deal matching contract tests
+        run: npm run test:phase4-2
+
       - name: Build
         run: npm run build
