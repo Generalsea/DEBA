@@ -100,7 +100,8 @@ create table if not exists private.order_trade_handshakes (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-\n
+
+
 alter table public.offers
  add column if not exists smart_decision text null check (smart_decision in ('auto_countered','auto_counter_offer','accepted_escrow','expired_auction')),
  add column if not exists smart_decision_at timestamptz null;
