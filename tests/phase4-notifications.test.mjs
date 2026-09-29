@@ -66,7 +66,7 @@ test('Resend integration contract uses server-only credentials, RTL HTML, and id
 })
 
 test('Resend request mock integration verifies payload without external delivery', async () => {
-  const email = await read('src/lib/notifications/email.ts')
+  const email = await read('src/lib/notifications/email-core.ts')
 
   assert.match(email, /fetchImpl = fetch/)
   assert.match(email, /method: 'POST'/)
