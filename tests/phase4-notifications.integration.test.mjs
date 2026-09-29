@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { sendNotificationEmail } from '../src/lib/notifications/email.ts'
+import { sendNotificationEmail } from '../src/lib/notifications/email-core.ts'
 
 test('transactional email request is built and delivered through a mocked Resend transport', async () => {
   try {
