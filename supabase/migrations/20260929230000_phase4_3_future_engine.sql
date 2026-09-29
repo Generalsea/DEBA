@@ -444,10 +444,10 @@ begin
   if v_peak_hour is not null and v_peak_hour=v_current_hour and not exists(
    select 1 from private.product_ad_controls x where x.product_id=r.product_id and x.last_auto_refresh_at is not null
     and x.last_auto_refresh_at>=p_reference_at-interval '20 hours') then
-   update public.products set bumped_at=p_reference_at,updated_at=p_reference_at
-   where id=r.product_id and status='published' and moderation_status='approved' and quantity>0;
+   update private.product_ad_controls
+   set last_auto_refresh_at=p_reference_at,last_placement_at=p_reference_at,updated_at=p_reference_at
+   where product_id=r.product_id;
    if found then
-    update private.product_ad_controls set last_auto_refresh_at=p_reference_at,updated_at=p_reference_at where product_id=r.product_id;
     update public.ad_boosts set last_used_at=p_reference_at where product_id=r.product_id and boost_type='auto_refresh' and status='active';
     v_count=v_count+1;
    end if;
