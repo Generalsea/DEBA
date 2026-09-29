@@ -21,7 +21,7 @@ grant all on table private.product_embeddings to service_role;
 
 create index if not exists product_embeddings_active_hnsw_idx
   on private.product_embeddings
-  using hnsw (embedding vector_cosine_ops)
+  using hnsw (embedding extensions.vector_cosine_ops)
   where searchable_active = true and embedding is not null;
 
 create index if not exists product_embeddings_model_hash_idx
@@ -43,8 +43,8 @@ as $function$
       concat_ws(' ', coalesce(p.city, ''), coalesce(p.governorate, ''), coalesce(p.district, '')),
       coalesce(c.name_ar, ''),
       coalesce(c.name_en, ''),
-      coalesce(p.metadata->'specifications'::text, ''),
-      coalesce(p.metadata->'commerce'::text, '')
+      coalesce((p.metadata->'specifications')::text, ''),
+      coalesce((p.metadata->'commerce')::text, '')
     )
   from public.products p
   left join public.categories c on c.id = p.category_id
