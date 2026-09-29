@@ -20,7 +20,7 @@ test('coin ledger is RLS protected and rewards are idempotent',async()=>{
 test('boosts are atomic and bounded by private catalog',async()=>{
  const s=await read(MIGRATION)
  assert.match(s,/private\.coin_boost_catalog/i);assert.match(s,/spend_coins_for_boost/i)
- assert.match(s,/for update/i);assert.match(s,/lifetime_spent/i);assert.match(s,/ad_boosts_active_product_type_uidx/i);assert.match(s,/bumped_at=now/i)
+ assert.match(s,/for update/i);assert.match(s,/lifetime_spent/i);assert.match(s,/ad_boosts_active_product_type_uidx/i);assert.match(s,/last_placement_at/i);assert.doesNotMatch(s,/update public\.products\s+set bumped_at/i)
 })
 test('smart offers integrate with the existing offer/order lifecycle without exposing the seller floor',async()=>{
  const s=await read(MIGRATION)
@@ -45,7 +45,7 @@ test('predictive suggestions provide price intelligence and seller density witho
  assert.doesNotMatch(s,/create extension.*vector/i)
 })
 test('boost-aware search consumes bumped_at while retaining its public return shape',async()=>{
- const s=await read(SEARCH);assert.match(s,/bumped_at/i);assert.match(s,/product_bumped_at/i);assert.match(s,/safe_sort = 'newest'/i)
+ const s=await read(SEARCH);assert.match(s,/get_product_placement_at/i);assert.match(s,/product_placement_at/i);assert.match(s,/safe_sort = 'newest'/i)
 })
 test('server endpoints and package surface are wired',async()=>{
  const p=JSON.parse(await read(PACKAGE))

@@ -65,6 +65,7 @@ create table if not exists private.product_ad_controls (
   auction_ends_at timestamptz null,
   auto_refresh_enabled boolean not null default false,
   last_auto_refresh_at timestamptz null,
+  last_placement_at timestamptz null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (auction_ends_at is null or auction_starts_at is null or auction_ends_at > auction_starts_at)
@@ -99,12 +100,7 @@ create table if not exists private.order_trade_handshakes (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
-alter table public.products add column if not exists bumped_at timestamptz null;
-create index if not exists products_bumped_at_idx on public.products(bumped_at desc nulls last)
- where status='published' and moderation_status='approved' and listing_type='sale'
- and owner_id is not null and quantity>0 and price>0;
-
+\n
 alter table public.offers
  add column if not exists smart_decision text null check (smart_decision in ('auto_countered','auto_counter_offer','accepted_escrow','expired_auction')),
  add column if not exists smart_decision_at timestamptz null;
@@ -211,9 +207,11 @@ begin
    jsonb_build_object('source','coins')) returning * into v_boost;
  insert into private.product_ad_controls(product_id,owner_id) values(p_product_id,v_uid)
  on conflict(product_id) do update set owner_id=excluded.owner_id,updated_at=now();
- update private.product_ad_controls set auto_refresh_enabled=case when p_boost_type='auto_refresh' then true else auto_refresh_enabled end,updated_at=now()
+ update private.product_ad_controls
+ set auto_refresh_enabled=case when p_boost_type='auto_refresh' then true else auto_refresh_enabled end,
+     last_placement_at=case when p_boost_type in ('super_boost','stealth_pin') then now() else last_placement_at end,
+     updated_at=now()
  where product_id=p_product_id;
- if p_boost_type in ('super_boost','stealth_pin') then update public.products set bumped_at=now(),updated_at=now() where id=p_product_id; end if;
  return jsonb_build_object('boostId',v_boost.id,'boostType',v_boost.boost_type,'coinCost',v_cost,'remainingCoins',v_balance.balance,
   'startsAt',v_boost.starts_at,'endsAt',v_boost.ends_at);
 end;

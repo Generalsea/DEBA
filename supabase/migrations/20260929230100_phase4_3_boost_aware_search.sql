@@ -1,6 +1,46 @@
--- DEBA Phase 4.3 — boost-aware marketplace ordering
-alter table public.products add column if not exists bumped_at timestamptz null;
-create or replace function public.search_marketplace_products(
+-- DEBA Phase 4.3 — boost-aware placement search
+-- Placement signals are computed from private ad state; no public product row is mutated.
+
+alter table private.product_ad_controls
+  add column if not exists last_placement_at timestamptz null;
+
+create or replace function private.get_product_placement_at(p_product_id uuid)
+returns timestamptz
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select case
+    when c.last_placement_at is null and b.boost_started_at is null then null
+    else greatest(
+      coalesce(c.last_placement_at,'epoch'::timestamptz),
+      coalesce(b.boost_started_at,'epoch'::timestamptz)
+    )
+  end
+  from (
+    select last_placement_at
+    from private.product_ad_controls
+    where product_id=p_product_id
+  ) c
+  full join (
+    select max(starts_at) as boost_started_at
+    from public.ad_boosts
+    where product_id=p_product_id
+      and status='active'
+      and ends_at>now()
+      and boost_type in ('super_boost','stealth_pin','auto_refresh')
+  ) b on true;
+$function$;
+
+revoke execute on function private.get_product_placement_at(uuid) from public;
+grant execute on function private.get_product_placement_at(uuid) to anon,authenticated;
+
+drop function if exists public.search_marketplace_products(
+  text, integer, integer, text, numeric, numeric, text, text, text, text
+);
+
+create function public.search_marketplace_products(
   p_query text default null,
   p_limit integer default 36,
   p_offset integer default 0,
@@ -27,16 +67,18 @@ returns table (
   created_at timestamptz,
   category_id uuid,
   quantity integer,
-  relevance real
+  relevance real,
+  total_count bigint
 )
 language plpgsql
 stable
 security invoker
 set search_path = public, private, extensions, pg_catalog
-as $$
+as $function$
 declare
   normalized_query text := nullif(private.deba_normalize_arabic(coalesce(p_query, '')), '');
   query_vector tsquery := private.deba_search_tsquery(coalesce(p_query, ''));
+  brand_groups text[] := private.deba_detect_search_brands(coalesce(p_query, ''));
   safe_limit integer := least(greatest(coalesce(p_limit, 36), 1), 100);
   safe_offset integer := greatest(coalesce(p_offset, 0), 0);
   safe_sort text := lower(coalesce(p_sort, 'relevance'));
@@ -54,7 +96,7 @@ begin
         or c.search_text % normalized_query
       )
   ),
-  ranked as (
+  filtered as (
     select
       p.id as product_id,
       p.owner_id as product_owner_id,
@@ -70,25 +112,14 @@ begin
       p.created_at as product_created_at,
       p.category_id as product_category_id,
       p.quantity as product_quantity,
-      (
-        case
-          when normalized_query is null then 0
-          else coalesce(ts_rank_cd(p.search_vector, query_vector, 32), 0)
-        end
-        +
-        case
-          when p.category_id in (select ch.matched_category_id from category_hits as ch)
-          then 0.35
-          else 0
-        end
-        +
-        case
-          when normalized_query is null then 0
-          else least(word_similarity(normalized_query, p.search_text), 1) * 0.15
-        end
-        + case when p.bumped_at >= now() - interval '24 hours' then 0.08 else 0 end
-      )::real as product_relevance
+      p.search_vector as product_search_vector,
+      ad.placement_at as product_placement_at,
+      private.deba_normalize_arabic(coalesce(p.title, '')) as normalized_title,
+      p.search_text as normalized_document
     from public.products as p
+    cross join lateral (
+      select private.get_product_placement_at(p.id) as placement_at
+    ) as ad
     where p.status = 'published'
       and p.moderation_status = 'approved'
       and p.listing_type = 'sale'
@@ -122,40 +153,120 @@ begin
           or p.search_text % normalized_query
         )
       )
+      and (
+        cardinality(brand_groups) = 0
+        or not exists (
+          select 1
+          from unnest(brand_groups) as requested_brand(group_key)
+          where not exists (
+            select 1
+            from private.search_synonyms as bs
+            where bs.group_key = requested_brand.group_key
+              and position(
+                ' ' || bs.normalized_term || ' '
+                in ' ' || p.search_text || ' '
+              ) > 0
+          )
+        )
+      )
+  ),
+  ranked as (
+    select
+      filtered.*,
+      (
+        case
+          when normalized_query is null then 0
+          when filtered.normalized_title = normalized_query then 8.0
+          when position(
+            ' ' || normalized_query || ' '
+            in ' ' || filtered.normalized_title || ' '
+          ) > 0 then 4.5
+          else 0
+        end
+        +
+        case
+          when normalized_query is null then 0
+          else coalesce(ts_rank_cd(filtered.product_search_vector, query_vector, 32), 0) * 1.5
+        end
+        +
+        case
+          when cardinality(brand_groups) = 0 then 0
+          when exists (
+            select 1
+            from private.search_synonyms as bs
+            where bs.group_key = any(brand_groups)
+              and position(
+                ' ' || bs.normalized_term || ' '
+                in ' ' || filtered.normalized_title || ' '
+              ) > 0
+          ) then 3.0
+          else 1.0
+        end
+        +
+        case
+          when filtered.product_category_id in (
+            select ch.matched_category_id from category_hits as ch
+          ) then 0.35
+          else 0
+        end
+        +
+        case
+          when normalized_query is null then 0
+          else least(word_similarity(normalized_query, filtered.normalized_document), 1) * 0.10
+        end
+        + case when filtered.product_placement_at >= now() - interval '24 hours' then 0.08 else 0 end
+      )::real as product_relevance
+    from filtered
+  ),
+  counted as (
+    select
+      ranked.*,
+      count(*) over() as match_count
+    from ranked
   )
   select
-    ranked.product_id,
-    ranked.product_owner_id,
-    ranked.product_title,
-    ranked.product_slug,
-    ranked.product_description,
-    ranked.product_price,
-    ranked.product_currency,
-    ranked.product_condition_grade,
-    ranked.product_city,
-    ranked.product_governorate,
-    ranked.product_published_at,
-    ranked.product_created_at,
-    ranked.product_category_id,
-    ranked.product_quantity,
-    ranked.product_relevance
-  from ranked
+    counted.product_id,
+    counted.product_owner_id,
+    counted.product_title,
+    counted.product_slug,
+    counted.product_description,
+    counted.product_price,
+    counted.product_currency,
+    counted.product_condition_grade,
+    counted.product_city,
+    counted.product_governorate,
+    counted.product_published_at,
+    counted.product_created_at,
+    counted.product_category_id,
+    counted.product_quantity,
+    counted.product_relevance,
+    counted.match_count
+  from counted
   order by
-    case when safe_sort = 'relevance' and normalized_query is not null then ranked.product_relevance end desc nulls last,
-    case when safe_sort = 'price_low' then ranked.product_price end asc nulls last,
-    case when safe_sort = 'price_high' then ranked.product_price end desc nulls last,
-    case when safe_sort = 'newest' then coalesce(ranked.product_bumped_at, ranked.product_published_at) end desc nulls last,
-    ranked.product_published_at desc nulls last,
-    ranked.product_created_at desc
+    case when safe_sort = 'relevance' and normalized_query is not null then counted.product_relevance end desc nulls last,
+    case when safe_sort = 'price_low' then counted.product_price end asc nulls last,
+    case when safe_sort = 'price_high' then counted.product_price end desc nulls last,
+    case when safe_sort = 'newest' then coalesce(counted.product_placement_at, counted.product_published_at) end desc nulls last,
+    counted.product_published_at desc nulls last,
+    counted.product_created_at desc,
+    counted.product_id desc
   limit safe_limit
   offset safe_offset;
 end;
-$$;
+$function$;
 
 revoke execute on function public.search_marketplace_products(
   text, integer, integer, text, numeric, numeric, text, text, text, text
 ) from public;
-
 grant execute on function public.search_marketplace_products(
   text, integer, integer, text, numeric, numeric, text, text, text, text
 ) to anon, authenticated;
+
+revoke execute on function public.search_marketplace_products(
+  text, integer, integer, text, numeric, numeric, text, text, text, text
+) from public;
+grant execute on function public.search_marketplace_products(
+  text, integer, integer, text, numeric, numeric, text, text, text, text
+) to anon, authenticated;
+
+notify pgrst, 'reload schema';
