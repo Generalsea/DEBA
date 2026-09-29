@@ -145,22 +145,9 @@ export function useNotifications() {
             table: 'notifications',
             filter: 'user_id=eq.' + user.id,
           },
-          (payload) => {
-            const incoming = payload.new as AppNotification
-
-            setNotifications((current) => {
-              const previous = current.find((item) => item.id === incoming.id)
-              if (!previous) return current
-
-              if (previous.read_at === null && incoming.read_at !== null) {
-                setUnreadCount((value) => Math.max(0, value - 1))
-              } else if (previous.read_at !== null && incoming.read_at === null) {
-                setUnreadCount((value) => value + 1)
-              }
-
-              return current.map((item) =>
-                item.id === incoming.id ? incoming : item,
-              )
+          () => {
+            void refresh().catch((error) => {
+              console.error('DEBA notification realtime refresh failed', error)
             })
           },
         )
