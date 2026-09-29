@@ -225,8 +225,8 @@ async function getProduct(slug: string) {
     userId,
     categoriesResponse,
     attributeDefinitionsResponse,
-    relatedResponse,
     dealScoreResponse,
+    relatedResponse,
   ] = await Promise.all([
       product.owner_id
         ? supabase
