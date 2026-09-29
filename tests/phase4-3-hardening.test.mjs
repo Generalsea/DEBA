@@ -9,6 +9,7 @@ const PERF=new URL('../supabase/migrations/20260929230300_phase4_3_placement_sto
 const HANDSHAKE=new URL('../supabase/migrations/20260929230400_phase4_3_handshake_cryptographic_hardening.sql',import.meta.url)
 const NEGOTIATION=new URL('../supabase/migrations/20260929230500_phase4_3_negotiation_constraint_fix.sql',import.meta.url)
 const RESERVATION=new URL('../supabase/migrations/20260929230600_phase4_3_order_reservation_lifecycle_bridge.sql',import.meta.url)
+const ELIGIBILITY=new URL('../supabase/migrations/20260929230700_phase4_3_negotiation_eligibility_hardening.sql',import.meta.url)
 async function read(p){return readFile(p,'utf8')}
 
 test('placement state never requires a write to public.products',async()=>{
@@ -60,4 +61,12 @@ test('smart-offer order reservation uses DEBA internal lifecycle controls',async
  assert.match(s,/deba\.internal_operation.*order_create/is)
  assert.match(s,/deba\.lifecycle_override.*1/is)
  assert.match(s,/quantity=quantity-1/i)
+})
+
+test('smart negotiation RPCs enforce sale + approved + negotiable eligibility',async()=>{
+ const s=await read(ELIGIBILITY)
+ assert.match(s,/status in \('published','paused'\)/i)
+ assert.match(s,/moderation_status='approved'/i)
+ assert.match(s,/listing_type='sale'/i)
+ assert.match(s,/is_negotiable=true/i)
 })
