@@ -1,6 +1,16 @@
 -- DEBA Phase 4.2: Dynamic Deal Matching & Smart Price Intelligence.
 -- This migration is self-contained and safe to apply repeatedly.
 
+create index if not exists products_normalized_title_trgm_idx
+  on public.products
+  using gin ((private.deba_normalize_arabic(title)) gin_trgm_ops)
+  where status = 'published'
+    and moderation_status = 'approved'
+    and listing_type = 'sale'
+    and owner_id is not null
+    and quantity > 0
+    and price > 0;
+
 create table if not exists public.buyer_intent_matches (
   id uuid primary key default gen_random_uuid(),
   saved_search_id uuid not null references public.saved_searches(id) on delete cascade,
@@ -120,6 +130,7 @@ begin
       )
       and (
         private.deba_normalize_arabic(coalesce(p.title, '')) = v_norm_title
+        or private.deba_normalize_arabic(coalesce(p.title, '')) % v_norm_title
         or word_similarity(
           v_norm_title,
           private.deba_normalize_arabic(coalesce(p.title, ''))
@@ -158,6 +169,7 @@ begin
         )
         and (
           private.deba_normalize_arabic(coalesce(p.title, '')) = v_norm_title
+          or private.deba_normalize_arabic(coalesce(p.title, '')) % v_norm_title
           or word_similarity(
             v_norm_title,
             private.deba_normalize_arabic(coalesce(p.title, ''))
