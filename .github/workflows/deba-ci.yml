@@ -33,5 +33,8 @@ jobs:
       - name: Contract tests
         run: npm test
 
+      - name: Public search rate-limit contract/integration tests
+        run: node --test tests/public-search-rate-limit.test.mjs
+
       - name: Playwright collection
         run: npm run e2e:list
