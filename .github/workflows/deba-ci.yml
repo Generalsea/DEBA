@@ -36,5 +36,8 @@ jobs:
       - name: Public search rate-limit contract/integration tests
         run: node --test tests/public-search-rate-limit.test.mjs
 
+      - name: Phase 4 notification contract/integration tests
+        run: npm run test:phase4-notifications
+
       - name: Playwright collection
         run: npm run e2e:list
