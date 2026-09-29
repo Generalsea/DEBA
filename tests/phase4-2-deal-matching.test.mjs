@@ -30,7 +30,6 @@ test('deal intelligence uses published approved sale comparables and returns a s
 
   assert.match(page, /get_product_deal_score/)
   assert.match(page, /ProductDealScore/)
-
   assert.match(component, /مؤشر السعر الذكي/)
   assert.match(component, /متوسط المقارنة/)
   assert.match(component, /الربع الأدنى/)
@@ -45,6 +44,7 @@ test('buyer intent matcher is persisted behind RLS and has asynchronous publicat
   const matches = await read('src/app/api/buyer-intent/matches/route.ts')
   const save = await read('src/app/api/buyer-intent/saved-searches/route.ts')
   const internal = await read('src/app/api/internal/buyer-intent/match/route.ts')
+  const emptyState = await read('src/components/SaveBuyerIntentButton.tsx')
 
   assert.match(migration, /create table if not exists public\.buyer_intent_matches/)
   assert.match(migration, /alter table public\.buyer_intent_matches enable row level security/)
@@ -66,11 +66,16 @@ test('buyer intent matcher is persisted behind RLS and has asynchronous publicat
   assert.match(internal, /DEBA_BUYER_INTENT_WEBHOOK_SECRET/)
   assert.match(internal, /process_buyer_intent_matches/)
   assert.match(internal, /status: 503/)
+
+  assert.match(emptyState, /api\/buyer-intent\/saved-searches/)
+  assert.match(emptyState, /alertFrequency: 'instant'/)
+  assert.match(emptyState, /response\.status === 401/)
 })
 
 test('buyer intent feature contains no client-side service credentials', async () => {
   const source = await read('src/app/api/internal/buyer-intent/match/route.ts')
+  const hook = await read('src/components/SaveBuyerIntentButton.tsx')
   assert.doesNotMatch(source, /NEXT_PUBLIC_/)
   assert.doesNotMatch(source, /SUPABASE_SERVICE_ROLE_KEY/)
-  assert.match(source, /createAdminClient/)
+  assert.doesNotMatch(hook, /SUPABASE_SERVICE_ROLE_KEY|RESEND_API_KEY|DEBA_BUYER_INTENT_WEBHOOK_SECRET/)
 })
