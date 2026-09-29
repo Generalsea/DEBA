@@ -303,6 +303,7 @@ begin
       p.id,
       p.title,
       p.search_text,
+      p.search_vector,
       p.category_id,
       p.price,
       p.currency,
@@ -491,7 +492,9 @@ begin
     match_score = excluded.match_score,
     match_reason = excluded.match_reason,
     matched_at = excluded.matched_at
-  returning 1 into v_inserted;
+  ;
+
+  get diagnostics v_inserted = row_count;
 
   return coalesce(v_inserted, 0);
 end;
