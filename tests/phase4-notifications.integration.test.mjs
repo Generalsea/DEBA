@@ -14,8 +14,8 @@ async function loadTypeScriptModule(relativePath) {
     source.replace(/^import 'server-only'\s*\n/, ''),
     {
       compilerOptions: {
-        module: ts.ModuleKind.CommonJS,
-        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind?.CommonJS ?? 1,
+        target: ts.ScriptTarget?.ES2022 ?? 9,
       },
       fileName: relativePath,
     },
