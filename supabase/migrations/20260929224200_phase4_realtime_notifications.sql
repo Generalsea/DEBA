@@ -402,10 +402,7 @@ begin
       'moderation.report_updated',
       'تحديث البلاغ',
       'تم تحديث حالة البلاغ المرتبط بإعلان أو حساب.',
-      case
-        when new.product_id is not null then '/products/' || new.product_id::text
-        else null
-      end,
+      null,
       jsonb_build_object(
         'entity', 'report',
         'event', 'status_changed',
@@ -431,10 +428,7 @@ begin
       'moderation.report_decision',
       'تحديث إشرافي',
       'تم تحديث الحالة الإشرافية لبلاغ مرتبط بإعلانك أو حسابك.',
-      case
-        when new.product_id is not null then '/products/' || new.product_id::text
-        else null
-      end,
+      null,
       jsonb_build_object(
         'entity', 'report',
         'event', 'status_changed',
