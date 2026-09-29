@@ -85,6 +85,6 @@ test('transactional email integration fails closed when the provider rejects the
   } finally {
     delete process.env.RESEND_API_KEY
     delete process.env.RESEND_FROM_EMAIL
-    await loaded.cleanup()
+  }
   }
 })
