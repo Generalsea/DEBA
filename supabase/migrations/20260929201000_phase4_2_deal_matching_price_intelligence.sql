@@ -382,7 +382,29 @@ begin
         ) is null
         or case
           when coalesce(s.filters ->> 'min_price', s.filters ->> 'minPrice')
-            ~ '^[0-9]+(\\.[0-9]+)?
+            ~ '^[0-9]+(\\.[0-9]+)?$'
+          then t.price >= coalesce(
+            s.filters ->> 'min_price',
+            s.filters ->> 'minPrice'
+          )::numeric
+          else true
+        end
+      )
+      and (
+        nullif(
+          coalesce(s.filters ->> 'max_price', s.filters ->> 'maxPrice'),
+          ''
+        ) is null
+        or case
+          when coalesce(s.filters ->> 'max_price', s.filters ->> 'maxPrice')
+            ~ '^[0-9]+(\\.[0-9]+)?$'
+          then t.price <= coalesce(
+            s.filters ->> 'max_price',
+            s.filters ->> 'maxPrice'
+          )::numeric
+          else true
+        end
+      )
       and (
         nullif(s.filters ->> 'condition', '') is null
         or (
@@ -391,7 +413,9 @@ begin
         )
         or (
           s.filters ->> 'condition' = 'used'
-          and t.condition_grade in ('like_new','excellent','good','fair','poor','for_parts')
+          and t.condition_grade in (
+            'like_new','excellent','good','fair','poor','for_parts'
+          )
         )
         or t.condition_grade = s.filters ->> 'condition'
       )
@@ -402,8 +426,7 @@ begin
       and (
         nullif(s.filters ->> 'city', '') is null
         or t.city ilike s.filters ->> 'city'
-      )
-  ),
+      )  ),
   scored as (
     select
       i.saved_search_id,
