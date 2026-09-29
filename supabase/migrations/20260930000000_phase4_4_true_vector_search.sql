@@ -474,6 +474,6 @@ revoke execute on function public.search_marketplace_hybrid(
 
 grant execute on function public.search_marketplace_hybrid(
   text, text, integer, integer, text, numeric, numeric, text, text, text, integer
-) to anon, authenticated;
+) to authenticated;
 
 notify pgrst, 'reload schema';
