@@ -116,7 +116,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'تعذر التحقق من الإشعار.' }, { status: 503 })
   }
 
-  const canonicalNotification = (storedNotification || notification) as NotificationEmailRecord
+  if (!storedNotification) {
+    return NextResponse.json({ error: 'الإشعار غير موجود.' }, { status: 404 })
+  }
+
+  const canonicalNotification = storedNotification as NotificationEmailRecord
   const typedPreferences = (preferences || null) as NotificationPreferences | null
 
   if (preferencesError) {
@@ -125,7 +129,7 @@ export async function POST(request: Request) {
   }
 
   if (!isNotificationEmailEnabled(canonicalNotification.type, typedPreferences)) {
-    return NextResponse.json({ ok: true, skipped: 'preference-disabled' }, { status: 204 })
+    return new NextResponse(null, { status: 204 })
   }
 
   try {
