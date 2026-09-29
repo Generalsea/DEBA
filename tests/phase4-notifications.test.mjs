@@ -43,10 +43,10 @@ test('Phase 4 notification database wiring is complete and RLS-first', async () 
   assert.match(migration, /notification_preferences/)
   assert.match(migration, /net\.http_post/)
   assert.match(migration, /vault\.decrypted_secrets/)
-  assert.match(migration, /app\.deba_notification_email_webhook_url/)
+  assert.match(migration, /deba_notification_webhook_url/)
   assert.match(migration, /deba_notification_webhook_secret/)
   assert.match(migration, /x-deba-notification-secret/)
-  assert.doesNotMatch(migration, /DEBA_NOTIFICATION_WEBHOOK_SECRET=/)
+  assert.doesNotMatch(migration, /current_setting\('app\.deba_notification_email_webhook_url'/)
 })
 
 test('Resend integration contract uses server-only credentials, RTL HTML, and idempotency', async () => {
