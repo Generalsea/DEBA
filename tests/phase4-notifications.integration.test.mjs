@@ -40,7 +40,7 @@ test('transactional email request is built and delivered through a mocked Resend
     assert.equal(headers.get('authorization'), 'Bearer re_test_phase4')
     assert.equal(
       headers.get('idempotency-key'),
-      'deba-notification-00000000-0000-0000-0000-000000000004',
+      'deba-notification-00000000-0000-0000-000000000004',
     )
 
     const payload = JSON.parse(calls[0].init.body)
@@ -53,6 +53,7 @@ test('transactional email request is built and delivered through a mocked Resend
   } finally {
     delete process.env.RESEND_API_KEY
     delete process.env.RESEND_FROM_EMAIL
+  }
 })
 
 test('transactional email integration fails closed when the provider rejects the request', async () => {
@@ -84,6 +85,5 @@ test('transactional email integration fails closed when the provider rejects the
   } finally {
     delete process.env.RESEND_API_KEY
     delete process.env.RESEND_FROM_EMAIL
-  }
   }
 })
