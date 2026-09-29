@@ -484,6 +484,7 @@ export default async function ProductDetailPage({
             <FutureMarketplacePanel
               productId={product.id}
               isOwner={isOwner}
+              isNegotiable={product.is_negotiable}
               currency={product.currency || 'EGP'}
               listingPrice={price}
             />
