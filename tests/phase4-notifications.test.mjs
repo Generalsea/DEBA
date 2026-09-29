@@ -49,10 +49,11 @@ test('Phase 4 notification database wiring is complete and RLS-first', async () 
   assert.doesNotMatch(migration, /current_setting\('app\.deba_notification_email_webhook_url'/)
 })
 
-test('Resend integration contract uses server-only credentials, RTL HTML, and idempotency', async () => {
+test('Resend integration contract uses a server-only wrapper plus a testable transport core', async () => {
+  const wrapper = await read('src/lib/notifications/email.ts')
   const email = await read('src/lib/notifications/email-core.ts')
 
-  assert.match(email, /^import 'server-only'/)
+  assert.match(wrapper, /^import 'server-only'/)
   assert.match(email, /https:\/\/api\.resend\.com\/emails/)
   assert.match(email, /Authorization: 'Bearer '/)
   assert.match(email, /Idempotency-Key/)
