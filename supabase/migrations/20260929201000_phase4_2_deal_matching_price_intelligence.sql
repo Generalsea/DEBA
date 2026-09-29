@@ -595,3 +595,57 @@ execute function private.enqueue_buyer_intent_match();
 
 revoke execute on function public.get_product_deal_score(uuid) from public;
 grant execute on function public.get_product_deal_score(uuid) to anon, authenticated;
+
+
+create or replace function public.get_buyer_intent_matches(
+  p_limit integer default 50
+)
+returns table (
+  id uuid,
+  saved_search_id uuid,
+  product_id uuid,
+  match_score numeric,
+  match_reason jsonb,
+  matched_at timestamptz,
+  seen_at timestamptz,
+  title text,
+  slug text,
+  price numeric,
+  currency text,
+  condition_grade text,
+  city text,
+  governorate text
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select
+    m.id,
+    m.saved_search_id,
+    m.product_id,
+    m.match_score,
+    m.match_reason,
+    m.matched_at,
+    m.seen_at,
+    p.title,
+    p.slug,
+    p.price,
+    p.currency,
+    p.condition_grade,
+    p.city,
+    p.governorate
+  from public.buyer_intent_matches m
+  join public.products p on p.id = m.product_id
+  where m.user_id = (select auth.uid())
+    and p.status = 'published'
+    and p.moderation_status = 'approved'
+    and p.listing_type = 'sale'
+  order by m.matched_at desc, m.match_score desc
+  limit greatest(1, least(coalesce(p_limit, 50), 50));
+$$;
+
+revoke execute on function public.get_buyer_intent_matches(integer)
+  from public, anon;
+grant execute on function public.get_buyer_intent_matches(integer) to authenticated;
