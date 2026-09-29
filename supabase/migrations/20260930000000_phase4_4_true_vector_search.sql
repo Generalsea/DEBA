@@ -83,7 +83,17 @@ language plpgsql
 security definer
 set search_path = ''
 as $function$
+declare
+  v_current_source_hash text;
 begin
+  v_current_source_hash := encode(
+    extensions.digest(
+      convert_to(private.product_embedding_source_text(new.id), 'UTF8'),
+      'sha256'
+    ),
+    'hex'
+  );
+
   update private.product_embeddings e
   set
     searchable_active = (
@@ -93,6 +103,7 @@ begin
       and new.owner_id is not null
       and new.quantity > 0
       and new.price > 0
+      and e.source_hash = v_current_source_hash
     ),
     updated_at = now()
   where e.product_id = new.id;
@@ -103,7 +114,21 @@ $function$;
 
 drop trigger if exists products_sync_embedding_searchability on public.products;
 create trigger products_sync_embedding_searchability
-after insert or update of status, moderation_status, listing_type, owner_id, quantity, price
+after insert or update of
+  status,
+  moderation_status,
+  listing_type,
+  owner_id,
+  quantity,
+  price,
+  title,
+  description,
+  condition_details,
+  city,
+  governorate,
+  district,
+  category_id,
+  metadata
 on public.products
 for each row
 execute function private.sync_product_embedding_searchability();
@@ -202,6 +227,22 @@ revoke execute on function public.upsert_product_embedding(uuid,text,text)
 
 grant execute on function public.upsert_product_embedding(uuid,text,text)
   to service_role;
+
+create or replace function public.get_product_embedding_source(p_product_id uuid)
+returns text
+language sql
+security definer
+set search_path = ''
+as $function$
+  select private.product_embedding_source_text(p_product_id);
+$function$;
+
+revoke execute on function public.get_product_embedding_source(uuid)
+  from public, anon, authenticated;
+
+grant execute on function public.get_product_embedding_source(uuid)
+  to service_role;
+
 
 create or replace function private.semantic_search_product_ids(
   p_query_embedding extensions.vector(1536),
