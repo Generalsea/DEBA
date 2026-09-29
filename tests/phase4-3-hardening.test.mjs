@@ -7,6 +7,7 @@ const SEARCH=new URL('../supabase/migrations/20260929230100_phase4_3_boost_aware
 const SECURITY=new URL('../supabase/migrations/20260929230200_phase4_3_rpc_security_hardening.sql',import.meta.url)
 const PERF=new URL('../supabase/migrations/20260929230300_phase4_3_placement_storage_correction.sql',import.meta.url)
 const HANDSHAKE=new URL('../supabase/migrations/20260929230400_phase4_3_handshake_cryptographic_hardening.sql',import.meta.url)
+const NEGOTIATION=new URL('../supabase/migrations/20260929230500_phase4_3_negotiation_constraint_fix.sql',import.meta.url)
 async function read(p){return readFile(p,'utf8')}
 
 test('placement state never requires a write to public.products',async()=>{
@@ -44,4 +45,11 @@ test('trade handshake uses cryptographic randomness and never implies funding',a
  assert.match(s,/extensions\.gen_random_bytes\(3\)/i)
  assert.match(s,/extensions\.digest\(convert_to\(v_code/i)
  assert.doesNotMatch(s,/escrow_status\s*=\s*case/i)
+})
+
+test('negotiable listings are actually representable without invalidating existing fixed-price rows',async()=>{
+ const s=await read(NEGOTIATION)
+ assert.match(s,/drop constraint if exists products_fixed_price_check/i)
+ assert.match(s,/is_negotiable = true/i)
+ assert.match(s,/minimum_offer_amount is null/i)
 })
