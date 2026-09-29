@@ -4,7 +4,9 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import ts from 'typescript'
+
+const rootRequire = createRequire(import.meta.url)
+const ts = rootRequire('typescript')
 
 async function loadTypeScriptModule(relativePath) {
   const source = await readFile(new URL('../' + relativePath, import.meta.url), 'utf8')
