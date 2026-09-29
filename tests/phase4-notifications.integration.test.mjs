@@ -53,7 +53,6 @@ test('transactional email request is built and delivered through a mocked Resend
   } finally {
     delete process.env.RESEND_API_KEY
     delete process.env.RESEND_FROM_EMAIL
-  }
 })
 
 test('transactional email integration fails closed when the provider rejects the request', async () => {
