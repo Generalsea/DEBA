@@ -33,3 +33,5 @@ npm test
 npm run test:phase4-notifications
 
 The live database migration should be applied only after branch review and the email endpoint is deployed.
+
+The Resend transport core is isolated from the Next.js `server-only` boundary so Node-based integration tests exercise the actual HTTP payload without mocking framework-only modules.
