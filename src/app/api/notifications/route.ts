@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 type Body = {
   notificationId?: string
   all?: boolean
@@ -27,7 +29,10 @@ export async function GET() {
       return NextResponse.json({ error: 'تعذر تحميل الإشعارات.' }, { status: 500 })
     }
 
-    return NextResponse.json({ notifications: data || [] })
+    return NextResponse.json({
+      notifications: data || [],
+      unreadCount: (data || []).filter((notification) => notification.read_at === null).length,
+    })
   } catch (error) {
     console.error('DEBA notification route failed', error)
     return NextResponse.json({ error: 'تعذر تحميل الإشعارات.' }, { status: 500 })
@@ -36,6 +41,12 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
+    const origin = request.headers.get('origin')
+    const requestOrigin = new URL(request.url).origin
+    if (origin && origin !== requestOrigin) {
+      return NextResponse.json({ error: 'طلب غير صالح.' }, { status: 403 })
+    }
+
     const body = (await request.json()) as Body
     const supabase = await createClient()
     const {
