@@ -3,8 +3,8 @@
 -- parallel event/outbox system.
 --
 -- Email delivery remains opt-in at deployment time:
---   app.deba_notification_email_webhook_url -> internal Next.js webhook URL
---   Vault secret name                      -> deba_notification_webhook_secret
+--   Vault secret name deba_notification_webhook_url -> internal Next.js webhook URL
+--   Vault secret name deba_notification_webhook_secret -> shared HMAC secret
 --
 -- Neither the webhook URL nor its secret is stored in source control.
 
@@ -497,16 +497,15 @@ begin
     return new;
   end if;
 
-  v_endpoint := nullif(trim(current_setting('app.deba_notification_email_webhook_url', true)), '');
-  if v_endpoint is null then
+  select max(ds.decrypted_secret) filter (where ds.name = 'deba_notification_webhook_url'),
+         max(ds.decrypted_secret) filter (where ds.name = 'deba_notification_webhook_secret')
+    into v_endpoint, v_secret
+  from vault.decrypted_secrets ds
+  where ds.name in ('deba_notification_webhook_url', 'deba_notification_webhook_secret');
+
+  if nullif(trim(v_endpoint), '') is null then
     return new;
   end if;
-
-  select ds.decrypted_secret
-    into v_secret
-  from vault.decrypted_secrets ds
-  where ds.name = 'deba_notification_webhook_secret'
-  limit 1;
 
   if nullif(v_secret, '') is null then
     raise warning 'DEBA notification email webhook secret is not configured';
