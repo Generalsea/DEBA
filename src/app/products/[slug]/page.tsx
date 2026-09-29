@@ -22,6 +22,7 @@ import CartAddButton from '@/components/CartAddButton'
 import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGallery'
 import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components/ProductDetailTabs'
 import ProductViewTracker from '@/components/ProductViewTracker'
+import ProductDealScore, { type ProductDealScoreData } from '@/components/ProductDealScore'
 import { createClient } from '@/utils/supabase/server'
 
 // Next.js 16 currently has a non-ASCII dynamic-route cache-tag issue.
@@ -225,6 +226,7 @@ async function getProduct(slug: string) {
     categoriesResponse,
     attributeDefinitionsResponse,
     relatedResponse,
+    dealScoreResponse,
   ] = await Promise.all([
       product.owner_id
         ? supabase
@@ -249,6 +251,9 @@ async function getProduct(slug: string) {
             .eq('is_required', true)
             .order('sort_order', { ascending: true })
         : Promise.resolve({ data: [], error: null }),
+      supabase
+        .rpc('get_product_deal_score', { p_product_id: product.id })
+        .maybeSingle(),
       product.category?.id
         ? supabase
             .from('products')
@@ -265,6 +270,9 @@ async function getProduct(slug: string) {
 
   if (sellerResponse.error) {
     console.error('DEBA seller query failed', sellerResponse.error)
+  }
+  if (dealScoreResponse.error) {
+    console.error('DEBA deal score query failed', dealScoreResponse.error)
   }
   product.seller = sellerResponse.data || null
 
@@ -303,6 +311,7 @@ async function getProduct(slug: string) {
     categories: ((categoriesResponse.data || []) as Category[]).map(mapCategory),
     definitions: ((attributeDefinitionsResponse.data || []) as unknown as ProductAttributeDefinition[]),
     related,
+    dealScore: (dealScoreResponse.data as ProductDealScoreData | null) || null,
   }
 }
 
