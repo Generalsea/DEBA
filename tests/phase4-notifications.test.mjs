@@ -50,7 +50,7 @@ test('Phase 4 notification database wiring is complete and RLS-first', async () 
 })
 
 test('Resend integration contract uses server-only credentials, RTL HTML, and idempotency', async () => {
-  const email = await read('src/lib/notifications/email.ts')
+  const email = await read('src/lib/notifications/email-core.ts')
 
   assert.match(email, /^import 'server-only'/)
   assert.match(email, /https:\/\/api\.resend\.com\/emails/)
