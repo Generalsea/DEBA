@@ -26,6 +26,7 @@ import {
 import Header from '@/components/Header'
 import ClassifiedFilterBar from '@/components/ClassifiedFilterBar'
 import ClassifiedListingCard, { type ClassifiedListingItem } from '@/components/ClassifiedListingCard'
+import SaveBuyerIntentButton from '@/components/SaveBuyerIntentButton'
 import type { HeaderPromo } from '@/components/HeaderReelsRail'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { createClient } from '@/utils/supabase/server'
