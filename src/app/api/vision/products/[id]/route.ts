@@ -130,6 +130,15 @@ export async function POST(
       })
     } catch (error) {
       console.error('DEBA visual inspection provider failed', error)
+      try {
+        const admin = createAdminClient()
+        await admin.rpc('fail_product_visual_inspection', {
+          p_inspection_id: inspectionId,
+          p_error_code: 'provider_failed',
+        })
+      } catch (completionError) {
+        console.error('DEBA visual inspection failure state update failed', completionError)
+      }
       return NextResponse.json(
         { error: 'تعذر إتمام المعاينة البصرية حالياً. لم يتم تعديل بيانات الحالة المكتوبة.' },
         { status: 502 },
