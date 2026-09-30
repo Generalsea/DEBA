@@ -51,6 +51,22 @@ type ImageRow = {
 
 type ProductMetadata = Record<string, unknown>
 
+type VisualTrustEvidence = {
+  inspection_id: string
+  visual_score: number | null
+  structural_score: number | null
+  cleanliness_score: number | null
+  description_consistency_score: number | null
+  condition_grade: string | null
+  confidence: number | null
+  damage_flags: unknown
+  observations: unknown
+  verified_badge: boolean
+  provider: string | null
+  model_name: string | null
+  completed_at: string | null
+}
+
 type ProductRow = {
   id: string
   owner_id: string | null
@@ -225,6 +241,7 @@ async function getProduct(slug: string) {
     categoriesResponse,
     attributeDefinitionsResponse,
     relatedResponse,
+    trustResponse,
   ] = await Promise.all([
       product.owner_id
         ? supabase
@@ -261,6 +278,9 @@ async function getProduct(slug: string) {
             .order('published_at', { ascending: false, nullsFirst: false })
             .limit(4)
         : Promise.resolve({ data: [], error: null }),
+      supabase
+        .rpc('get_product_trust_evidence', { p_product_id: product.id })
+        .maybeSingle<VisualTrustEvidence>(),
     ])
 
   if (sellerResponse.error) {
@@ -300,6 +320,7 @@ async function getProduct(slug: string) {
     isFavorite,
     favoriteCount,
     negotiationCount: 0,
+    trustEvidence: (trustResponse.data || null) as VisualTrustEvidence | null,
     categories: ((categoriesResponse.data || []) as Category[]).map(mapCategory),
     definitions: ((attributeDefinitionsResponse.data || []) as unknown as ProductAttributeDefinition[]),
     related,
@@ -349,6 +370,7 @@ export default async function ProductDetailPage({
   if (!data) notFound()
 
   const { product } = data
+  const trustEvidence = data.trustEvidence
   const images: ProductGalleryImage[] = [...(product.images || [])]
     .sort(
       (left, right) =>
@@ -436,6 +458,16 @@ export default async function ProductDetailPage({
                 <strong>سعر ثابت</strong>
                 <span>السعر المعلن ثابت ويمكنك إتمام الطلب مباشرة.</span>
               </div>
+              {trustEvidence?.verified_badge ? (
+                <div>
+                  <ShieldCheck size={20} />
+                  <strong>فحص بصري موثوق</strong>
+                  <span>
+                    ثقة الفحص {Math.round(trustEvidence.confidence || 0)}٪، مع مقارنة الأدلة
+                    المرئية بالوصف المقدم من البائع.
+                  </span>
+                </div>
+              ) : null}
               <div>
                 <Truck size={20} />
                 <strong>الاستلام واضح</strong>
@@ -455,6 +487,12 @@ export default async function ProductDetailPage({
                   <CheckCircle2 size={14} />
                   سعر ثابت
                 </span>
+                {trustEvidence?.verified_badge ? (
+                  <span className="deba-detail-badge">
+                    <ShieldCheck size={14} />
+                    فحص بصري موثوق
+                  </span>
+                ) : null}
               </div>
 
               <FavoriteButton
