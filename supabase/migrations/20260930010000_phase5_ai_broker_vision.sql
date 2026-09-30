@@ -144,6 +144,8 @@ create table if not exists public.ai_negotiation_sessions (
   buyer_id uuid not null references auth.users(id) on delete cascade,
   seller_id uuid not null references auth.users(id) on delete cascade,
   product_id uuid not null references public.products(id) on delete cascade,
+  broker_user_id uuid not null references auth.users(id) on delete cascade,
+  broker_role text not null check (broker_role in ('buyer','seller')),
   status text not null default 'active'
     check (status in ('active','paused','completed','declined','expired','cancelled')),
   current_round integer not null default 0 check (current_round >= 0),
@@ -178,6 +180,58 @@ on public.ai_negotiation_sessions(buyer_id, updated_at desc);
 
 create index if not exists ai_negotiation_sessions_seller_idx
 on public.ai_negotiation_sessions(seller_id, updated_at desc);
+
+
+create table if not exists public.ai_broker_proposals (
+  id uuid primary key default extensions.gen_random_uuid(),
+  session_id uuid not null references public.ai_negotiation_sessions(id) on delete cascade,
+  source_offer_id uuid not null references public.offers(id) on delete cascade,
+  broker_user_id uuid not null references auth.users(id) on delete cascade,
+  action text not null check (action in ('counter_offer','accept','hold','decline')),
+  proposed_amount numeric null check (proposed_amount is null or proposed_amount >= 0),
+  policy_floor numeric not null check (policy_floor >= 0),
+  buyer_ceiling numeric not null check (buyer_ceiling >= 0),
+  product_price numeric not null check (product_price >= 0),
+  round_number integer not null check (round_number >= 1),
+  policy_version text not null,
+  market_median numeric null check (market_median is null or market_median >= 0),
+  market_confidence numeric not null default 0 check (market_confidence between 0 and 1),
+  status text not null default 'proposed'
+    check (status in ('proposed','accepted_by_policy','applied','rejected','expired','superseded','failed')),
+  applied_offer_id uuid null references public.offers(id) on delete set null,
+  applied_at timestamptz null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.ai_broker_proposals enable row level security;
+revoke all on public.ai_broker_proposals from anon, authenticated;
+grant select on public.ai_broker_proposals to authenticated;
+
+drop policy if exists ai_broker_proposals_participant_select on public.ai_broker_proposals;
+create policy ai_broker_proposals_participant_select
+on public.ai_broker_proposals
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.ai_negotiation_sessions s
+    where s.id = session_id
+      and (
+        (select auth.uid()) = s.buyer_id
+        or (select auth.uid()) = s.seller_id
+      )
+  )
+);
+
+revoke insert, update, delete on public.ai_broker_proposals from authenticated;
+grant all on public.ai_broker_proposals to service_role;
+
+create unique index if not exists ai_broker_proposals_session_round_idx
+on public.ai_broker_proposals(session_id, round_number);
+
+create index if not exists ai_broker_proposals_offer_created_idx
+on public.ai_broker_proposals(source_offer_id, created_at desc);
 
 create table if not exists public.ai_negotiation_logs (
   id uuid primary key default extensions.gen_random_uuid(),
@@ -266,6 +320,40 @@ alter table public.product_visual_inspections enable row level security;
 revoke all on public.product_visual_inspections from anon, authenticated;
 grant select on public.product_visual_inspections to authenticated;
 revoke insert, update, delete on public.product_visual_inspections from authenticated;
+
+grant select (
+  product_id,
+  visual_score,
+  structural_score,
+  cleanliness_score,
+  description_consistency_score,
+  condition_grade,
+  confidence,
+  damage_flags,
+  observations,
+  verified_badge,
+  provider,
+  model_name,
+  created_at,
+  completed_at
+) on public.product_visual_inspections to anon, authenticated;
+
+drop policy if exists product_visual_inspections_public_select on public.product_visual_inspections;
+create policy product_visual_inspections_public_select
+on public.product_visual_inspections
+for select
+to anon, authenticated
+using (
+  status = 'completed'
+  and exists (
+    select 1
+    from public.products p
+    where p.id = product_id
+      and p.status = 'published'
+      and p.moderation_status = 'approved'
+      and p.listing_type = 'sale'
+  )
+);
 
 drop policy if exists product_visual_inspections_owner_select on public.product_visual_inspections;
 create policy product_visual_inspections_owner_select
@@ -634,6 +722,7 @@ declare
   v_proposed numeric;
   v_next_round integer;
   v_decision text;
+  v_proposal_id uuid;
 begin
   if v_uid is null then
     raise exception 'Authentication required' using errcode = '42501';
@@ -758,6 +847,40 @@ begin
       last_action_at = now()
   where id = v_session.id;
 
+  if v_decision in ('counter_offer','hold','accept') then
+    insert into public.ai_broker_proposals(
+      session_id,
+      source_offer_id,
+      broker_user_id,
+      action,
+      proposed_amount,
+      policy_floor,
+      buyer_ceiling,
+      product_price,
+      round_number,
+      policy_version,
+      market_median,
+      market_confidence,
+      status
+    )
+    values (
+      v_session.id,
+      v_offer.id,
+      v_session.broker_user_id,
+      v_decision,
+      v_proposed,
+      v_policy.seller_floor,
+      v_policy.buyer_ceiling,
+      v_product.price,
+      v_next_round,
+      v_session.policy_version,
+      v_market.market_median,
+      v_market.market_confidence,
+      'accepted_by_policy'
+    )
+    returning id into v_proposal_id;
+  end if;
+
   insert into public.ai_negotiation_logs(
     session_id,
     offer_id,
@@ -790,6 +913,7 @@ begin
 
   return jsonb_build_object(
     'sessionId', v_session.id,
+    'proposalId', v_proposal_id,
     'decision', v_decision,
     'round', v_next_round,
     'proposedAmount', v_proposed,
@@ -879,6 +1003,55 @@ revoke execute on function public.grade_product_visual_condition(uuid, jsonb)
 grant execute on function public.grade_product_visual_condition(uuid, jsonb)
   to authenticated;
 
+
+
+create or replace function public.get_product_trust_evidence(p_product_id uuid)
+returns table (
+  inspection_id uuid,
+  visual_score numeric,
+  structural_score numeric,
+  cleanliness_score numeric,
+  description_consistency_score numeric,
+  condition_grade text,
+  confidence numeric,
+  damage_flags jsonb,
+  observations jsonb,
+  verified_badge boolean,
+  provider text,
+  model_name text,
+  completed_at timestamptz
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $function$
+  select
+    i.id,
+    i.visual_score,
+    i.structural_score,
+    i.cleanliness_score,
+    i.description_consistency_score,
+    i.condition_grade,
+    i.confidence,
+    i.damage_flags,
+    i.observations,
+    i.verified_badge,
+    i.provider,
+    i.model_name,
+    i.completed_at
+  from public.product_visual_inspections i
+  where i.product_id = p_product_id
+    and i.status = 'completed'
+  order by i.completed_at desc nulls last, i.created_at desc
+  limit 1;
+$function$;
+
+revoke execute on function public.get_product_trust_evidence(uuid)
+  from public, anon, authenticated;
+grant execute on function public.get_product_trust_evidence(uuid)
+  to anon, authenticated;
+
 create or replace function private.apply_product_visual_grade(
   p_inspection_id uuid,
   p_visual_score numeric,
@@ -948,6 +1121,292 @@ $function$;
 revoke execute on function private.apply_product_visual_grade(uuid, numeric, numeric, numeric, numeric, text, numeric, jsonb, jsonb, text, text, text)
   from public, anon, authenticated;
 grant execute on function private.apply_product_visual_grade(uuid, numeric, numeric, numeric, numeric, text, numeric, jsonb, jsonb, text, text, text)
+  to service_role;
+
+
+
+create or replace function public.apply_ai_broker_accepted_proposal(
+  p_session_id uuid,
+  p_proposal_id uuid
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_session public.ai_negotiation_sessions%rowtype;
+  v_proposal public.ai_broker_proposals%rowtype;
+  v_offer public.offers%rowtype;
+  v_product public.products%rowtype;
+  v_policy record;
+  v_actor uuid;
+  v_message_id uuid;
+  v_new_offer_id uuid;
+  v_expected_amount numeric;
+  v_execution_actor uuid;
+begin
+  select *
+  into v_session
+  from public.ai_negotiation_sessions
+  where id = p_session_id
+  for update;
+
+  if not found then
+    raise exception 'AI negotiation session not found' using errcode = 'P0002';
+  end if;
+
+  select *
+  into v_proposal
+  from public.ai_broker_proposals
+  where id = p_proposal_id
+    and session_id = p_session_id
+  for update;
+
+  if not found then
+    raise exception 'AI broker proposal not found' using errcode = 'P0002';
+  end if;
+
+  if v_proposal.status = 'applied' then
+    return jsonb_build_object(
+      'applied', true,
+      'idempotent', true,
+      'proposalId', v_proposal.id,
+      'offerId', v_proposal.applied_offer_id
+    );
+  end if;
+
+  if v_proposal.status <> 'accepted_by_policy' then
+    raise exception 'Only accepted_by_policy proposals can be applied' using errcode = '42501';
+  end if;
+
+  if v_proposal.round_number <> v_session.current_round then
+    update public.ai_broker_proposals
+    set status = 'superseded'
+    where id = v_proposal.id;
+    raise exception 'Proposal round is stale' using errcode = '40001';
+  end if;
+
+  if v_session.current_round < 1
+     or v_session.current_round > 20 then
+    raise exception 'Negotiation round is outside the allowed bounds' using errcode = '22023';
+  end if;
+
+  v_actor := v_proposal.broker_user_id;
+  if v_actor <> v_session.buyer_id and v_actor <> v_session.seller_id then
+    raise exception 'Broker actor is not a negotiation participant' using errcode = '42501';
+  end if;
+
+  select * into v_offer
+  from public.offers
+  where id = v_proposal.source_offer_id
+  for update;
+
+  if not found then
+    raise exception 'Source offer not found' using errcode = 'P0002';
+  end if;
+
+  if v_offer.status <> 'pending' then
+    raise exception 'Source offer is no longer pending' using errcode = '40900';
+  end if;
+
+  select * into v_product
+  from public.products
+  where id = v_offer.product_id
+    and status = 'published'
+    and moderation_status = 'approved'
+    and listing_type = 'sale'
+    and owner_id = v_session.seller_id
+    and quantity > 0
+    and price > 0
+  for update;
+
+  if not found then
+    raise exception 'Product is unavailable for broker execution' using errcode = 'P0002';
+  end if;
+
+  select * into v_policy from private.get_ai_broker_policy(v_session.id);
+
+  if v_proposal.product_price <> v_product.price
+     or v_proposal.policy_floor <> v_policy.seller_floor
+     or v_proposal.buyer_ceiling <> v_policy.buyer_ceiling then
+    raise exception 'Broker proposal financial context changed' using errcode = '40001';
+  end if;
+
+  if v_proposal.action = 'counter_offer' then
+    v_expected_amount := v_proposal.proposed_amount;
+
+    if v_expected_amount is null
+       or v_expected_amount < v_policy.seller_floor
+       or v_expected_amount > least(v_product.price, v_policy.buyer_ceiling) then
+      raise exception 'Broker proposal violates current financial policy' using errcode = '42501';
+    end if;
+
+    -- The existing offer trigger intentionally derives buyer_id from auth.uid().
+    -- Execute the broker-created message and offer with transaction-local actor claims,
+    -- while keeping the gate itself service_role-only.
+    perform set_config('request.jwt.claim.sub', v_actor::text, true);
+    insert into public.messages(
+      room_id,
+      sender_id,
+      message_type,
+      body,
+      metadata
+    )
+    values (
+      v_offer.room_id,
+      v_actor,
+      'offer',
+      'عرض مقابل عبر وكيل DEBA',
+      jsonb_build_object(
+        'kind','offer',
+        'amount',v_expected_amount,
+        'currency',coalesce(v_offer.currency,v_product.currency,'EGP'),
+        'brokerProposalId',v_proposal.id,
+        'parentOfferMessageId',v_offer.message_id
+      )
+    )
+    returning id into v_message_id;
+
+    perform set_config('request.jwt.claim.sub', v_offer.buyer_id::text, true);
+    insert into public.offers(
+      product_id,
+      buyer_id,
+      parent_offer_id,
+      amount,
+      currency,
+      status,
+      expires_at,
+      message,
+      room_id,
+      message_id,
+      seller_id,
+      created_by,
+      updated_at
+    )
+    values (
+      v_offer.product_id,
+      v_offer.buyer_id,
+      v_offer.id,
+      v_expected_amount,
+      coalesce(v_offer.currency,v_product.currency,'EGP'),
+      'pending',
+      null,
+      'AI broker counter offer',
+      v_offer.room_id,
+      v_message_id,
+      v_offer.seller_id,
+      v_actor,
+      now()
+    )
+    returning id into v_new_offer_id;
+
+    perform set_config('request.jwt.claim.sub', v_actor::text, true);
+    update public.messages
+    set metadata = metadata || jsonb_build_object('offerId',v_new_offer_id)
+    where id = v_message_id;
+
+    update public.offers
+    set status='countered',
+        responded_at=now(),
+        last_action_by=v_actor,
+        updated_at=now()
+    where id=v_offer.id;
+
+    update public.ai_broker_proposals
+    set status='applied',
+        applied_offer_id=v_new_offer_id,
+        applied_at=now()
+    where id=v_proposal.id;
+
+    update public.ai_negotiation_sessions
+    set last_offer_amount=v_expected_amount,
+        last_decision='counter_offer_applied',
+        updated_at=now(),
+        last_action_at=now()
+    where id=v_session.id;
+
+    insert into public.ai_negotiation_logs(
+      session_id,offer_id,actor,event_type,proposed_amount,policy_decision,output
+    )
+    values (
+      v_session.id,v_offer.id,'system','counter_proposed',v_expected_amount,
+      'executed_by_policy',
+      jsonb_build_object('proposalId',v_proposal.id,'newOfferId',v_new_offer_id)
+    );
+
+    return jsonb_build_object(
+      'applied',true,
+      'idempotent',false,
+      'action','counter_offer',
+      'proposalId',v_proposal.id,
+      'offerId',v_new_offer_id
+    );
+  end if;
+
+  if v_proposal.action = 'accept' then
+    if v_offer.amount < v_policy.seller_floor
+       or v_offer.amount > least(v_product.price, v_policy.buyer_ceiling) then
+      raise exception 'Source offer violates current financial policy' using errcode = '42501';
+    end if;
+
+    perform set_config('request.jwt.claim.sub', v_actor::text, true);
+
+    update public.offers
+    set status='accepted',
+        responded_at=now(),
+        last_action_by=v_actor,
+        updated_at=now()
+    where id=v_offer.id;
+
+    update public.offers
+    set status='rejected',
+        responded_at=now(),
+        last_action_by=v_actor,
+        updated_at=now()
+    where room_id=v_offer.room_id
+      and product_id=v_offer.product_id
+      and status='pending'
+      and id<>v_offer.id;
+
+    update public.ai_broker_proposals
+    set status='applied',
+        applied_offer_id=v_offer.id,
+        applied_at=now()
+    where id=v_proposal.id;
+
+    update public.ai_negotiation_sessions
+    set status='completed',
+        last_decision='accept_applied',
+        updated_at=now(),
+        last_action_at=now()
+    where id=v_session.id;
+
+    insert into public.ai_negotiation_logs(
+      session_id,offer_id,actor,event_type,observed_offer_amount,policy_decision,output
+    )
+    values (
+      v_session.id,v_offer.id,'system','accepted',v_offer.amount,
+      'executed_by_policy',
+      jsonb_build_object('proposalId',v_proposal.id)
+    );
+
+    return jsonb_build_object(
+      'applied',true,
+      'idempotent',false,
+      'action','accept',
+      'proposalId',v_proposal.id,
+      'offerId',v_offer.id
+    );
+  end if;
+
+  raise exception 'Proposal action is not executable' using errcode = '42501';
+end;
+$function$;
+
+revoke execute on function public.apply_ai_broker_accepted_proposal(uuid, uuid)
+  from public, anon, authenticated;
+grant execute on function public.apply_ai_broker_accepted_proposal(uuid, uuid)
   to service_role;
 
 notify pgrst, 'reload schema';
