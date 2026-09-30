@@ -2578,6 +2578,49 @@ export type Database = {
         Returns: Json
       }
       get_seller_analytics: { Args: never; Returns: Json }
+      get_buyer_intent_matches: {
+        Args: { p_limit?: number }
+        Returns: {
+          city: string | null
+          condition_grade: string | null
+          currency: string
+          governorate: string | null
+          id: string
+          match_reason: Json
+          match_score: number
+          matched_at: string
+          product_id: string
+          saved_search_id: string
+          seen_at: string | null
+          slug: string
+          title: string
+          price: number | null
+        }[]
+      }
+      get_product_deal_score: {
+        Args: { p_product_id: string }
+        Returns: {
+          average_price: number | null
+          category_id: string | null
+          confidence: number | null
+          condition_grade: string | null
+          currency: string
+          current_price: number
+          deal_label: string
+          deal_score: number | null
+          graph: Json
+          median_price: number | null
+          p25_price: number | null
+          p75_price: number | null
+          peer_count: number
+          price_delta_pct: number | null
+          product_id: string
+        }[]
+      }
+      process_buyer_intent_matches: {
+        Args: { p_limit?: number; p_product_id: string }
+        Returns: number
+      }
       mark_chat_read: { Args: { p_room_id: string }; Returns: Json }
       record_search_telemetry: {
         Args: {
