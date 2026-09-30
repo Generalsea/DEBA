@@ -318,7 +318,6 @@ create table if not exists public.product_visual_inspections (
 
 alter table public.product_visual_inspections enable row level security;
 revoke all on public.product_visual_inspections from anon, authenticated;
-grant select on public.product_visual_inspections to authenticated;
 revoke insert, update, delete on public.product_visual_inspections from authenticated;
 
 grant select (
@@ -658,6 +657,8 @@ begin
     buyer_id,
     seller_id,
     product_id,
+    broker_user_id,
+    broker_role,
     status,
     current_round,
     last_offer_amount,
@@ -669,6 +670,8 @@ begin
     v_offer.buyer_id,
     v_offer.seller_id,
     v_offer.product_id,
+    v_uid,
+    case when v_uid = v_offer.buyer_id then 'buyer' else 'seller' end,
     'active',
     0,
     v_offer.amount,
