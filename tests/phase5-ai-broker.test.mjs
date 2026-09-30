@@ -44,9 +44,11 @@ test('Phase 5 broker evaluation fails closed and does not mutate offers directly
   assert.match(migration, /'no_feasible_deal'/)
   assert.match(migration, /'round_limit'/)
   assert.match(migration, /'policy_rejected'|model_rejected_by_policy|rejected_by_policy/)
+  assert.match(migration, /create or replace function public\.apply_ai_broker_accepted_proposal\(/)
+  assert.match(migration, /grant execute on function public\.apply_ai_broker_accepted_proposal\(uuid, uuid\)\s+to service_role/)
   assert.doesNotMatch(
     migration,
-    /insert into public\.offers\s*\(/i,
+    /grant execute on function public\.apply_ai_broker_accepted_proposal\(uuid, uuid\)\s+to authenticated/,
   )
 })
 
