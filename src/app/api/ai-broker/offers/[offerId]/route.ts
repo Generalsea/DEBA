@@ -12,6 +12,18 @@ export async function POST(
 ) {
   const { offerId } = await context.params
 
+  const origin = _request.headers.get('origin')
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  if (origin && siteUrl) {
+    try {
+      if (new URL(origin).origin !== new URL(siteUrl).origin) {
+        return NextResponse.json({ error: 'Origin غير مسموح.' }, { status: 403 })
+      }
+    } catch {
+      return NextResponse.json({ error: 'Origin غير صالح.' }, { status: 403 })
+    }
+  }
+
   try {
     const supabase = await createClient()
     const {
