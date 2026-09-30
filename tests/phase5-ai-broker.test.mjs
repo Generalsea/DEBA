@@ -114,3 +114,52 @@ test('Phase 5 contract test is wired into both CI workflows and provider env is 
   assert.match(env, /DEBA_VISION_API_KEY=/)
   assert.match(env, /DEBA_VISION_MODEL=/)
 })
+
+
+test('AI broker execution gate is deterministic, idempotent, round-bounded, and policy-locked', async () => {
+  const migration = await read(
+    'supabase/migrations/20260930010000_phase5_ai_broker_vision.sql',
+  )
+  const route = await read('src/app/api/ai-broker/offers/[offerId]/route.ts')
+
+  assert.match(migration, /create table if not exists public\.ai_broker_proposals/)
+  assert.match(migration, /status in \('proposed','accepted_by_policy','applied'/)
+  assert.match(migration, /Only accepted_by_policy proposals can be applied/)
+  assert.match(migration, /Proposal round is stale/)
+  assert.match(migration, /Source offer is no longer pending/)
+  assert.match(migration, /Broker proposal financial context changed/)
+  assert.match(migration, /Broker proposal violates current financial policy/)
+  assert.match(migration, /Negotiation round is outside the allowed bounds/)
+  assert.match(migration, /idempotent/)
+  assert.match(migration, /request\.jwt\.claim\.sub/)
+  assert.match(migration, /grant execute on function public\.apply_ai_broker_accepted_proposal\(uuid, uuid\)\s+to service_role/)
+  assert.doesNotMatch(
+    migration,
+    /grant execute on function public\.apply_ai_broker_accepted_proposal\(uuid, uuid\)\s+to authenticated/,
+  )
+
+  assert.match(route, /evaluate_broker_counter_offer/)
+  assert.match(route, /execution:/)
+  assert.match(route, /performed: false/)
+})
+
+test('visual trust evidence is public-safe and does not expose private image/request fields', async () => {
+  const migration = await read(
+    'supabase/migrations/20260930010000_phase5_ai_broker_vision.sql',
+  )
+  const page = await read('src/app/products/[slug]/page.tsx')
+
+  assert.match(migration, /public\.get_product_trust_evidence/)
+  assert.match(migration, /security invoker/)
+  assert.match(migration, /grant select \(\s*product_id,\s*visual_score/)
+  assert.match(migration, /product_visual_inspections_public_select/)
+  assert.doesNotMatch(
+    migration,
+    /grant select on public\.product_visual_inspections to authenticated/,
+  )
+  assert.match(migration, /verified_badge/)
+  assert.match(page, /get_product_trust_evidence/)
+  assert.match(page, /فحص بصري موثوق/)
+  assert.match(page, /trustEvidence\?\.verified_badge/)
+  assert.match(page, /description.*condition/)
+})
