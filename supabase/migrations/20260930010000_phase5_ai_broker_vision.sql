@@ -1096,4 +1096,23 @@ revoke execute on function public.record_ai_broker_advisory(
 grant execute on function public.record_ai_broker_advisory(
   uuid, text, numeric, text, numeric, text, text, text
 ) to service_role;
+create or replace function public.fail_product_visual_inspection(
+  p_inspection_id uuid,
+  p_error_code text
+)
+returns void
+language sql
+security definer
+set search_path = ''
+as $function$
+  update public.product_visual_inspections
+  set status = 'failed',
+      error_code = left(p_error_code, 120),
+      completed_at = now()
+  where id = p_inspection_id;
+$function$;
 
+revoke execute on function public.fail_product_visual_inspection(uuid, text)
+  from public, anon, authenticated;
+grant execute on function public.fail_product_visual_inspection(uuid, text)
+  to service_role;
