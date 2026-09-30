@@ -1011,3 +1011,89 @@ revoke execute on function public.complete_product_visual_inspection(
 grant execute on function public.complete_product_visual_inspection(
   uuid, numeric, numeric, numeric, numeric, text, numeric, jsonb, jsonb, text, text, text
 ) to service_role;
+create or replace function public.record_ai_broker_advisory(
+  p_session_id uuid,
+  p_action text,
+  p_amount numeric,
+  p_rationale text,
+  p_confidence numeric,
+  p_model_name text,
+  p_prompt_hash text,
+  p_input_hash text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, private, extensions, pg_catalog, pg_temp
+as $function$
+declare
+  v_session public.ai_negotiation_sessions%rowtype;
+  v_policy text;
+begin
+  if p_session_id is null then
+    raise exception 'Session id is required' using errcode = '22023';
+  end if;
+
+  if p_action not in ('counter_offer','hold','accept','decline','rejected_by_policy') then
+    raise exception 'Invalid broker advisory action' using errcode = '22023';
+  end if;
+
+  if p_confidence is null or p_confidence < 0 or p_confidence > 1 then
+    raise exception 'Invalid broker advisory confidence' using errcode = '22023';
+  end if;
+
+  select * into v_session
+  from public.ai_negotiation_sessions
+  where id = p_session_id;
+
+  if not found then
+    raise exception 'AI negotiation session not found' using errcode = 'P0002';
+  end if;
+
+  if p_amount is not null and p_amount < 0 then
+    raise exception 'Broker advisory amount cannot be negative' using errcode = '22023';
+  end if;
+
+  v_policy := case
+    when p_action = 'rejected_by_policy' then 'model_rejected_by_policy'
+    else 'model_advisory_recorded'
+  end;
+
+  insert into public.ai_negotiation_logs(
+    session_id,
+    offer_id,
+    actor,
+    event_type,
+    proposed_amount,
+    policy_decision,
+    model_name,
+    prompt_hash,
+    input_hash,
+    output
+  )
+  values (
+    p_session_id,
+    v_session.offer_id,
+    'broker',
+    case when p_action = 'counter_offer' then 'counter_proposed' else 'policy_evaluated' end,
+    p_amount,
+    v_policy,
+    left(p_model_name, 160),
+    p_prompt_hash,
+    p_input_hash,
+    jsonb_build_object(
+      'action', p_action,
+      'rationale', left(coalesce(p_rationale, ''), 2000),
+      'confidence', p_confidence
+    )
+  );
+end;
+$function$;
+
+revoke execute on function public.record_ai_broker_advisory(
+  uuid, text, numeric, text, numeric, text, text, text
+) from public, anon, authenticated;
+grant execute on function public.record_ai_broker_advisory(
+  uuid, text, numeric, text, numeric, text, text, text
+) to service_role;
+
