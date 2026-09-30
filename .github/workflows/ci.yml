@@ -58,5 +58,8 @@ jobs:
       - name: Contract tests
         run: npm test
 
+      - name: Phase 5 broker and vision contract tests
+        run: npm run test:phase5
+
       - name: Build
         run: npm run build

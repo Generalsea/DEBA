@@ -33,6 +33,9 @@ jobs:
       - name: Contract tests
         run: npm test
 
+      - name: Phase 5 broker and vision contract tests
+        run: npm run test:phase5
+
       - name: Public search rate-limit contract/integration tests
         run: node --test tests/public-search-rate-limit.test.mjs
 
