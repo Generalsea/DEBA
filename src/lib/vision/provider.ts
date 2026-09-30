@@ -116,9 +116,10 @@ export async function inspectProductImages(input: {
       if (row.severity !== 'low' && row.severity !== 'medium' && row.severity !== 'high') {
         throw new Error('Vision provider returned an invalid damage severity.')
       }
+      const severity = row.severity as 'low' | 'medium' | 'high'
       return {
         label: String(row.label ?? '').trim().slice(0, 240),
-        severity: row.severity,
+        severity,
         confidence: score(row.confidence, 'damage confidence'),
       }
     })
