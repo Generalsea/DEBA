@@ -8,7 +8,7 @@ async function read(path) {
 
 test('deal intelligence uses published approved sale comparables and returns a safe label contract', async () => {
   const migration = await read(
-    'supabase/migrations/20260929201000_phase4_2_deal_matching_price_intelligence.sql',
+    'supabase/migrations/20260929224300_phase4_2_deal_matching_price_intelligence.sql',
   )
   const page = await read('src/app/products/[slug]/page.tsx')
   const component = await read('src/components/ProductDealScore.tsx')
@@ -39,7 +39,7 @@ test('deal intelligence uses published approved sale comparables and returns a s
 
 test('buyer intent matcher is persisted behind RLS and has asynchronous publication wiring', async () => {
   const migration = await read(
-    'supabase/migrations/20260929201000_phase4_2_deal_matching_price_intelligence.sql',
+    'supabase/migrations/20260929224300_phase4_2_deal_matching_price_intelligence.sql',
   )
   const matches = await read('src/app/api/buyer-intent/matches/route.ts')
   const save = await read('src/app/api/buyer-intent/saved-searches/route.ts')
