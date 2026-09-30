@@ -136,6 +136,38 @@ execute function private.sync_product_embedding_searchability();
 revoke execute on function private.sync_product_embedding_searchability()
   from public, anon, authenticated;
 
+create or replace function public.get_product_embedding_status(p_product_id uuid)
+returns jsonb
+language sql
+security definer
+set search_path = ''
+as $function$
+  select case
+    when e.product_id is null then
+      jsonb_build_object(
+        'exists', false,
+        'searchableActive', false,
+        'sourceHash', null,
+        'embeddingModel', null
+      )
+    else
+      jsonb_build_object(
+        'exists', true,
+        'searchableActive', e.searchable_active,
+        'sourceHash', e.source_hash,
+        'embeddingModel', e.embedding_model
+      )
+  end
+  from (select p_product_id as product_id) request
+  left join private.product_embeddings e on e.product_id = request.product_id;
+$function$;
+
+revoke execute on function public.get_product_embedding_status(uuid)
+  from public, anon, authenticated;
+
+grant execute on function public.get_product_embedding_status(uuid)
+  to service_role;
+
 create or replace function public.upsert_product_embedding(
   p_product_id uuid,
   p_embedding text,
