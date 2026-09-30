@@ -951,3 +951,63 @@ grant execute on function private.apply_product_visual_grade(uuid, numeric, nume
   to service_role;
 
 notify pgrst, 'reload schema';
+
+create or replace function public.upsert_ai_broker_rule_secret(
+  p_rule_id uuid,
+  p_user_id uuid,
+  p_policy jsonb
+)
+returns void
+language sql
+security definer
+set search_path = ''
+as $function$
+  select private.upsert_ai_broker_rule_secret(p_rule_id, p_user_id, p_policy);
+$function$;
+
+revoke execute on function public.upsert_ai_broker_rule_secret(uuid, uuid, jsonb)
+  from public, anon, authenticated;
+grant execute on function public.upsert_ai_broker_rule_secret(uuid, uuid, jsonb)
+  to service_role;
+
+create or replace function public.complete_product_visual_inspection(
+  p_inspection_id uuid,
+  p_visual_score numeric,
+  p_structural_score numeric,
+  p_cleanliness_score numeric,
+  p_description_consistency_score numeric,
+  p_condition_grade text,
+  p_confidence numeric,
+  p_damage_flags jsonb,
+  p_observations jsonb,
+  p_provider text,
+  p_model_name text,
+  p_source_hash text
+)
+returns jsonb
+language sql
+security definer
+set search_path = ''
+as $function$
+  select private.apply_product_visual_grade(
+    p_inspection_id,
+    p_visual_score,
+    p_structural_score,
+    p_cleanliness_score,
+    p_description_consistency_score,
+    p_condition_grade,
+    p_confidence,
+    p_damage_flags,
+    p_observations,
+    p_provider,
+    p_model_name,
+    p_source_hash
+  );
+$function$;
+
+revoke execute on function public.complete_product_visual_inspection(
+  uuid, numeric, numeric, numeric, numeric, text, numeric, jsonb, jsonb, text, text, text
+) from public, anon, authenticated;
+grant execute on function public.complete_product_visual_inspection(
+  uuid, numeric, numeric, numeric, numeric, text, numeric, jsonb, jsonb, text, text, text
+) to service_role;
