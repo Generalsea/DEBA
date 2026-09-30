@@ -33,6 +33,12 @@ jobs:
       - name: Contract tests
         run: npm test
 
+      - name: Phase 4.3 contract tests
+        run: npm run test:phase4-3
+
+      - name: Phase 4.3 hardening contract tests
+        run: node --test tests/phase4-3-hardening.test.mjs
+
       - name: Public search rate-limit contract/integration tests
         run: node --test tests/public-search-rate-limit.test.mjs
 

@@ -15,7 +15,8 @@
     "e2e:list": "playwright test --list",
     "e2e:headed": "playwright test --headed",
     "test:phase4-notifications": "node --experimental-strip-types --test tests/phase4-notifications.test.mjs tests/phase4-notifications.integration.test.mjs",
-    "test:phase4-2": "node --experimental-strip-types --test tests/phase4-2-deal-matching.test.mjs"
+    "test:phase4-2": "node --experimental-strip-types --test tests/phase4-2-deal-matching.test.mjs",
+    "test:phase4-3": "node --test tests/phase4-3-future-engine.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
@@ -26,14 +27,14 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/postcss": "4.3.3",
     "@types/node": "24.4.0",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "typescript": "7.0.2",
-    "@tailwindcss/postcss": "4.3.3",
     "postcss": "8.5.28",
     "tailwindcss": "4.3.3",
-    "@playwright/test": "1.63.0"
+    "typescript": "7.0.2"
   },
   "engines": {
     "node": ">=22.14.0",

@@ -64,5 +64,12 @@ jobs:
       - name: Phase 4.2 deal matching contract tests
         run: npm run test:phase4-2
 
+      - name: Phase 4.3 contract tests
+        run: npm run test:phase4-3
+
+      - name: Phase 4.3 hardening contract tests
+        run: node --test tests/phase4-3-hardening.test.mjs
+
       - name: Build
         run: npm run build
+
