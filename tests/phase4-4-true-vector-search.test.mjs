@@ -122,7 +122,8 @@ test('batch ingestion pipeline is guarded, incremental, and production-safe by d
   assert.match(source, /embeddingModel ===/)
   assert.match(source, /DEBA_EMBEDDING_BATCH_SIZE/)
   assert.match(source, /DEBA_EMBEDDING_MAX_PRODUCTS/)
-  assert.match(source, /expected ' \+ dimensions/)
+  assert.match(source, /Embedding dimension mismatch/)
+  assert.match(source, /const dimensions = 1536/)
   assert.doesNotMatch(source, /Math\.random/)
 })
 
