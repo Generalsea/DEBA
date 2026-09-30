@@ -106,3 +106,39 @@ test('Phase 4.4 integration smoke is opt-in and never fabricates production embe
     'DEBA_EMBEDDING_MODEL must be configured for a true semantic integration test.',
   )
 })
+
+
+test('batch ingestion pipeline is guarded, incremental, and production-safe by default', async () => {
+  const source = await readFile(
+    new URL('../scripts/ingest-product-embeddings.mjs', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(source, /const APPLY = process\.argv\.includes\('--apply'\)/)
+  assert.match(source, /DEBA_PHASE44_PRODUCTION/)
+  assert.match(source, /Production ingestion is locked/)
+  assert.match(source, /get_product_embedding_status/)
+  assert.match(source, /sourceHash ===/)
+  assert.match(source, /embeddingModel ===/)
+  assert.match(source, /DEBA_EMBEDDING_BATCH_SIZE/)
+  assert.match(source, /DEBA_EMBEDDING_MAX_PRODUCTS/)
+  assert.match(source, /expected ' \+ dimensions/)
+  assert.doesNotMatch(source, /Math\.random/)
+})
+
+test('embedding status RPC remains service-role only', async () => {
+  const sql = await readFile(
+    new URL(
+      '../supabase/migrations/20260930000000_phase4_4_true_vector_search.sql',
+      import.meta.url,
+    ),
+    'utf8',
+  )
+
+  assert.match(sql, /public\.get_product_embedding_status/)
+  assert.match(sql, /revoke execute on function public\.get_product_embedding_status\(uuid\)/i)
+  assert.match(
+    sql,
+    /grant execute on function public\.get_product_embedding_status\(uuid\)[\s\S]*to service_role/i,
+  )
+})
