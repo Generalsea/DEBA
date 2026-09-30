@@ -33,6 +33,9 @@ jobs:
       - name: Contract tests
         run: npm test
 
+      - name: Phase 4.4 true vector search contract tests
+        run: npm run test:phase4-4
+
       - name: Public search rate-limit contract/integration tests
         run: node --test tests/public-search-rate-limit.test.mjs
 
