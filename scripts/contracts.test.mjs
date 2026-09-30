@@ -473,7 +473,7 @@ test('report lifecycle is database-enforced and product reports can auto-pause a
   assert.match(route, /under_review/)
   assert.match(reportApi, /fraud/)
   assert.match(reportApi, /prohibited_item/)
-  assert.match(reportApi, /reason,\n        description/)
+  assert.match(reportApi, /reason,\r?\n        description/)
   assert.doesNotMatch(reportApi, /reason \+ ': '/)
   assert.match(tabs, /value="fraud"/)
   assert.match(tabs, /value="prohibited_item"/)
