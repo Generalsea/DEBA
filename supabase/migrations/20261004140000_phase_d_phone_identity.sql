@@ -339,6 +339,93 @@ $function$;
 
 revoke execute on function private.guard_marketplace_phone() from public;
 
+create or replace function private.annotate_listing_risk_signals()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, private, extensions, pg_catalog
+as $function$
+declare
+  v_normalized_title text;
+  v_duplicate_count integer;
+  v_risk_flags jsonb;
+begin
+  if new.owner_id is null
+     or new.category_id is null
+     or new.title is null
+     or btrim(new.title) = '' then
+    return new;
+  end if;
+
+  v_normalized_title := lower(
+    regexp_replace(
+      private.deba_normalize_arabic(btrim(new.title)),
+      '[[:space:][:punct:]]',
+      '',
+      'g'
+    )
+  );
+
+  select count(*)
+    into v_duplicate_count
+  from public.products p
+  where p.owner_id = new.owner_id
+    and p.category_id = new.category_id
+    and p.id is distinct from new.id
+    and p.created_at >= now() - interval '30 days'
+    and p.status in ('draft', 'published', 'paused', 'reserved')
+    and similarity(
+      lower(
+        regexp_replace(
+          private.deba_normalize_arabic(btrim(p.title)),
+          '[[:space:][:punct:]]',
+          '',
+          'g'
+        )
+      ),
+      v_normalized_title
+    ) >= 0.92
+    and (
+      new.price is null
+      or p.price is null
+      or p.currency is distinct from new.currency
+      or abs(p.price - new.price) <= greatest(1, abs(new.price) * 0.05)
+    );
+
+  if v_duplicate_count = 0 then
+    return new;
+  end if;
+
+  v_risk_flags := coalesce(
+    new.metadata -> 'system_risk_flags',
+    '[]'::jsonb
+  );
+
+  if jsonb_typeof(v_risk_flags) <> 'array' then
+    v_risk_flags := '[]'::jsonb;
+  end if;
+
+  if not (v_risk_flags ? 'possible_duplicate_listing') then
+    v_risk_flags := v_risk_flags || to_jsonb(array['possible_duplicate_listing']);
+  end if;
+
+  new.metadata := jsonb_set(
+    coalesce(new.metadata, '{}'::jsonb),
+    '{system_risk_flags}',
+    v_risk_flags,
+    true
+  );
+
+  return new;
+end;
+$function$;
+
+drop trigger if exists trg_annotate_listing_risk_signals on public.products;
+create trigger trg_annotate_listing_risk_signals
+before insert on public.products
+for each row
+execute function private.annotate_listing_risk_signals();
+
 create or replace function private.annotate_chat_abuse_signals()
 returns trigger
 language plpgsql
