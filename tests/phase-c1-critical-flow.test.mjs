@@ -35,6 +35,8 @@ test('C1 chat RPC errors are mapped to truthful HTTP classes', async () => {
   assert.match(api, /return 500/)
   assert.match(api, /chat participant lookup failed/)
   assert.match(api, /status: 500/)
+  assert.match(api, /تعذر رفع الملف الآن\.' \}, \{ status: 500 \}/)
+  assert.match(api, /apply_chat_offer_action/[\s\S]*?chatRpcErrorStatus\(error\)/)
   assert.match(rooms, /status: error\.code === 'P0001' \? 400 : 500/)
 })
 
