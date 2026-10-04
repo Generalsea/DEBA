@@ -268,12 +268,12 @@ export default function ProductDetailTabs({
           <strong>
             {isStructured
               ? 'هذا الإعلان اجتاز عقد بيانات المنتج المنظم.'
-              : 'هذا الإعلان من جيل بيانات أقدم؛ ستظهر فقط المعلومات التي قدمها البائع.'}
+              : 'أحدث بيانات متاحة في سجل الإعلان؛ ستظهر فقط المعلومات التي قدمها البائع.'}
           </strong>
         </div>
         <div className={isStructured ? 'is-complete' : 'is-legacy'}>
           {isStructured ? <CheckCircle2 size={16} /> : <PackageCheck size={16} />}
-          {isStructured ? 'تفاصيل منظمة' : 'بيانات قديمة'}
+          {isStructured ? 'تفاصيل منظمة' : 'أحدث بيانات متاحة'}
         </div>
       </div>
 
@@ -328,7 +328,7 @@ export default function ProductDetailTabs({
               <div className="deba-detail-check-list">
                 <div>
                   <CheckCircle2 size={17} />
-                  <span>السعر الحالي هو السعر الثابت المعروض للشراء.</span>
+                  <span>السعر الحالي هو السعر المطلوب من البائع.</span>
                 </div>
                 <div>
                   <CheckCircle2 size={17} />
