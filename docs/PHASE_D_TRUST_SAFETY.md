@@ -98,3 +98,8 @@ Presence uses per-user private Realtime topics. Authenticated clients may observ
 ## Messaging abuse signals
 
 The existing message pipeline now annotates deterministic advisory signals for unusually rapid bursts and repeated identical content. These signals do not automatically accuse or ban a user; they become evidence for moderation and abuse analysis through the existing chat security event stream.
+
+
+## Duplicate-listing defense
+
+At listing insertion, DEBA now computes an advisory `possible_duplicate_listing` signal for the same owner/category when a recently created listing has very high normalized-title similarity and a nearby price. It does not auto-block the seller; moderation retains the final decision path.
