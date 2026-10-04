@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { isValidEgyptianPhone, normalizeEgyptianPhone } from '@/lib/auth/egyptian-phone'
 import { createClient } from '@/utils/supabase/server'
 
 function clean(value: unknown, max: number) {
@@ -11,8 +12,7 @@ function cleanNullable(value: unknown, max: number) {
 }
 
 function validPhone(value: string | null) {
-  if (!value) return true
-  return /^01\d{9}$/.test(value.replace(/\s/g, ''))
+  return value === null || isValidEgyptianPhone(value)
 }
 
 export async function GET() {
@@ -93,7 +93,12 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'رقم الهاتف المصري غير صالح.' }, { status: 400 })
     }
 
-    if (requestedPhone !== verifiedAuthPhone) {
+    const normalizedRequestedPhone =
+      requestedPhone === null ? null : normalizeEgyptianPhone(requestedPhone)
+
+    if (
+      normalizedRequestedPhone !== verifiedAuthPhone
+    ) {
       return NextResponse.json(
         {
           error: 'تغيير رقم الهاتف يتم فقط عبر مسار التحقق الرسمي.',
