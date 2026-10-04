@@ -271,6 +271,90 @@ begin
 end;
 $function$;
 
+create or replace function private.annotate_chat_abuse_signals()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $function$
+declare
+  v_normalized text;
+  v_recent_count integer;
+  v_repeat_count integer;
+  v_risk_flags text[];
+begin
+  v_risk_flags := array(
+    select jsonb_array_elements_text(
+      case
+        when jsonb_typeof(coalesce(new.metadata -> 'risk_flags', '[]'::jsonb)) = 'array'
+          then coalesce(new.metadata -> 'risk_flags', '[]'::jsonb)
+        else '[]'::jsonb
+      end
+    )
+  );
+
+  if new.body is null or btrim(new.body) = '' then
+    return new;
+  end if;
+
+  v_normalized := lower(
+    regexp_replace(
+      private.deba_normalize_arabic(btrim(new.body)),
+      '[[:space:][:punct:]]',
+      '',
+      'g'
+    )
+  );
+
+  select count(*)
+    into v_recent_count
+  from public.messages m
+  where m.room_id = new.room_id
+    and m.sender_id = new.sender_id
+    and m.created_at >= now() - interval '2 minutes';
+
+  if v_recent_count >= 10 and not ('rapid_messages' = any(v_risk_flags)) then
+    v_risk_flags := array_append(v_risk_flags, 'rapid_messages');
+  end if;
+
+  if length(v_normalized) >= 12 then
+    select count(*)
+      into v_repeat_count
+    from public.messages m
+    where m.room_id = new.room_id
+      and m.sender_id = new.sender_id
+      and m.created_at >= now() - interval '10 minutes'
+      and lower(
+        regexp_replace(
+          private.deba_normalize_arabic(coalesce(m.body, '')),
+          '[[:space:][:punct:]]',
+          '',
+          'g'
+        )
+      ) = v_normalized;
+
+    if v_repeat_count >= 2 and not ('repeated_content' = any(v_risk_flags)) then
+      v_risk_flags := array_append(v_risk_flags, 'repeated_content');
+    end if;
+  end if;
+
+  new.metadata := jsonb_set(
+    coalesce(new.metadata, '{}'::jsonb),
+    '{risk_flags}',
+    to_jsonb(v_risk_flags),
+    true
+  );
+
+  return new;
+end;
+$function$;
+
+drop trigger if exists trg_annotate_chat_abuse_signals on public.messages;
+create trigger trg_annotate_chat_abuse_signals
+before insert on public.messages
+for each row
+execute function private.annotate_chat_abuse_signals();
+
 drop trigger if exists trg_products_phone_verified on public.products;
 create trigger trg_products_phone_verified
 before insert or update on public.products
