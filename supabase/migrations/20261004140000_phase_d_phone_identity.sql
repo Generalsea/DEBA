@@ -128,6 +128,60 @@ begin
 end;
 $cron$;
 
+-- Direct RPC callers must observe the same phone-trust rule as the HTTP route.
+create or replace function public.start_seller_verification(
+  p_verification_level text,
+  p_legal_name text,
+  p_taxpayer_number text,
+  p_document_type text,
+  p_document_country text
+)
+returns jsonb
+language plpgsql
+security invoker
+set search_path='public','private','pg_temp'
+as $function$
+declare
+  v_uid uuid := auth.uid();
+  v_id uuid;
+begin
+  if v_uid is null then
+    raise exception 'Authentication required' using errcode='42501';
+  end if;
+
+  perform private.assert_marketplace_phone_verified();
+
+  if p_verification_level not in ('basic','identity','business') then
+    raise exception 'Invalid verification level' using errcode='22023';
+  end if;
+
+  insert into public.seller_verifications(
+    user_id,verification_level,status,legal_name,taxpayer_number,
+    document_type,document_country,submitted_at
+  )
+  values(
+    v_uid,p_verification_level,'pending',
+    nullif(trim(p_legal_name),''),nullif(trim(p_taxpayer_number),''),
+    nullif(trim(p_document_type),''),coalesce(nullif(trim(p_document_country),''),'EG'),
+    now()
+  )
+  on conflict(user_id) do update
+  set verification_level=excluded.verification_level,
+      status='pending',
+      legal_name=excluded.legal_name,
+      taxpayer_number=excluded.taxpayer_number,
+      document_type=excluded.document_type,
+      document_country=excluded.document_country,
+      submitted_at=now(),
+      reviewed_at=null,
+      reviewed_by=null,
+      review_note=null
+  returning id into v_id;
+
+  return jsonb_build_object('verification_id',v_id,'status','pending');
+end;
+$function$;
+
 drop policy if exists products_insert_seller on public.products;
 create policy products_insert_seller
 on public.products
