@@ -5,8 +5,9 @@
 - Integration branch: `rc/phase4-5-integrated-20261004`
 - Verification PR: #43 (Draft, base `main`)
 - Main baseline: `75b26ae6ec72a5f69339f5e2145c2be651967b5e`
-- RC head at this checkpoint: `a015c9b26fede24dca6e09186ff57bbe783edfdf`
+- RC head at this refreshed checkpoint: `7442895a8cc2311e35956c249b9a7c839b903bad`
 - Main has not been merged or directly modified by this RC work.
+- GitHub workflow runs for this exact RC head: verify run `37190098682` PASS; quality run `37190098675` PASS.
 
 ## Evidence gates
 
