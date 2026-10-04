@@ -645,8 +645,9 @@ export default async function ProductDetailPage({
             <div className="deba-detail-security">
               <ShieldCheck size={17} />
               <span>
-                السعر الظاهر هو السعر الثابت للمنتج. طلب الشراء يُسجل داخل DEBA،
-                والدفع الإلكتروني غير مفعل في النسخة الحالية.
+                السعر الظاهر هو السعر المطلوب من البائع.
+                تواصل مع البائع داخل DEBA للاتفاق على التفاصيل والتسليم.
+                الدفع الإلكتروني غير مفعّل حاليًا.
               </span>
             </div>
           </div>
