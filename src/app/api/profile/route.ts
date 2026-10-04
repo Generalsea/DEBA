@@ -49,12 +49,14 @@ export async function PATCH(request: Request) {
     }
 
     const supabase = await createClient()
-    const { data: claimsData } = await supabase.auth.getClaims()
-    const userId = claimsData?.claims?.sub
+    const { data: authUserData, error: authUserError } = await supabase.auth.getUser()
+    const userId = authUserData.user?.id
 
-    if (typeof userId !== 'string') {
+    if (authUserError || typeof userId !== 'string') {
       return NextResponse.json({ error: 'يجب تسجيل الدخول لإدارة الحساب.' }, { status: 401 })
     }
+
+    const verifiedAuthPhone = authUserData.user?.phone || null
 
     const body = (await request.json()) as Record<string, unknown>
     const hasAvatarUrl = Object.prototype.hasOwnProperty.call(body, 'avatarUrl')
@@ -65,7 +67,7 @@ export async function PATCH(request: Request) {
     const bio = cleanNullable(body.bio, 500)
     const city = cleanNullable(body.city, 100)
     const governorate = cleanNullable(body.governorate, 100)
-    const phone = cleanNullable(body.phone, 30)
+    const requestedPhone = cleanNullable(body.phone, 30)
     const addressLine1 = cleanNullable(body.addressLine1, 180)
     const addressLine2 = cleanNullable(body.addressLine2, 180)
     const district = cleanNullable(body.district, 100)
@@ -87,8 +89,18 @@ export async function PATCH(request: Request) {
       )
     }
 
-    if (!validPhone(phone)) {
+    if (requestedPhone && !validPhone(requestedPhone)) {
       return NextResponse.json({ error: 'رقم الهاتف المصري غير صالح.' }, { status: 400 })
+    }
+
+    if (requestedPhone !== verifiedAuthPhone) {
+      return NextResponse.json(
+        {
+          error: 'تغيير رقم الهاتف يتم فقط عبر مسار التحقق الرسمي.',
+          code: 'PHONE_CHANGE_REQUIRES_VERIFICATION',
+        },
+        { status: 403 },
+      )
     }
 
     const expectedAvatarPath = userId + '/avatar.webp'
@@ -134,7 +146,7 @@ export async function PATCH(request: Request) {
       .upsert(
         {
           user_id: userId,
-          phone,
+          phone: verifiedAuthPhone,
           address_line1: addressLine1,
           address_line2: addressLine2,
           district,
