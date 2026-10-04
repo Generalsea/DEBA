@@ -16,7 +16,8 @@
     "e2e:headed": "playwright test --headed",
     "test:phase4-notifications": "node --experimental-strip-types --test tests/phase4-notifications.test.mjs tests/phase4-notifications.integration.test.mjs",
     "test:phase4-2": "node --experimental-strip-types --test tests/phase4-2-deal-matching.test.mjs",
-    "test:phase4-3": "node --test tests/phase4-3-future-engine.test.mjs"
+    "test:phase4-3": "node --test tests/phase4-3-future-engine.test.mjs",
+    "test:phase4-4": "node --test tests/phase4-4-true-vector-search.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
