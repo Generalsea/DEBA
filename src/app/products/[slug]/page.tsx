@@ -22,7 +22,7 @@ import CartAddButton from '@/components/CartAddButton'
 import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGallery'
 import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components/ProductDetailTabs'
 import ProductViewTracker from '@/components/ProductViewTracker'
-import ProductDealScore, { type ProductDealScoreData } from '@/components/ProductDealScore'
+import FutureMarketplacePanel from '@/components/FutureMarketplacePanel'
 import { createClient } from '@/utils/supabase/server'
 
 // Next.js 16 currently has a non-ASCII dynamic-route cache-tag issue.
@@ -75,6 +75,7 @@ type ProductRow = {
   details_last_completed_at: string | null
   published_at: string | null
   created_at: string
+  is_negotiable: boolean
   category: Category | null
   images: ImageRow[] | null
   seller:
@@ -92,7 +93,7 @@ type ProductRow = {
 }
 
 const SELECT =
-  'id,owner_id,title,slug,description,listing_type,status,moderation_status,condition_grade,condition_details,price,currency,quantity,city,governorate,district,delivery_method,metadata,details_schema_version,details_last_completed_at,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
+  'id,owner_id,title,slug,description,listing_type,status,moderation_status,condition_grade,condition_details,price,currency,is_negotiable,quantity,city,governorate,district,delivery_method,metadata,details_schema_version,details_last_completed_at,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
 
 const CONDITION_LABELS: Record<string, string> = {
   new: 'جديد',
@@ -225,7 +226,6 @@ async function getProduct(slug: string) {
     userId,
     categoriesResponse,
     attributeDefinitionsResponse,
-    dealScoreResponse,
     relatedResponse,
   ] = await Promise.all([
       product.owner_id
@@ -251,9 +251,6 @@ async function getProduct(slug: string) {
             .eq('is_required', true)
             .order('sort_order', { ascending: true })
         : Promise.resolve({ data: [], error: null }),
-      supabase
-        .rpc('get_product_deal_score', { p_product_id: product.id })
-        .maybeSingle(),
       product.category?.id
         ? supabase
             .from('products')
@@ -270,9 +267,6 @@ async function getProduct(slug: string) {
 
   if (sellerResponse.error) {
     console.error('DEBA seller query failed', sellerResponse.error)
-  }
-  if (dealScoreResponse.error) {
-    console.error('DEBA deal score query failed', dealScoreResponse.error)
   }
   product.seller = sellerResponse.data || null
 
@@ -311,7 +305,6 @@ async function getProduct(slug: string) {
     categories: ((categoriesResponse.data || []) as Category[]).map(mapCategory),
     definitions: ((attributeDefinitionsResponse.data || []) as unknown as ProductAttributeDefinition[]),
     related,
-    dealScore: (dealScoreResponse.data as ProductDealScoreData | null) || null,
   }
 }
 
@@ -487,6 +480,14 @@ export default async function ProductDetailPage({
                 سعر ثابت
               </span>
             </div>
+
+            <FutureMarketplacePanel
+              productId={product.id}
+              isOwner={isOwner}
+              isNegotiable={product.is_negotiable}
+              currency={product.currency || 'EGP'}
+              listingPrice={price}
+            />
 
             <div className="deba-detail-location">
               <MapPin size={16} />
