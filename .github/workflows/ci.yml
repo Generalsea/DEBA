@@ -52,6 +52,9 @@ jobs:
         run: |
           git diff --exit-code -- package-lock.json
 
+      - name: Release migration preflight
+        run: npm run release:preflight
+
       - name: Type-check
         run: npm run typecheck
 
@@ -66,6 +69,9 @@ jobs:
 
       - name: Phase 4.3 future marketplace contract tests
         run: npm run test:phase4-3
+
+      - name: Phase 4.4 true vector search contract tests
+        run: npm run test:phase4-4
 
       - name: Phase 5.1 AI broker/vision contract tests
         run: npm run test:phase5
