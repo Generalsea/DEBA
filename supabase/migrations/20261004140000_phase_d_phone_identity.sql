@@ -63,6 +63,66 @@ execute function private.guard_profile_private_phone();
 
 revoke execute on function private.guard_profile_private_phone() from public;
 
+drop policy if exists products_insert_seller on public.products;
+create policy products_insert_seller
+on public.products
+for insert
+to authenticated
+with check (
+  (select private.is_admin())
+  or (
+    owner_id = (select auth.uid())
+    and exists (
+      select 1
+      from public.profiles p
+      where p.id = (select auth.uid())
+        and p.account_type = 'seller'
+    )
+    and exists (
+      select 1
+      from auth.users u
+      where u.id = (select auth.uid())
+        and u.phone is not null
+        and u.phone_confirmed_at is not null
+    )
+    and status = 'draft'
+    and moderation_status = 'pending'
+  )
+);
+
+drop policy if exists products_delete_seller on public.products;
+create policy products_delete_seller
+on public.products
+for delete
+to authenticated
+using (
+  (select private.is_admin())
+  or (
+    owner_id = (select auth.uid())
+    and exists (
+      select 1
+      from public.profiles p
+      where p.id = (select auth.uid())
+        and p.account_type = 'seller'
+    )
+    and exists (
+      select 1
+      from auth.users u
+      where u.id = (select auth.uid())
+        and u.phone is not null
+        and u.phone_confirmed_at is not null
+    )
+    and status = 'draft'
+    and moderation_status in ('pending', 'rejected', 'needs_changes')
+    and not exists (
+      select 1 from public.orders o where o.product_id = products.id
+    )
+    and not exists (
+      select 1 from public.offers o where o.product_id = products.id
+    )
+  )
+);
+
 create or replace function private.sync_profile_phone_verification()
 returns trigger
 language plpgsql
