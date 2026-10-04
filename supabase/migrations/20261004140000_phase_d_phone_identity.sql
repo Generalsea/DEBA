@@ -1,14 +1,10 @@
--- DEBA Phase D — phone identity foundation.
--- Not applied to production by this change. Auth provider configuration is an external gate.
+-- DEBA Phase D — verified Egyptian phone identity foundation.
+-- This migration is intentionally NOT applied to production by this PR.
 
 begin;
 
 alter table public.profiles
   add column if not exists phone_verified boolean not null default false;
-
-create index if not exists profiles_phone_verified_idx
-  on public.profiles(id)
-  where phone_verified = true;
 
 alter table public.profile_private
   drop constraint if exists profile_private_phone_egyptian_check;
@@ -17,7 +13,8 @@ alter table public.profile_private
   add constraint profile_private_phone_egyptian_check
   check (
     phone is null
-    or phone ~ '^\+20(10|11|12|15)[0-9]{8}
+    or phone ~ '^\+20(10|11|12|15)[0-9]{8}$'
+  ) not valid;
 
 create unique index if not exists profile_private_phone_uidx
   on public.profile_private(phone)
@@ -62,9 +59,89 @@ execute function private.guard_profile_private_phone();
 
 revoke execute on function private.guard_profile_private_phone() from public;
 
--- Realtime Presence is intentionally private and narrowly scoped to DEBA user-presence topics.
--- Readers may observe a user's displayed presence; only the authenticated owner may publish
--- to that user's topic. This prevents one user from spoofing another user's online state.
+create or replace function private.assert_marketplace_phone_verified()
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $function$
+declare
+  v_uid uuid := auth.uid();
+  v_phone text;
+  v_phone_confirmed_at timestamptz;
+  v_role text := coalesce(current_setting('request.jwt.claim.role', true), '');
+begin
+  if v_role in ('service_role', 'supabase_admin') then
+    return;
+  end if;
+
+  if v_uid is null then
+    raise exception 'Authentication is required' using errcode = '42501';
+  end if;
+
+  select phone, phone_confirmed_at
+    into v_phone, v_phone_confirmed_at
+  from auth.users
+  where id = v_uid;
+
+  if v_phone_confirmed_at is null
+     or v_phone is null
+     or v_phone !~ '^\+20(10|11|12|15)[0-9]{8}$' then
+    raise exception 'Verified Egyptian phone is required for marketplace actions' using errcode = '42501';
+  end if;
+end;
+$function$;
+
+revoke execute on function private.assert_marketplace_phone_verified() from public;
+
+create or replace function private.sync_profile_phone_verification()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $function$
+declare
+  v_valid_egyptian_phone boolean :=
+    new.phone is not null
+    and new.phone ~ '^\+20(10|11|12|15)[0-9]{8}$'
+    and new.phone_confirmed_at is not null;
+begin
+  update public.profiles
+  set phone_verified = v_valid_egyptian_phone,
+      updated_at = now()
+  where id = new.id;
+
+  if v_valid_egyptian_phone then
+    insert into public.profile_private(user_id, phone, updated_at)
+    values (new.id, new.phone, now())
+    on conflict (user_id) do update
+      set phone = excluded.phone,
+          updated_at = now();
+  end if;
+
+  return new;
+end;
+$function$;
+
+drop trigger if exists trg_sync_profile_phone_verification on auth.users;
+create trigger trg_sync_profile_phone_verification
+after insert or update of phone, phone_confirmed_at on auth.users
+for each row
+execute function private.sync_profile_phone_verification();
+
+update public.profiles p
+set phone_verified = exists (
+  select 1
+  from auth.users u
+  where u.id = p.id
+    and u.phone is not null
+    and u.phone_confirmed_at is not null
+    and u.phone ~ '^\+20(10|11|12|15)[0-9]{8}$'
+);
+
+-- Realtime Presence:
+-- private per-user topics; observers can read presence,
+-- but only the authenticated owner can publish their own topic.
 drop policy if exists deba_presence_read on realtime.messages;
 create policy deba_presence_read
 on realtime.messages
@@ -128,7 +205,7 @@ begin
 end;
 $cron$;
 
--- Direct RPC callers must observe the same phone-trust rule as the HTTP route.
+-- Direct RPC callers must satisfy the same phone-trust boundary as HTTP routes.
 create or replace function public.start_seller_verification(
   p_verification_level text,
   p_legal_name text,
@@ -145,11 +222,11 @@ declare
   v_uid uuid := auth.uid();
   v_id uuid;
 begin
+  perform private.assert_marketplace_phone_verified();
+
   if v_uid is null then
     raise exception 'Authentication required' using errcode='42501';
   end if;
-
-  perform private.assert_marketplace_phone_verified();
 
   if p_verification_level not in ('basic','identity','business') then
     raise exception 'Invalid verification level' using errcode='22023';
@@ -203,6 +280,7 @@ with check (
       where u.id = (select auth.uid())
         and u.phone is not null
         and u.phone_confirmed_at is not null
+        and u.phone ~ '^\+20(10|11|12|15)[0-9]{8}$'
     )
     and status = 'draft'
     and moderation_status = 'pending'
@@ -230,6 +308,7 @@ using (
       where u.id = (select auth.uid())
         and u.phone is not null
         and u.phone_confirmed_at is not null
+        and u.phone ~ '^\+20(10|11|12|15)[0-9]{8}$'
     )
     and status = 'draft'
     and moderation_status in ('pending', 'rejected', 'needs_changes')
@@ -241,77 +320,6 @@ using (
     )
   )
 );
-
-create or replace function private.sync_profile_phone_verification()
-returns trigger
-language plpgsql
-security definer
-set search_path = public, pg_catalog
-as $function$
-begin
-  update public.profiles
-  set phone_verified = (new.phone is not null and new.phone_confirmed_at is not null),
-      updated_at = now()
-  where id = new.id;
-
-  if new.phone is not null and new.phone_confirmed_at is not null then
-    insert into public.profile_private(user_id, phone, updated_at)
-    values (new.id, new.phone, now())
-    on conflict (user_id) do update
-      set phone = excluded.phone,
-          updated_at = now();
-  end if;
-
-  return new;
-end;
-$function$;
-
-drop trigger if exists trg_sync_profile_phone_verification on auth.users;
-create trigger trg_sync_profile_phone_verification
-after insert or update of phone, phone_confirmed_at on auth.users
-for each row
-execute function private.sync_profile_phone_verification();
-
--- Existing legacy rows may contain pre-Phase-D phone formats. The NOT VALID
--- constraint protects every new/updated row without silently rewriting legacy PII.
-update public.profiles p
-set phone_verified = exists (
-  select 1
-  from auth.users u
-  where u.id = p.id
-    and u.phone is not null
-    and u.phone_confirmed_at is not null
-);
-
-create or replace function private.assert_marketplace_phone_verified()
-returns void
-language plpgsql
-security definer
-set search_path = public, pg_catalog
-as $function$
-declare
-  v_uid uuid := auth.uid();
-  v_phone_confirmed_at timestamptz;
-  v_role text := coalesce(current_setting('request.jwt.claim.role', true), '');
-begin
-  if v_role in ('service_role', 'supabase_admin') then
-    return;
-  end if;
-
-  if v_uid is null then
-    raise exception 'Authentication is required' using errcode = '42501';
-  end if;
-
-  select phone_confirmed_at
-    into v_phone_confirmed_at
-  from auth.users
-  where id = v_uid;
-
-  if v_phone_confirmed_at is null then
-    raise exception 'Verified Egyptian phone is required for marketplace actions' using errcode = '42501';
-  end if;
-end;
-$function$;
 
 create or replace function private.guard_marketplace_phone()
 returns trigger
@@ -325,6 +333,8 @@ begin
 end;
 $function$;
 
+revoke execute on function private.guard_marketplace_phone() from public;
+
 create or replace function private.annotate_chat_abuse_signals()
 returns trigger
 language plpgsql
@@ -335,18 +345,20 @@ declare
   v_normalized text;
   v_recent_count integer;
   v_repeat_count integer;
-  v_risk_flags text[];
+  v_risk_flags text[] :=
+    coalesce(
+      array(
+        select jsonb_array_elements_text(
+          case
+            when jsonb_typeof(coalesce(new.metadata -> 'risk_flags', '[]'::jsonb)) = 'array'
+              then coalesce(new.metadata -> 'risk_flags', '[]'::jsonb)
+            else '[]'::jsonb
+          end
+        )
+      ),
+      '{}'::text[]
+    );
 begin
-  v_risk_flags := array(
-    select jsonb_array_elements_text(
-      case
-        when jsonb_typeof(coalesce(new.metadata -> 'risk_flags', '[]'::jsonb)) = 'array'
-          then coalesce(new.metadata -> 'risk_flags', '[]'::jsonb)
-        else '[]'::jsonb
-      end
-    )
-  );
-
   if new.body is null or btrim(new.body) = '' then
     return new;
   end if;
@@ -432,268 +444,5 @@ create trigger trg_marketplace_offers_phone_verified
 before insert on public.offers
 for each row
 execute function private.guard_marketplace_phone();
-
-revoke execute on function private.assert_marketplace_phone_verified() from public;
-revoke execute on function private.sync_profile_phone_verification() from public;
-revoke execute on function private.guard_marketplace_phone() from public;
-
-commit;
-
-  ) not valid;
-
-create unique index if not exists profile_private_phone_uidx
-  on public.profile_private(phone)
-  where phone is not null;
-
-create or replace function private.guard_profile_private_phone()
-returns trigger
-language plpgsql
-security definer
-set search_path = public, pg_catalog
-as $function$
-declare
-  v_uid uuid := auth.uid();
-  v_auth_phone text;
-begin
-  if v_uid is null then
-    return new;
-  end if;
-
-  if new.user_id <> v_uid then
-    raise exception 'Private profile ownership violation' using errcode = '42501';
-  end if;
-
-  select phone
-    into v_auth_phone
-  from auth.users
-  where id = v_uid;
-
-  if new.phone is distinct from v_auth_phone then
-    raise exception 'Profile phone must match authenticated phone identity' using errcode = '42501';
-  end if;
-
-  return new;
-end;
-$function$;
-
-drop trigger if exists trg_guard_profile_private_phone on public.profile_private;
-create trigger trg_guard_profile_private_phone
-before insert or update of phone on public.profile_private
-for each row
-execute function private.guard_profile_private_phone();
-
-revoke execute on function private.guard_profile_private_phone() from public;
-
-create or replace function private.cleanup_stale_phone_change(
-  p_max_age interval default interval '24 hours'
-)
-returns integer
-language plpgsql
-security definer
-set search_path = pg_catalog
-as $function$
-declare
-  v_count integer;
-begin
-  update auth.users
-  set phone_change = null,
-      phone_change_token = null,
-      phone_change_sent_at = null
-  where phone_change is not null
-    and phone_confirmed_at is null
-    and phone_change_sent_at is not null
-    and phone_change_sent_at < now() - p_max_age;
-
-  get diagnostics v_count = row_count;
-  return v_count;
-end;
-$function$;
-
-revoke execute on function private.cleanup_stale_phone_change(interval) from public;
-
-do $cron$
-begin
-  if not exists (
-    select 1
-    from cron.job
-    where jobname = 'deba-auth-cleanup-stale-phone-change'
-  ) then
-    perform cron.schedule(
-      'deba-auth-cleanup-stale-phone-change',
-      '0 * * * *',
-      $command$select private.cleanup_stale_phone_change();$command$
-    );
-  end if;
-end;
-$cron$;
-
-drop policy if exists products_insert_seller on public.products;
-create policy products_insert_seller
-on public.products
-for insert
-to authenticated
-with check (
-  (select private.is_admin())
-  or (
-    owner_id = (select auth.uid())
-    and exists (
-      select 1
-      from public.profiles p
-      where p.id = (select auth.uid())
-        and p.account_type = 'seller'
-    )
-    and exists (
-      select 1
-      from auth.users u
-      where u.id = (select auth.uid())
-        and u.phone is not null
-        and u.phone_confirmed_at is not null
-    )
-    and status = 'draft'
-    and moderation_status = 'pending'
-  )
-);
-
-drop policy if exists products_delete_seller on public.products;
-create policy products_delete_seller
-on public.products
-for delete
-to authenticated
-using (
-  (select private.is_admin())
-  or (
-    owner_id = (select auth.uid())
-    and exists (
-      select 1
-      from public.profiles p
-      where p.id = (select auth.uid())
-        and p.account_type = 'seller'
-    )
-    and exists (
-      select 1
-      from auth.users u
-      where u.id = (select auth.uid())
-        and u.phone is not null
-        and u.phone_confirmed_at is not null
-    )
-    and status = 'draft'
-    and moderation_status in ('pending', 'rejected', 'needs_changes')
-    and not exists (
-      select 1 from public.orders o where o.product_id = products.id
-    )
-    and not exists (
-      select 1 from public.offers o where o.product_id = products.id
-    )
-  )
-);
-
-create or replace function private.sync_profile_phone_verification()
-returns trigger
-language plpgsql
-security definer
-set search_path = public, pg_catalog
-as $function$
-begin
-  update public.profiles
-  set phone_verified = (new.phone is not null and new.phone_confirmed_at is not null),
-      updated_at = now()
-  where id = new.id;
-
-  if new.phone is not null and new.phone_confirmed_at is not null then
-    insert into public.profile_private(user_id, phone, updated_at)
-    values (new.id, new.phone, now())
-    on conflict (user_id) do update
-      set phone = excluded.phone,
-          updated_at = now();
-  end if;
-
-  return new;
-end;
-$function$;
-
-drop trigger if exists trg_sync_profile_phone_verification on auth.users;
-create trigger trg_sync_profile_phone_verification
-after insert or update of phone, phone_confirmed_at on auth.users
-for each row
-execute function private.sync_profile_phone_verification();
-
-update public.profiles p
-set phone_verified = exists (
-  select 1
-  from auth.users u
-  where u.id = p.id
-    and u.phone is not null
-    and u.phone_confirmed_at is not null
-);
-
-create or replace function private.assert_marketplace_phone_verified()
-returns void
-language plpgsql
-security definer
-set search_path = public, pg_catalog
-as $function$
-declare
-  v_uid uuid := auth.uid();
-  v_phone_confirmed_at timestamptz;
-  v_role text := coalesce(current_setting('request.jwt.claim.role', true), '');
-begin
-  if v_role in ('service_role', 'supabase_admin') then
-    return;
-  end if;
-
-  if v_uid is null then
-    raise exception 'Authentication is required' using errcode = '42501';
-  end if;
-
-  select phone_confirmed_at
-    into v_phone_confirmed_at
-  from auth.users
-  where id = v_uid;
-
-  if v_phone_confirmed_at is null then
-    raise exception 'Verified Egyptian phone is required for marketplace actions' using errcode = '42501';
-  end if;
-end;
-$function$;
-
-create or replace function private.guard_marketplace_phone()
-returns trigger
-language plpgsql
-security definer
-set search_path = public, pg_catalog
-as $function$
-begin
-  perform private.assert_marketplace_phone_verified();
-  return new;
-end;
-$function$;
-
-drop trigger if exists trg_products_phone_verified on public.products;
-create trigger trg_products_phone_verified
-before insert or update on public.products
-for each row
-execute function private.guard_marketplace_phone();
-
-drop trigger if exists trg_marketplace_chat_phone_verified on public.chat_rooms;
-create trigger trg_marketplace_chat_phone_verified
-before insert on public.chat_rooms
-for each row
-execute function private.guard_marketplace_phone();
-
-drop trigger if exists trg_marketplace_messages_phone_verified on public.messages;
-create trigger trg_marketplace_messages_phone_verified
-before insert on public.messages
-for each row
-execute function private.guard_marketplace_phone();
-
-drop trigger if exists trg_marketplace_offers_phone_verified on public.offers;
-create trigger trg_marketplace_offers_phone_verified
-before insert on public.offers
-for each row
-execute function private.guard_marketplace_phone();
-
-revoke execute on function private.assert_marketplace_phone_verified() from public;
-revoke execute on function private.sync_profile_phone_verification() from public;
-revoke execute on function private.guard_marketplace_phone() from public;
 
 commit;
