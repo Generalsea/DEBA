@@ -236,3 +236,10 @@ test('Phase D seller verification RPC itself enforces phone trust against direct
   assert.match(migration, /create or replace function public\.start_seller_verification/)
   assert.match(migration, /perform private\.assert_marketplace_phone_verified\(\)/)
 })
+
+
+test('Phase D presence never maps a channel failure to a false offline claim', async () => {
+  const observer = await read('src/components/UserPresence.tsx')
+  assert.match(observer, /unavailable/)
+  assert.match(observer, /الحالة غير متاحة/)
+})
