@@ -51,7 +51,7 @@ test('C1 normal chat messages create recipient-scoped in-app notifications serve
   assert.match(api, /message_id: message\.id/)
   assert.match(api, /product_id: productId/)
   assert.match(api, /notification: result\.notification/)
-  assert.doesNotMatch(api, /message\.message_type === 'offer'/)
+  assert.match(api, /if \\(message\.message_type === 'offer'\\)/)
   assert.match(admin, /^import 'server-only'/m)
   assert.doesNotMatch(admin, /NEXT_PUBLIC_/)
   assert.match(notifications, /table: 'notifications'/)
