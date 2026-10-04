@@ -92,6 +92,10 @@ test('C1 listing detail is classified-first and hides irrelevant commerce/auctio
   assert.match(page, /تواصل مع البائع داخل DEBA للاتفاق على التفاصيل والتسليم/)
   assert.match(page, /<strong>تواصل واتفق<\/strong>/)
 
+  const legacyCheckout = await read('src/app/products/[slug]/checkout/page.tsx')
+  assert.match(legacyCheckout, /redirect\('\/products\/' \+ encodeURIComponent\(normalizedSlug\)\)/)
+  assert.doesNotMatch(legacyCheckout, /CheckoutForm|إتمام شراء المنتج|طلب الشراء/)
+
   assert.match(panel, /if \(!isNegotiable && !isOwner\) \{/)
   assert.match(panel, /أدوات الإعلان الذكية/)
   assert.match(panel, /التفاوض الذكي/)
