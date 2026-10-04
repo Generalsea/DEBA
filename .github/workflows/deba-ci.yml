@@ -48,5 +48,8 @@ jobs:
       - name: Phase 4.4 true vector search contract tests
         run: npm run test:phase4-4
 
+      - name: Phase 5.1 AI broker/vision contract tests
+        run: npm run test:phase5
+
       - name: Playwright collection
         run: npm run e2e:list
