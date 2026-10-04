@@ -268,3 +268,15 @@ test('Phase D marketplace phone guard preserves authenticated admin/service acce
   assert.match(migration, /service_role/)
   assert.match(migration, /supabase_admin/)
 })
+
+
+test('Phase D duplicate listing protection is advisory, scoped, and non-blocking', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+
+  assert.match(migration, /annotate_listing_risk_signals/)
+  assert.match(migration, /possible_duplicate_listing/)
+  assert.match(migration, /30 days/)
+  assert.match(migration, /0\.92/)
+  assert.match(migration, /system_risk_flags/)
+  assert.doesNotMatch(migration, /raise exception[^\n]*duplicate/i)
+})
