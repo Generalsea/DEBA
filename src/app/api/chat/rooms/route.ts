@@ -65,7 +65,7 @@ export async function POST(request: Request) {
               }
             : {}),
         },
-        { status: 400 },
+        { status: error.code === 'P0001' ? 400 : 500 },
       )
     }
 
