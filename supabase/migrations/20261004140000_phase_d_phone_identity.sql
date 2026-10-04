@@ -75,6 +75,10 @@ begin
     return;
   end if;
 
+  if v_uid is not null and (select private.is_admin()) then
+    return;
+  end if;
+
   if v_uid is null then
     raise exception 'Authentication is required' using errcode = '42501';
   end if;
