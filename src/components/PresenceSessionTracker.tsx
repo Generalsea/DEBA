@@ -10,13 +10,17 @@ export default function PresenceSessionTracker() {
     let mounted = true
     let channel: ReturnType<typeof supabase.channel> | null = null
 
-    const start = async () => {
-      const { data } = await supabase.auth.getSession()
-      const userId = data.session?.user?.id
+    const stop = async () => {
+      if (!channel) return
+      await supabase.removeChannel(channel)
+      channel = null
+    }
 
+    const start = async (userId: string | null) => {
+      await stop()
       if (!mounted || !userId) return
 
-      channel = supabase.channel('deba:presence', {
+      channel = supabase.channel('deba:presence:' + userId, {
         config: {
           presence: {
             key: userId,
@@ -25,19 +29,33 @@ export default function PresenceSessionTracker() {
       })
 
       channel.subscribe(async (status) => {
-        if (status !== 'SUBSCRIBED') return
-        await channel?.track({
+        if (!mounted || status !== 'SUBSCRIBED') return
+
+        const tracked = await channel?.track({
           user_id: userId,
           online_at: new Date().toISOString(),
         })
+
+        if (tracked !== 'ok') {
+          await stop()
+        }
       })
     }
 
-    void start()
+    void supabase.auth.getSession().then(({ data }) => {
+      void start(data.session?.user?.id || null)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      void start(session?.user?.id || null)
+    })
 
     return () => {
       mounted = false
-      if (channel) void supabase.removeChannel(channel)
+      subscription.unsubscribe()
+      void stop()
     }
   }, [supabase])
 
