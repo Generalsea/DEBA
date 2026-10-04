@@ -450,3 +450,66 @@ This is the first Phase C milestone because it strengthens the marketplace's cen
 The next cycle may modify application code and, only when proven necessary, database/schema code under the existing safety gates.
 
 **Phase C C1 = DEFINED / READY FOR EXECUTION**
+
+
+---
+
+## 13. C1 implementation evidence — 2026-10-04
+
+### Verified code fixes
+
+1. Chat location payload is normalized to the database RPC contract: `lat`, `lng`, and optional `accuracy`.
+2. Chat room cards no longer claim universal online presence or seller verification. Until a real presence/verification source is integrated, both signals remain false.
+3. Chat participant lookup/database/RPC failures are mapped to truthful HTTP classes:
+   - `42501` → 403
+   - `P0002` → 404
+   - `P0001` → 400
+   - unexpected backend failures → 500
+4. Chat media storage failures return 500 instead of incorrectly returning 403.
+5. Offer-action RPC errors use the same truthful status classifier.
+6. Normal text/image/file/location messages create recipient-scoped in-app notifications through the server-only admin client, excluding offer messages because offer lifecycle already owns their notifications.
+7. Muted chat participants are excluded from the message notification recipient set.
+8. Message writes remain behind the database-enforced `send_chat_message` RPC.
+
+### Live Supabase verification
+
+Read-only production inspection confirmed:
+
+- current database PostgreSQL version is 17.6.1.166;
+- current production migration ledger does not contain the Phase 4.1–5.1 RC release chain;
+- `vector` is available but not installed;
+- one Security Advisor warning remains: `auth_leaked_password_protection`;
+- current RLS policies scope chat rooms, chat participants, messages, favorites, notifications, and products as expected for their current access model.
+
+A temporary live RPC probe executed against an existing published/approved product confirmed that the real `public.send_chat_message` function accepts the normalized location payload and persists `lat/lng/accuracy` inside the message metadata. The probe was removed after verification; post-check showed zero remaining probe rooms, participants, or messages.
+
+A second temporary probe confirmed repeated marketplace chat-room acquisition returns the same room for the same product/buyer pair, while direct client-role message insertion is rejected by the existing database privilege model. That probe was explicitly cleaned after the tool's statement-session behavior was detected; post-check showed zero remaining probe objects.
+
+### Automated contract evidence
+
+The C1 contract suite is wired into `npm test` and also exposed as:
+
+`npm run test:phase-c1`
+
+Static contract execution against the exact branch sources passed all six C1 contract groups:
+
+- location payload ↔ RPC contract;
+- truthful presence/verification state;
+- truthful chat error classification;
+- recipient-scoped message notification contract;
+- RPC-only message writes;
+- npm test wiring.
+
+### Remaining runtime verification
+
+**NOT VERIFIED IN THIS SESSION:**
+
+- actual user-machine `npm ci`;
+- actual user-machine `npm test`;
+- actual typecheck/build;
+- actual local Playwright critical-path walkthrough;
+- two-user notification receipt in a running browser session.
+
+GitHub official CI was not observable through the connected workflow/status surfaces for this draft PR, so no CI PASS claim is made.
+
+C1 therefore remains **IMPLEMENTED + STATICALLY VERIFIED + LIVE RPC VERIFIED / LOCAL E2E NOT YET VERIFIED** until the local runtime gate is executed.
