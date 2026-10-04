@@ -4,8 +4,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { BadgeCheck, MapPin, PackageCheck, Star, Truck } from 'lucide-react'
 import FavoriteButton from '@/components/FavoriteButton'
-import AddToCartButton from '@/components/AddToCartButton'
-import type { CartProduct } from '@/lib/types'
 
 export type ProductCardItem = {
   id: string
@@ -28,7 +26,7 @@ export type ProductCardItem = {
   sellerVerified?: boolean
   quantityAvailable?: number
   isLowStock?: boolean
-  deliveryMethod?: CartProduct['deliveryMethod'] | null
+  deliveryMethod?: 'pickup' | 'seller_delivery' | 'platform_delivery' | 'both' | null
   ratingValue?: number | null
   ratingCount?: number
 }
@@ -83,28 +81,6 @@ export default function ProductCard({ item, priority = false, compact = false }:
   const unavailable = (item.quantityAvailable ?? 1) < 1
   const lowStock = !unavailable && Boolean(item.isLowStock)
   const sellerName = item.sellerName?.trim() || null
-
-  const cartProduct: CartProduct | null =
-    item.price !== null &&
-    Boolean(item.sellerId) &&
-    (item.quantityAvailable ?? 0) > 0
-      ? {
-          id: item.id,
-          title: item.title,
-          slug: item.slug,
-          price: item.price,
-          currency: item.currency || 'EGP',
-          conditionGrade: item.conditionGrade,
-          listingType: 'sale',
-          quantityAvailable: Math.max(0, item.quantityAvailable ?? 0),
-          sellerId: item.sellerId as string,
-          sellerName: sellerName || 'عضو DEBA',
-          sellerAvatar: item.sellerAvatar || null,
-          imageUrl: item.imageUrl,
-          imageAlt: item.imageAlt,
-          deliveryMethod: item.deliveryMethod || 'pickup',
-        }
-      : null
 
   return (
     <article data-testid="product-card" className={'deba-market-card' + (compact ? ' is-compact' : '') + (unavailable ? ' is-unavailable' : '')}>
@@ -206,14 +182,22 @@ export default function ProductCard({ item, priority = false, compact = false }:
         ) : null}
 
         <div className="deba-market-card-actions">
-          {cartProduct ? (
-            <AddToCartButton product={cartProduct} disabled={unavailable} />
-          ) : (
-            <Link href={'/products/' + encodeURIComponent(item.slug)} className="deba-product-action">
-              <PackageCheck size={15} aria-hidden="true" />
-              {unavailable ? 'غير متاح' : 'عرض التفاصيل'}
+          <Link
+            href={'/products/' + encodeURIComponent(item.slug)}
+            className="deba-product-action"
+          >
+            <PackageCheck size={15} aria-hidden="true" />
+            {unavailable ? 'غير متاح' : 'عرض الإعلان'}
+          </Link>
+          {!unavailable ? (
+            <Link
+              href={'/chat?product=' + encodeURIComponent(item.id)}
+              className="deba-product-action is-contact"
+            >
+              <MessageCircle size={15} aria-hidden="true" />
+              تواصل مع البائع
             </Link>
-          )}
+          ) : null}
         </div>
       </div>
     </article>
