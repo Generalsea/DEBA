@@ -243,3 +243,20 @@ test('Phase D presence never maps a channel failure to a false offline claim', a
   assert.match(observer, /unavailable/)
   assert.match(observer, /الحالة غير متاحة/)
 })
+
+
+test('Phase D legacy phone constraint is intentionally NOT VALID while protecting future writes', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+  assert.match(
+    migration,
+    /add constraint profile_private_phone_egyptian_check[\s\S]{0,300}\) not valid;/,
+  )
+  assert.match(migration, /phone ~ '\^\\\+20\(10\|11\|12\|15\)\[0-9\]\{8\}\$'/)
+})
+
+test('Phase D migration has one transaction boundary and no production activation command', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+  assert.equal((migration.match(/^begin;$/gm) || []).length, 1)
+  assert.equal((migration.match(/^commit;$/gm) || []).length, 1)
+  assert.doesNotMatch(migration, /supabase db push|production|apply migration/i)
+})
