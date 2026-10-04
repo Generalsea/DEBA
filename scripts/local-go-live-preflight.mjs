@@ -64,7 +64,7 @@ const AI_ENV_GROUPS = [
 ]
 
 function loadLocalEnv() {
-  const values = {}
+  const values = { ...process.env }
   for (const relativePath of ['.env.local', '.env']) {
     const fullPath = path.join(ROOT, relativePath)
     if (!existsSync(fullPath)) continue
