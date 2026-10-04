@@ -24,13 +24,7 @@ export default function UserPresence({ userId, compact = false, label = true }: 
     if (!userId) return
 
     let mounted = true
-    const channel = supabase.channel('deba:presence', {
-      config: {
-        presence: {
-          key: userId,
-        },
-      },
-    })
+    const channel = supabase.channel('deba:presence')
 
     const sync = () => {
       if (!mounted) return
@@ -44,14 +38,9 @@ export default function UserPresence({ userId, compact = false, label = true }: 
       .on('presence', { event: 'sync' }, sync)
       .on('presence', { event: 'join' }, sync)
       .on('presence', { event: 'leave' }, sync)
-      .subscribe(async (status) => {
+      .subscribe((status) => {
         if (!mounted) return
-
         if (status === 'SUBSCRIBED') {
-          await channel.track({
-            user_id: userId,
-            online_at: new Date().toISOString(),
-          })
           sync()
         } else {
           setOnline(false)
