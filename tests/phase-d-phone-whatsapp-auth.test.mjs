@@ -148,3 +148,25 @@ test('Phase D reuses existing trust and safety infrastructure instead of inventi
   assert.match(risk, /risk_assessments/)
   assert.match(trust, /chat_security_events|reports|auto_pause_reported_product/)
 })
+
+
+test('Phase D keeps seller trust signals evidence-backed', async () => {
+  const page = await read('src/app/products/[slug]/page.tsx')
+  const trustMigration = await read('supabase/migrations/20260925201854_public_profiles_trust_reviews_moderation_20260925.sql')
+
+  assert.match(page, /get_seller_rating_summary/)
+  assert.match(page, /phone_verified/)
+  assert.match(page, /هاتف موثّق/)
+  assert.match(page, /بائع موثّق/)
+  assert.match(page, /reviewCount/)
+  assert.match(trustMigration, /verified_seller/)
+  assert.match(trustMigration, /review_count/)
+})
+
+test('Phase D synchronizes a newly confirmed Auth phone into profile_private', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+
+  assert.match(migration, /insert into public\.profile_private\(user_id, phone, updated_at\)/)
+  assert.match(migration, /phone = excluded\.phone/)
+  assert.match(migration, /phone_confirmed_at/)
+})
