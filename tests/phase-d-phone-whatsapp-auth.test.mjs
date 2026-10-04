@@ -215,3 +215,17 @@ test('Phase D presence uses private Realtime channels with RLS owner-only publis
   assert.match(tracker, /config: \{ private: true \}/)
   assert.match(observer, /config: \{ private: true \}/)
 })
+
+
+test('Phase D chat abuse signals are deterministic, advisory, and attached to existing message metadata', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+  const route = await read('src/app/api/chat/rooms/[id]/messages/route.ts')
+
+  assert.match(migration, /annotate_chat_abuse_signals/)
+  assert.match(migration, /rapid_messages/)
+  assert.match(migration, /repeated_content/)
+  assert.match(migration, /now\(\) - interval '2 minutes'/)
+  assert.match(migration, /now\(\) - interval '10 minutes'/)
+  assert.match(migration, /to_jsonb\(v_risk_flags\)/)
+  assert.match(route, /chat_security_events/)
+})
