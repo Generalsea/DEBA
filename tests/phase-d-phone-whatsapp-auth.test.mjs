@@ -229,3 +229,10 @@ test('Phase D chat abuse signals are deterministic, advisory, and attached to ex
   assert.match(migration, /to_jsonb\(v_risk_flags\)/)
   assert.match(route, /chat_security_events/)
 })
+
+
+test('Phase D seller verification RPC itself enforces phone trust against direct API bypass', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+  assert.match(migration, /create or replace function public\.start_seller_verification/)
+  assert.match(migration, /perform private\.assert_marketplace_phone_verified\(\)/)
+})
