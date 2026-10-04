@@ -133,8 +133,11 @@ test('C1 classifieds discovery does not expose cart actions or hidden horizontal
   const relatedCard = await read('src/components/ProductCard.tsx')
   const css = await read('src/app/globals.css')
   const cart = await read('src/app/cart/page.tsx')
+  const detailTabsCss = css.slice(css.indexOf('.deba-detail-tabs-nav'), css.indexOf('.deba-detail-tab-panel'))
 
   assert.match(home, /deba-classified-listing-grid/)
+  assert.match(home, /favoriteProductIds/)
+  assert.match(home, /supabase\.from\('favorites'\)/)
   assert.doesNotMatch(home, /deba-classified-listing-scroll/)
   assert.doesNotMatch(home, /deba-classified-listing-scroll-item/)
 
@@ -146,6 +149,8 @@ test('C1 classifieds discovery does not expose cart actions or hidden horizontal
   
   assert.match(css, /\.deba-classified-listing-grid \{/)
   assert.doesNotMatch(css, /\.deba-classified-listing-scroll \{[\s\S]*?overflow-x: auto/)
+  assert.match(detailTabsCss, /display: grid/)
+  assert.doesNotMatch(detailTabsCss, /overflow-x: auto/)
   assert.match(cart, /redirect\('\/'\)/)
   assert.doesNotMatch(cart, /سلة التسوق|CartSummary|SellerGroup/)
 })
