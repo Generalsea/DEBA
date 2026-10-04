@@ -62,6 +62,29 @@ execute function private.guard_profile_private_phone();
 
 revoke execute on function private.guard_profile_private_phone() from public;
 
+-- Realtime Presence is intentionally private and narrowly scoped to DEBA user-presence topics.
+-- Readers may observe a user's displayed presence; only the authenticated owner may publish
+-- to that user's topic. This prevents one user from spoofing another user's online state.
+drop policy if exists deba_presence_read on realtime.messages;
+create policy deba_presence_read
+on realtime.messages
+for select
+to authenticated
+using (
+  realtime.messages.extension = 'presence'
+  and realtime.topic() like 'deba:presence:%'
+);
+
+drop policy if exists deba_presence_publish_own on realtime.messages;
+create policy deba_presence_publish_own
+on realtime.messages
+for insert
+to authenticated
+with check (
+  realtime.messages.extension = 'presence'
+  and realtime.topic() = 'deba:presence:' || (select auth.uid())::text
+);
+
 create or replace function private.cleanup_stale_phone_change(
   p_max_age interval default interval '24 hours'
 )
