@@ -125,3 +125,27 @@ test('C1 price intelligence copy never presents an asking price as guaranteed ma
   assert.match(migration, /peer_count/)
   assert.match(migration, /confidence/)
 })
+
+
+test('C1 classifieds discovery does not expose cart actions or hidden horizontal listing rails', async () => {
+  const home = await read('src/app/page.tsx')
+  const card = await read('src/components/ClassifiedListingCard.tsx')
+  const relatedCard = await read('src/components/ProductCard.tsx')
+  const css = await read('src/app/globals.css')
+  const cart = await read('src/app/cart/page.tsx')
+
+  assert.match(home, /deba-classified-listing-grid/)
+  assert.doesNotMatch(home, /deba-classified-listing-scroll/)
+  assert.doesNotMatch(home, /deba-classified-listing-scroll-item/)
+
+  assert.match(card, /initialFavorite=\{Boolean\(item\.isFavorite\)\}/)
+  assert.match(card, /تواصل مع البائع/)
+
+  assert.doesNotMatch(relatedCard, /AddToCartButton|أضف للسلة|ShoppingCart/)
+  assert.match(relatedCard, /تواصل مع البائع/)
+  
+  assert.match(css, /\.deba-classified-listing-grid \{/)
+  assert.doesNotMatch(css, /\.deba-classified-listing-scroll \{[\s\S]*?overflow-x: auto/)
+  assert.match(cart, /redirect\('\/'\)/)
+  assert.doesNotMatch(cart, /سلة التسوق|CartSummary|SellerGroup/)
+})
