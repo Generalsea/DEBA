@@ -45,5 +45,8 @@ jobs:
       - name: Phase 4.3 future marketplace contract tests
         run: npm run test:phase4-3
 
+      - name: Phase 4.4 true vector search contract tests
+        run: npm run test:phase4-4
+
       - name: Playwright collection
         run: npm run e2e:list
