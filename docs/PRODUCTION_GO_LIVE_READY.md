@@ -5,7 +5,8 @@
 **Integrated RC:** `rc/phase4-5-integrated-20261004`
 **Verification PR:** #43
 **Protected main baseline:** `75b26ae6ec72a5f69339f5e2145c2be651967b5e`
-**Current RC head:** `19a0eb7f6c14660724f444595202e7573f0938ff`
+**Verified code head:** `bf117a6ab203f86789cbcad4125a1bc906683de1`
+**Post-verification commits:** documentation-only evidence refresh; no application, migration, configuration, or workflow code changed after the verified code head.
 **Supabase project:** `gkwpjtbrecoesxyoybto`
 
 ## Executive decision
