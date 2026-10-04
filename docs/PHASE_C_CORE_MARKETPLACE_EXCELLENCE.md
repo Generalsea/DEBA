@@ -513,3 +513,18 @@ Static contract execution against the exact branch sources passed all six C1 con
 GitHub official CI was not observable through the connected workflow/status surfaces for this draft PR, so no CI PASS claim is made.
 
 C1 therefore remains **IMPLEMENTED + STATICALLY VERIFIED + LIVE RPC VERIFIED / LOCAL E2E NOT YET VERIFIED** until the local runtime gate is executed.
+
+
+### Classified-first detail semantics added during C1
+
+The listing detail surface now reflects DEBA's actual business model:
+
+- Fixed-price buyers see a primary **"تواصل مع البائع"** action rather than Buy Now, Cart, or Checkout.
+- The detail page no longer builds a cart payload or exposes the legacy checkout route.
+- The former Future Engine panel is suppressed for buyers when the listing is fixed-price.
+- Buyer-facing secret-floor terminology is removed completely; the floor is only exposed to the listing owner on offer-enabled listings and is described as **"الحد الأدنى الذي تقبله للعروض"**.
+- The detail/security copy now says the visible amount is the seller's asking price and that agreement/delivery are handled through DEBA communication.
+- The data banner now uses **"أحدث بيانات متاحة"** instead of demotivating "بيانات قديمة".
+- Price Insight language is decision-oriented while retaining its evidence-based states.
+
+The existing Phase 4.2 price intelligence is a real, explainable comparison engine in RC: it first seeks strict peers by currency/category/condition/title similarity, falls back to broader comparable peers when needed, computes median and quartile ranges, derives price delta, and exposes a confidence value. It must not be described as live production intelligence until its RC migration is activated in the target database.
