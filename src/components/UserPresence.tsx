@@ -17,8 +17,7 @@ type Props = {
 
 export default function UserPresence({ userId, compact = false, label = true }: Props) {
   const supabase = useMemo(() => createClient(), [])
-  const [online, setOnline] = useState(false)
-  const [ready, setReady] = useState(false)
+  const [state, setState] = useState<'online' | 'offline' | 'unavailable'>('unavailable')
 
   useEffect(() => {
     if (!userId) return
@@ -30,8 +29,7 @@ export default function UserPresence({ userId, compact = false, label = true }: 
       if (!mounted) return
       const state = channel.presenceState<PresencePayload>()
       const entries = state[userId] || []
-      setOnline(entries.length > 0)
-      setReady(true)
+      setState(entries.length > 0 ? 'online' : 'offline')
     }
 
     channel
@@ -43,8 +41,7 @@ export default function UserPresence({ userId, compact = false, label = true }: 
         if (status === 'SUBSCRIBED') {
           sync()
         } else {
-          setOnline(false)
-          setReady(true)
+          setState('unavailable')
         }
       })
 
@@ -54,14 +51,19 @@ export default function UserPresence({ userId, compact = false, label = true }: 
     }
   }, [supabase, userId])
 
-  const text = online ? 'متصل الآن' : ready ? 'غير متصل' : 'جارٍ التحقق'
+  const text =
+    state === 'online'
+      ? 'متصل الآن'
+      : state === 'offline'
+        ? 'غير متصل'
+        : 'الحالة غير متاحة'
 
   return (
     <span
       className={
         'deba-presence-indicator ' +
         (compact ? 'is-compact ' : '') +
-        (online ? 'is-online' : 'is-offline')
+        (state === 'online' ? 'is-online' : state === 'offline' ? 'is-offline' : 'is-unavailable')
       }
       title={text}
       aria-label={label ? text : undefined}
