@@ -79,3 +79,7 @@ Existing legacy accounts were created before phone identity became mandatory. Th
 This branch is CODE READY / NOT PRODUCTION ACTIVATED.
 
 Local tests, build, browser E2E and real WhatsApp delivery must be verified after the repository is available in the development environment and the provider configuration exists.
+
+## Seller trust projection
+
+Listing detail trust is evidence-backed: phone trust comes from `auth.users.phone_confirmed_at` projected to `profiles.phone_verified`; seller verification and ratings come from the existing seller verification/rating summary. No generic trusted-seller badge is shown without corresponding evidence.
