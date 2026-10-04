@@ -88,3 +88,8 @@ Listing detail trust is evidence-backed: phone trust comes from `auth.users.phon
 ## Verification checkpoint
 
 2026-10-04: Phase D workflow is configured for branch pushes and pull requests; GitHub run visibility remains an external verification gate until a run is observed.
+
+
+## Realtime presence security
+
+Presence uses per-user private Realtime topics. Authenticated clients may observe presence topics, but publication is restricted by RLS to the topic matching `auth.uid()`. Production activation also requires Realtime private-channel authorization to be enabled at the project level.
