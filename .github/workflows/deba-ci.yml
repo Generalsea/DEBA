@@ -42,5 +42,8 @@ jobs:
       - name: Phase 4.2 deal matching contract tests
         run: npm run test:phase4-2
 
+      - name: Phase 4.3 future marketplace contract tests
+        run: npm run test:phase4-3
+
       - name: Playwright collection
         run: npm run e2e:list
