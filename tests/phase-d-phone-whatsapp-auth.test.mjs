@@ -199,3 +199,19 @@ test('Phase D must not expose premium presence controls without a verified premi
   assert.doesNotMatch(tracker, /show.*offline|display.*offline/i)
   assert.doesNotMatch(observer, /premium|subscription|اشتراك|مدفوع/i)
 })
+
+
+test('Phase D presence uses private Realtime channels with RLS owner-only publish', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+  const tracker = await read('src/components/PresenceSessionTracker.tsx')
+  const observer = await read('src/components/UserPresence.tsx')
+
+  assert.match(migration, /realtime\.messages/)
+  assert.match(migration, /realtime\.topic\(\)/)
+  assert.match(migration, /extension = 'presence'/)
+  assert.match(migration, /deba:presence:%/)
+  assert.match(migration, /deba:presence:'? \|\|?/)
+  assert.match(migration, /auth\.uid\(\)/)
+  assert.match(tracker, /config: \{ private: true \}/)
+  assert.match(observer, /config: \{ private: true \}/)
+})
