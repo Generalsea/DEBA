@@ -684,14 +684,13 @@ function ListingRail({
           </Link>
         </div>
 
-        <div className="deba-classified-listing-scroll">
+        <div className="deba-classified-listing-grid">
           {products.slice(0, 6).map((product, index) => (
-            <div className="deba-classified-listing-scroll-item" key={product.id}>
-              <ClassifiedListingCard
-                item={toClassifiedItem(product, data)}
-                priority={index < 2}
-              />
-            </div>
+            <ClassifiedListingCard
+              key={product.id}
+              item={toClassifiedItem(product, data)}
+              priority={index < 2}
+            />
           ))}
         </div>
       </div>
