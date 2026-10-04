@@ -51,6 +51,13 @@ const LABEL_COPY = {
   insufficient_data: 'لا توجد أدلة مقارنة كافية لإعطاء إشارة سعر موثوقة بعد.',
 } as const
 
+const ADVICE = {
+  great_deal: 'نصيحة DEBA: السعر يبدو تنافسيًا وفق المقارنات المتاحة؛ راجع الحالة والتفاصيل قبل الاتفاق.',
+  fair: 'نصيحة DEBA: السعر داخل النطاق المعتاد؛ ركّز في المقارنة على الحالة والموقع وما يتضمنه الإعلان.',
+  overpriced: 'تنبيه DEBA: السعر أعلى من المقارنات المتاحة؛ اسأل عن المزايا أو حالة المنتج قبل اتخاذ القرار.',
+  insufficient_data: 'نصيحة DEBA: لا توجد بيانات مقارنة كافية بعد؛ لا تعتمد على السعر وحده، واطلب التفاصيل التي تنقصك.',
+} as const
+
 export default function ProductDealScore({
   data,
 }: {
@@ -84,6 +91,11 @@ export default function ProductDealScore({
       </div>
 
       <p className={styles.copy}>{LABEL_COPY[data.deal_label]}</p>
+
+      <div className={styles.advice} role="note">
+        <strong>مساعدة في القرار</strong>
+        <span>{ADVICE[data.deal_label]}</span>
+      </div>
 
       <div className={styles.metrics}>
         <div>
