@@ -178,6 +178,14 @@ begin
       updated_at = now()
   where id = new.id;
 
+  if new.phone is not null and new.phone_confirmed_at is not null then
+    insert into public.profile_private(user_id, phone, updated_at)
+    values (new.id, new.phone, now())
+    on conflict (user_id) do update
+      set phone = excluded.phone,
+          updated_at = now();
+  end if;
+
   return new;
 end;
 $function$;
