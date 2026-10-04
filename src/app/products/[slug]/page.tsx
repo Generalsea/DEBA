@@ -20,6 +20,7 @@ import FavoriteButton from '@/components/FavoriteButton'
 import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGallery'
 import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components/ProductDetailTabs'
 import ProductViewTracker from '@/components/ProductViewTracker'
+import UserPresence from '@/components/UserPresence'
 import ProductDealScore, { type ProductDealScoreData } from '@/components/ProductDealScore'
 import FutureMarketplacePanel from '@/components/FutureMarketplacePanel'
 import { createClient } from '@/utils/supabase/server'
@@ -660,6 +661,9 @@ export default async function ProductDetailPage({
                       maximumFractionDigits: 1,
                     })} · {sellerTrust.reviewCount.toLocaleString('ar-EG')} تقييم
                   </span>
+                ) : null}
+                {product.owner_id && !isOwner ? (
+                  <UserPresence userId={product.owner_id} compact label />
                 ) : null}
               </div>
             </section>
