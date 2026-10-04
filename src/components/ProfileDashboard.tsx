@@ -94,6 +94,7 @@ export type ProfileAccountData = {
     storeKey: string | null
     createdAt: string
     phone: string | null
+    phoneVerified: boolean
     addressLine1: string | null
     addressLine2: string | null
     district: string | null
@@ -597,8 +598,8 @@ export default function ProfileDashboard({ account, initialTab }: Props) {
                   {isSeller ? 'حساب بائع' : 'حساب مشتري'}
                 </span>
                 <span className="deba-profile-trust-badge">
-                  {account.emailConfirmed ? <ShieldCheck size={14} /> : <Bell size={14} />}
-                  {account.emailConfirmed ? 'البريد الإلكتروني موثق' : 'البريد الإلكتروني غير مؤكد'}
+                  {profile.phoneVerified ? <ShieldCheck size={14} /> : <Bell size={14} />}
+                  {profile.phoneVerified ? 'هاتف موثّق' : 'الهاتف غير موثّق'}
                 </span>
               </div>
               <div className="deba-profile-contact-line">
