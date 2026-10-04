@@ -103,6 +103,7 @@ type ProductRow = {
         governorate: string | null
         is_public: boolean
         account_type: 'buyer' | 'seller'
+        phone_verified: boolean
       }
     | null
 }
@@ -249,7 +250,7 @@ async function getProduct(slug: string) {
         ? supabase
             .from('profiles')
             .select(
-              'display_name,username,avatar_url,bio,city,governorate,is_public,account_type',
+              'display_name,username,avatar_url,bio,city,governorate,is_public,account_type,phone_verified',
             )
             .eq('id', product.owner_id)
             .maybeSingle()
@@ -637,7 +638,9 @@ export default async function ProductDetailPage({
               </div>
               <div className="deba-seller-verified">
                 <ShieldCheck size={17} />
-                <span>حساب داخل DEBA</span>
+                <span>
+                  {product.seller?.phone_verified ? 'هاتف موثّق' : 'حساب داخل DEBA'}
+                </span>
               </div>
             </section>
 
