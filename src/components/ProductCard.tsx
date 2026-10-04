@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { BadgeCheck, MapPin, PackageCheck, Star, Truck } from 'lucide-react'
+import { BadgeCheck, MapPin, MessageCircle, PackageCheck, Star, Truck } from 'lucide-react'
 import FavoriteButton from '@/components/FavoriteButton'
 
 export type ProductCardItem = {
