@@ -2218,6 +2218,45 @@ textarea {
   font-weight: 900;
 }
 
+.deba-seller-verified-stack {
+  min-width: 0;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.deba-seller-verified.is-muted {
+  background: var(--deba-surface-2);
+  color: var(--deba-text-3);
+}
+
+.deba-seller-verified.is-trust {
+  background: var(--deba-green-soft);
+  color: var(--deba-green);
+}
+
+.deba-seller-rating-inline {
+  color: var(--deba-text-3);
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .deba-seller-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .deba-seller-verified-stack {
+    width: 100%;
+    align-items: flex-start;
+    padding-inline-start: 58px;
+  }
+}
+
 .deba-detail-trust-grid {
   margin-top: 12px;
   display: grid;
