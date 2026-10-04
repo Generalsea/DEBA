@@ -4557,6 +4557,11 @@ textarea {
   font-weight: 900;
 }
 
+.deba-profile-trust-badge.is-unverified {
+  background: var(--deba-surface-2);
+  color: var(--deba-text-3);
+}
+
 .deba-profile-hero-actions {
   display: flex;
   flex-wrap: wrap;
