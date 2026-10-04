@@ -1,10 +1,10 @@
 .card {
   margin-top: 18px;
   padding: 18px;
-  border: 1px solid rgba(15, 23, 42, 0.09);
+  border: 1px solid var(--deba-border);
   border-radius: 20px;
-  background: linear-gradient(180deg, #fffaf7 0%, #ffffff 100%);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+  background: var(--deba-surface);
+  box-shadow: var(--deba-shadow-sm);
 }
 
 .header {
@@ -17,50 +17,74 @@
 .eyebrow {
   display: block;
   margin-bottom: 5px;
-  font-family: Inter, Arial, sans-serif;
+  font-family: var(--deba-font);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.14em;
-  color: #7b8494;
+  color: var(--deba-text-3);
 }
 
 .header h2 {
   margin: 0;
   font-size: 19px;
   line-height: 1.45;
-  color: #111827;
+  color: var(--deba-text);
 }
 
 .badge {
   flex: 0 0 auto;
   padding: 7px 10px;
   border-radius: 999px;
-  background: #fff1ea;
-  color: #c94c20;
+  background: var(--deba-brand-soft);
+  color: var(--deba-brand-strong);
   font-size: 12px;
   font-weight: 800;
 }
 
 .badge[data-label="fair"] {
-  background: #eef4fb;
-  color: #205b8c;
+  background: var(--deba-blue-soft, rgba(44, 95, 138, .12));
+  color: var(--deba-blue);
 }
 
 .badge[data-label="overpriced"] {
-  background: #fff4e8;
-  color: #9a5a12;
+  background: var(--deba-brand-soft);
+  color: var(--deba-brand-strong);
 }
 
 .badge[data-label="insufficient_data"] {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--deba-surface-2);
+  color: var(--deba-text-3);
 }
 
 .copy {
   margin: 10px 0 0;
-  color: #5f6877;
+  color: var(--deba-text-2);
   font-size: 13px;
   line-height: 1.8;
+}
+
+.advice {
+  margin-top: 12px;
+  padding: 11px 12px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  border: 1px solid var(--deba-brand-soft);
+  border-radius: 12px;
+  background: var(--deba-brand-soft);
+}
+
+.advice strong {
+  color: var(--deba-brand-strong);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.advice span {
+  color: var(--deba-text-2);
+  font-size: 11px;
+  line-height: 1.7;
 }
 
 .metrics {
@@ -74,20 +98,20 @@
   min-width: 0;
   padding: 11px 12px;
   border-radius: 14px;
-  background: #f8fafc;
+  background: var(--deba-surface-2);
 }
 
 .metrics span,
 .graphLabels,
 .footer {
   font-size: 11px;
-  color: #788190;
+  color: var(--deba-text-3);
 }
 
 .metrics strong {
   display: block;
   margin-top: 5px;
-  color: #172033;
+  color: var(--deba-text);
   font-size: 14px;
 }
 
@@ -100,7 +124,7 @@
 .range {
   height: 8px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #ffd8c9 0%, #ff8b61 50%, #ffd8c9 100%);
+  background: linear-gradient(90deg, var(--deba-brand-soft) 0%, var(--deba-brand) 50%, var(--deba-brand-soft) 100%);
 }
 
 .marker {
@@ -116,17 +140,17 @@
   width: 12px;
   height: 12px;
   margin: 5px auto 0;
-  border: 3px solid #ffffff;
+  border: 3px solid var(--deba-surface);
   border-radius: 50%;
-  background: #ff6b35;
-  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.18);
+  background: var(--deba-brand);
+  box-shadow: var(--deba-shadow-sm);
 }
 
 .marker span {
   display: inline-flex;
   padding: 4px 7px;
   border-radius: 8px;
-  background: #111827;
+  background: var(--deba-navy-2);
   color: #ffffff;
   font-size: 10px;
   font-weight: 800;
@@ -146,11 +170,11 @@
   gap: 10px;
   margin-top: 13px;
   padding-top: 12px;
-  border-top: 1px solid rgba(15, 23, 42, 0.07);
+  border-top: 1px solid var(--deba-border);
 }
 
 .footer strong {
-  color: #172033;
+  color: var(--deba-text);
   font-size: 12px;
 }
 
@@ -162,6 +186,10 @@
 
   .badge {
     align-self: flex-start;
+  }
+
+  .advice {
+    grid-template-columns: 1fr;
   }
 
   .metrics {
