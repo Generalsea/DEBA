@@ -83,3 +83,8 @@ Local tests, build, browser E2E and real WhatsApp delivery must be verified afte
 ## Seller trust projection
 
 Listing detail trust is evidence-backed: phone trust comes from `auth.users.phone_confirmed_at` projected to `profiles.phone_verified`; seller verification and ratings come from the existing seller verification/rating summary. No generic trusted-seller badge is shown without corresponding evidence.
+
+
+## Verification checkpoint
+
+2026-10-04: Phase D workflow is configured for branch pushes and pull requests; GitHub run visibility remains an external verification gate until a run is observed.
