@@ -22,6 +22,7 @@ import CartAddButton from '@/components/CartAddButton'
 import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGallery'
 import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components/ProductDetailTabs'
 import ProductViewTracker from '@/components/ProductViewTracker'
+import ProductDealScore, { type ProductDealScoreData } from '@/components/ProductDealScore'
 import FutureMarketplacePanel from '@/components/FutureMarketplacePanel'
 import { createClient } from '@/utils/supabase/server'
 
@@ -242,6 +243,7 @@ async function getProduct(slug: string) {
     userId,
     categoriesResponse,
     attributeDefinitionsResponse,
+    dealScoreResponse,
     relatedResponse,
     trustResponse,
   ] = await Promise.all([
@@ -268,6 +270,9 @@ async function getProduct(slug: string) {
             .eq('is_required', true)
             .order('sort_order', { ascending: true })
         : Promise.resolve({ data: [], error: null }),
+      supabase
+        .rpc('get_product_deal_score', { p_product_id: product.id })
+        .maybeSingle(),
       product.category?.id
         ? supabase
             .from('products')
@@ -287,6 +292,9 @@ async function getProduct(slug: string) {
 
   if (sellerResponse.error) {
     console.error('DEBA seller query failed', sellerResponse.error)
+  }
+  if (dealScoreResponse.error) {
+    console.error('DEBA deal score query failed', dealScoreResponse.error)
   }
   product.seller = sellerResponse.data || null
 
@@ -322,6 +330,7 @@ async function getProduct(slug: string) {
     isFavorite,
     favoriteCount,
     negotiationCount: 0,
+    dealScore: (dealScoreResponse.data as ProductDealScoreData | null) || null,
     trustEvidence: (trustResponse.data || null) as VisualTrustEvidence | null,
     categories: ((categoriesResponse.data || []) as Category[]).map(mapCategory),
     definitions: ((attributeDefinitionsResponse.data || []) as unknown as ProductAttributeDefinition[]),
@@ -526,6 +535,8 @@ export default async function ProductDetailPage({
               currency={product.currency || 'EGP'}
               listingPrice={price}
             />
+
+            <ProductDealScore data={data.dealScore} />
 
             <div className="deba-detail-location">
               <MapPin size={16} />
