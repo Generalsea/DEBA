@@ -14050,3 +14050,31 @@ html[data-theme="dark"] .deba-comms-security-banner-sm {
     font-size: 23px;
   }
 }
+
+
+.deba-presence-indicator {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--deba-text-3);
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.deba-presence-indicator.is-online {
+  color: var(--deba-green);
+}
+
+.deba-presence-indicator.is-offline {
+  color: var(--deba-text-3);
+}
+
+.deba-presence-indicator.is-compact {
+  font-size: 7.5px;
+}
+
+.deba-presence-indicator.is-online svg {
+  filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 45%, transparent));
+}
