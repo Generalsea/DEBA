@@ -24,6 +24,45 @@ create unique index if not exists profile_private_phone_uidx
   on public.profile_private(phone)
   where phone is not null;
 
+create or replace function private.guard_profile_private_phone()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_catalog
+as $function$
+declare
+  v_uid uuid := auth.uid();
+  v_auth_phone text;
+begin
+  if v_uid is null then
+    return new;
+  end if;
+
+  if new.user_id <> v_uid then
+    raise exception 'Private profile ownership violation' using errcode = '42501';
+  end if;
+
+  select phone
+    into v_auth_phone
+  from auth.users
+  where id = v_uid;
+
+  if new.phone is distinct from v_auth_phone then
+    raise exception 'Profile phone must match authenticated phone identity' using errcode = '42501';
+  end if;
+
+  return new;
+end;
+$function$;
+
+drop trigger if exists trg_guard_profile_private_phone on public.profile_private;
+create trigger trg_guard_profile_private_phone
+before insert or update of phone on public.profile_private
+for each row
+execute function private.guard_profile_private_phone();
+
+revoke execute on function private.guard_profile_private_phone() from public;
+
 create or replace function private.sync_profile_phone_verification()
 returns trigger
 language plpgsql
