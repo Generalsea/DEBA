@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { assertEgyptianPhone } from '@/lib/auth/egyptian-phone'
+import { sendWhatsAppOtp } from '@/lib/auth/whatsappOtpProvider'
 import { enforceOtpSendRateLimits } from '@/utils/auth/otpRateLimit'
 import { createClient } from '@/utils/supabase/server'
 
@@ -31,16 +32,7 @@ export async function POST(request: Request) {
     }
 
     const supabase = await createClient()
-    const { error } = await supabase.auth.signInWithOtp({
-      phone,
-      options: {
-        channel: 'whatsapp',
-        shouldCreateUser: true,
-        data: {
-          account_type: accountType,
-        },
-      },
-    })
+    const { error } = await sendWhatsAppOtp(supabase, phone, accountType)
 
     if (error) {
       console.error('DEBA WhatsApp OTP send failed', {
