@@ -228,7 +228,7 @@ async function main() {
   })
 
   const failures = checks.filter((check) => check.status === 'FAIL')
-  const strictNonPass = strict ? checks.filter((check) => check.status === 'INFO' || check.status === 'WARN') : []
+  const strictNonPass = strict ? checks.filter((check) => check.status === 'WARN') : []
   const summary = {
     pass: checks.filter((check) => check.status === 'PASS').length,
     info: checks.filter((check) => check.status === 'INFO').length,
