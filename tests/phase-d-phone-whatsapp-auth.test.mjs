@@ -260,3 +260,11 @@ test('Phase D migration has one transaction boundary and no production activatio
   assert.equal((migration.match(/^commit;$/gm) || []).length, 1)
   assert.doesNotMatch(migration, /supabase db push|production|apply migration/i)
 })
+
+
+test('Phase D marketplace phone guard preserves authenticated admin/service access', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+  assert.match(migration, /private\.is_admin\(\)/)
+  assert.match(migration, /service_role/)
+  assert.match(migration, /supabase_admin/)
+})
