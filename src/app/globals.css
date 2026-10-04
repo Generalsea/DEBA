@@ -10421,31 +10421,14 @@ html[data-theme="dark"] .deba-classified-shell {
   font-weight: 500;
 }
 
-.deba-classified-listing-scroll {
-  display: flex;
-  gap: var(--spacing-md);
-  overflow-x: auto;
-  padding-bottom: var(--spacing-md);
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+.deba-classified-listing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-lg);
 }
 
-.deba-classified-listing-scroll::-webkit-scrollbar {
-  height: 6px;
-}
-
-.deba-classified-listing-scroll::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-  border-radius: 3px;
-}
-
-.deba-classified-listing-scroll::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-}
-
-.deba-classified-listing-scroll-item {
-  flex: 0 0 280px;
+.deba-classified-listing-grid .deba-classified-listing-card {
+  width: 100%;
 }
 
 /* Listing card */
@@ -11127,8 +11110,8 @@ html[data-theme="dark"] .deba-classified-shell {
     flex: 1;
   }
 
-  .deba-classified-listing-scroll-item {
-    flex-basis: 265px;
+  .deba-classified-listing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .deba-classified-listing-card {
