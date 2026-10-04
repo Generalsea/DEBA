@@ -58,5 +58,8 @@ jobs:
       - name: Contract tests
         run: npm test
 
+      - name: Phase 4 notification contract/integration tests
+        run: npm run test:phase4-notifications
+
       - name: Build
         run: npm run build
