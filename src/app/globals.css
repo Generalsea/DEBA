@@ -14071,6 +14071,11 @@ html[data-theme="dark"] .deba-comms-security-banner-sm {
   color: var(--deba-text-3);
 }
 
+.deba-presence-indicator.is-unavailable {
+  color: var(--deba-text-3);
+  opacity: .72;
+}
+
 .deba-presence-indicator.is-compact {
   font-size: 7.5px;
 }
