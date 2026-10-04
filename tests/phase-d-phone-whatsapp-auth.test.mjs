@@ -114,3 +114,37 @@ test('Phase D auth code does not expose service-role or private credentials to t
   const page = await read('src/app/(auth)/login/page.tsx')
   assert.doesNotMatch(page, /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY|service_role/i)
 })
+
+
+test('Phase D prevents direct profile phone mutation outside Auth verification', async () => {
+  const route = await read('src/app/api/profile/route.ts')
+  assert.match(route, /PHONE_CHANGE_REQUIRES_VERIFICATION/)
+  assert.match(route, /normalizeEgyptianPhone/)
+  assert.match(route, /verifiedAuthPhone/)
+  assert.match(route, /phone: verifiedAuthPhone/)
+})
+
+test('Phase D seller verification is downstream of verified phone trust', async () => {
+  const route = await read('src/app/api/seller-verification/route.ts')
+  assert.match(route, /requireVerifiedPhone/)
+  assert.match(route, /status: 403/)
+})
+
+test('Phase D stale phone-change cleanup is scheduled and removes unconfirmed stale attempts', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+  assert.match(migration, /cleanup_stale_phone_change/)
+  assert.match(migration, /phone_change_sent_at/)
+  assert.match(migration, /phone_change_token = null/)
+  assert.match(migration, /deba-auth-cleanup-stale-phone-change/)
+  assert.match(migration, /0 \* \* \* \*/)
+})
+
+test('Phase D reuses existing trust and safety infrastructure instead of inventing a parallel risk stack', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+  const risk = await read('supabase/migrations/20260921210000_risk_engine.sql')
+  const trust = await read('supabase/migrations/20260925201854_public_profiles_trust_reviews_moderation_20260925.sql')
+
+  assert.match(migration, /api_rate_limit/i)
+  assert.match(risk, /risk_assessments/)
+  assert.match(trust, /chat_security_events|reports|auto_pause_reported_product/)
+})
