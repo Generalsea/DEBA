@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { assertEgyptianPhone } from '@/lib/auth/egyptian-phone'
+import { verifyWhatsAppOtp } from '@/lib/auth/whatsappOtpProvider'
 import { enforceOtpVerifyRateLimits } from '@/utils/auth/otpRateLimit'
 import { createClient } from '@/utils/supabase/server'
 
@@ -39,11 +40,7 @@ export async function POST(request: Request) {
     }
 
     const supabase = await createClient()
-    const { data, error } = await supabase.auth.verifyOtp({
-      phone,
-      token,
-      type: 'sms',
-    })
+    const { data, error } = await verifyWhatsAppOtp(supabase, phone, token)
 
     if (error || !data.session || !data.user) {
       console.error('DEBA WhatsApp OTP verification failed', {
