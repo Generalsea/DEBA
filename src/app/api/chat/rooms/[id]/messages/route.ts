@@ -329,7 +329,7 @@ async function handleMultipart(
 
   if (uploadError) {
     console.error('DEBA chat media upload failed', uploadError)
-    return NextResponse.json({ error: 'تعذر رفع الملف الآن.' }, { status: 403 })
+    return NextResponse.json({ error: 'تعذر رفع الملف الآن.' }, { status: 500 })
   }
 
   const messageType: MessageType = isImage ? 'image' : 'system'
@@ -566,7 +566,10 @@ export async function POST(request: Request, context: Context) {
 
         if (error) {
           console.error('DEBA offer action failed', error)
-          return NextResponse.json({ error: 'تعذر تنفيذ إجراء العرض.' }, { status: 400 })
+          return NextResponse.json(
+            { error: 'تعذر تنفيذ إجراء العرض.' },
+            { status: chatRpcErrorStatus(error) },
+          )
         }
 
         return NextResponse.json({ message: data, riskFlags: [] }, { status: 201 })
