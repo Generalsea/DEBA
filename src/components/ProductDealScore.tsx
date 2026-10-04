@@ -38,17 +38,17 @@ function percent(value: number | string | null | undefined) {
 }
 
 const LABELS = {
-  great_deal: 'سعر ممتاز',
-  fair: 'سعر عادل',
-  overpriced: 'أعلى من نطاق السوق',
+  great_deal: 'سعر ممتاز وتنافسي',
+  fair: 'ضمن النطاق المعتاد',
+  overpriced: 'أعلى من المعتاد',
   insufficient_data: 'بيانات مقارنة غير كافية',
 } as const
 
 const LABEL_COPY = {
-  great_deal: 'السعر الحالي أقل بوضوح من متوسط الإعلانات المقارنة.',
-  fair: 'السعر الحالي قريب من مستوى الأسعار المقارنة لنفس السلعة وحالتها.',
-  overpriced: 'السعر الحالي أعلى من المتوسط المقارن المتاح لهذا النوع من الإعلانات.',
-  insufficient_data: 'نحتاج إلى إعلانات مقارنة كافية قبل إصدار حكم سعري.',
+  great_deal: 'السعر الحالي أقل بوضوح من الأسعار المقارنة المتاحة لهذا الإعلان.',
+  fair: 'السعر الحالي قريب من نطاق الأسعار المقارنة المتاحة لنفس الفئة والحالة.',
+  overpriced: 'السعر الحالي أعلى من مستوى الأسعار المقارنة المتاح لهذا النوع من الإعلانات.',
+  insufficient_data: 'لا توجد أدلة مقارنة كافية لإعطاء إشارة سعر موثوقة بعد.',
 } as const
 
 export default function ProductDealScore({
@@ -116,7 +116,7 @@ export default function ProductDealScore({
       ) : null}
 
       <div className={styles.footer}>
-        <span>{data.peer_count.toLocaleString('ar-EG')} إعلان مقارنة</span>
+        <span>مقارنة مع {data.peer_count.toLocaleString('ar-EG')} إعلانًا مشابهًا</span>
         {score !== null ? <strong>{score.toFixed(0)}/100</strong> : <strong>غير متاح</strong>}
         {confidence !== null ? <span>ثقة {Math.round(confidence * 100)}%</span> : null}
       </div>
