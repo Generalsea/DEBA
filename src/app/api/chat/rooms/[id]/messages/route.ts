@@ -360,7 +360,10 @@ async function handleMultipart(
     result.data as ChatMessageRow,
   ])
 
-  return NextResponse.json({ message, riskFlags: [] }, { status: 201 })
+  return NextResponse.json(
+    { message, riskFlags: [], notification: result.notification },
+    { status: 201 },
+  )
 }
 
 function validateLocation(value: unknown) {
