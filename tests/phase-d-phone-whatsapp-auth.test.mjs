@@ -170,3 +170,32 @@ test('Phase D synchronizes a newly confirmed Auth phone into profile_private', a
   assert.match(migration, /phone = excluded\.phone/)
   assert.match(migration, /phone_confirmed_at/)
 })
+
+
+test('Phase D presence is realtime, read-only for observers, and scoped per user', async () => {
+  const tracker = await read('src/components/PresenceSessionTracker.tsx')
+  const observer = await read('src/components/UserPresence.tsx')
+  const account = await read('src/components/AccountDashboard.tsx')
+  const layout = await read('src/app/layout.tsx')
+
+  assert.match(tracker, /deba:presence:' \+ userId/)
+  assert.match(tracker, /presence:/)
+  assert.match(tracker, /track\(/)
+  assert.match(tracker, /onAuthStateChange/)
+  assert.match(tracker, /removeChannel/)
+
+  assert.match(observer, /deba:presence:' \+ userId/)
+  assert.match(observer, /presenceState/)
+  assert.doesNotMatch(observer, /\.track\(/)
+
+  assert.match(account, /<UserPresence userId={account\.userId}/)
+  assert.match(account, /متصل الآن/)
+  assert.match(layout, /<PresenceSessionTracker \/>/)
+})
+
+test('Phase D must not expose premium presence controls without a verified premium entitlement source', async () => {
+  const tracker = await read('src/components/PresenceSessionTracker.tsx')
+  const observer = await read('src/components/UserPresence.tsx')
+  assert.doesNotMatch(tracker, /show.*offline|display.*offline/i)
+  assert.doesNotMatch(observer, /premium|subscription|اشتراك|مدفوع/i)
+})
