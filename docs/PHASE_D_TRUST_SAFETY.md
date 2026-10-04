@@ -93,3 +93,8 @@ Listing detail trust is evidence-backed: phone trust comes from `auth.users.phon
 ## Realtime presence security
 
 Presence uses per-user private Realtime topics. Authenticated clients may observe presence topics, but publication is restricted by RLS to the topic matching `auth.uid()`. Production activation also requires Realtime private-channel authorization to be enabled at the project level.
+
+
+## Messaging abuse signals
+
+The existing message pipeline now annotates deterministic advisory signals for unusually rapid bursts and repeated identical content. These signals do not automatically accuse or ban a user; they become evidence for moderation and abuse analysis through the existing chat security event stream.
