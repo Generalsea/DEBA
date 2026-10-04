@@ -10,7 +10,6 @@ import {
   MessageCircle,
   Package,
   ShieldCheck,
-  ShoppingBag,
   Truck,
   UserRound,
 } from 'lucide-react'
@@ -18,7 +17,6 @@ import { notFound } from 'next/navigation'
 import Header, { type HeaderCategory } from '@/components/Header'
 import ProductCard, { type ProductCardItem } from '@/components/ProductCard'
 import FavoriteButton from '@/components/FavoriteButton'
-import CartAddButton from '@/components/CartAddButton'
 import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGallery'
 import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components/ProductDetailTabs'
 import ProductViewTracker from '@/components/ProductViewTracker'
@@ -411,24 +409,8 @@ export default async function ProductDetailPage({
       ? CONDITION_LABELS[product.condition_grade] || 'حالة موثقة'
       : 'حالة غير محددة'
   const isOwner = Boolean(product.owner_id && data.userId === product.owner_id)
-  const canBuy = Boolean(product.owner_id) && price !== null && price > 0 && product.quantity > 0
-  const purchaseHref = '/products/' + encodeURIComponent(product.slug) + '/checkout'
-  const cartProduct = price !== null ? {
-    id: product.id,
-    title: product.title,
-    slug: product.slug,
-    price,
-    currency: product.currency || 'EGP',
-    conditionGrade: product.condition_grade,
-    listingType: 'sale' as const,
-    quantityAvailable: product.quantity,
-    sellerId: product.owner_id || '',
-    sellerName,
-    sellerAvatar: product.seller?.avatar_url || null,
-    imageUrl: images[0]?.url || null,
-    imageAlt: images[0]?.alt || product.title,
-    deliveryMethod: product.delivery_method as 'pickup' | 'seller_delivery' | 'platform_delivery' | 'both',
-  } : null
+  const canContact = Boolean(product.owner_id && product.quantity > 0)
+  const contactHref = '/chat?product=' + encodeURIComponent(product.id)
 
   return (
     <>
@@ -466,8 +448,8 @@ export default async function ProductDetailPage({
               </div>
               <div>
                 <BadgeCheck size={20} />
-                <strong>سعر ثابت</strong>
-                <span>السعر المعلن ثابت ويمكنك إتمام الطلب مباشرة.</span>
+                <strong>السعر المطلوب</strong>
+                <span>السعر الذي حدده البائع لهذا الإعلان. التواصل والاتفاق يتمان بين الطرفين عبر DEBA.</span>
               </div>
               {trustEvidence?.verified_badge ? (
                 <div>
@@ -549,37 +531,39 @@ export default async function ProductDetailPage({
                   <UserRound size={18} />
                   <div>
                     <strong>هذا إعلانك</strong>
-                    <span>يمكنك إدارة إعلانك، لكن لا يمكنك شراء سلعتك الخاصة.</span>
+                    <span>يمكنك إدارة الإعلان ومتابعة اهتمام المشترين، لكن لا يمكنك مراسلة نفسك من هذا الإعلان.</span>
                   </div>
                 </div>
-              ) : canBuy ? (
+              ) : canContact ? (
                 <div className="deba-purchase-actions">
-                  {cartProduct ? <CartAddButton product={cartProduct} /> : null}
-
-                  <Link href={purchaseHref} className="deba-purchase-primary">
-                  <span className="deba-purchase-primary-icon">
-                    <ShoppingBag size={21} />
-                  </span>
+                  <Link href={contactHref} className="deba-purchase-primary">
+                    <span className="deba-purchase-primary-icon">
+                      <MessageCircle size={21} />
+                    </span>
                     <span>
-                      <strong>اشترِ الآن</strong>
-                      <small>السعر ثابت — اختر الكمية وطريقة الاستلام ثم أكد طلبك</small>
+                      <strong>تواصل مع البائع</strong>
+                      <small>اسأل عن التفاصيل، المعاينة، والاستلام قبل الاتفاق النهائي.</small>
                     </span>
                     <ArrowLeft size={20} />
                   </Link>
-                  <Link
-                    href={'/chat?product=' + encodeURIComponent(product.id)}
-                    className="deba-purchase-chat"
-                  >
-                    <MessageCircle size={17} />
-                    <span>تواصل مع البائع</span>
-                  </Link>
+                  {product.is_negotiable ? (
+                    <Link href={contactHref} className="deba-purchase-chat">
+                      <MessageCircle size={17} />
+                      <span>راسل البائع وأرسل عرضًا</span>
+                    </Link>
+                  ) : (
+                    <span className="deba-purchase-chat is-static">
+                      <CheckCircle2 size={17} />
+                      <span>السعر ثابت — التواصل المباشر هو الخطوة التالية</span>
+                    </span>
+                  )}
                 </div>
               ) : (
                 <div className="deba-owner-notice is-muted">
                   <Package size={18} />
                   <div>
-                    <strong>المنتج غير متاح للشراء حاليًا</strong>
-                    <span>تحقق من توفر الكمية والسعر ثم حاول مرة أخرى.</span>
+                    <strong>الإعلان غير متاح للتواصل حاليًا</strong>
+                    <span>لا توجد وحدات متاحة وفق حالة الإعلان الحالية.</span>
                   </div>
                 </div>
               )}
@@ -687,18 +671,18 @@ export default async function ProductDetailPage({
         <section className="deba-purchase-steps">
           <div>
             <span>1</span>
-            <strong>راجع التفاصيل</strong>
-            <small>السعر والحالة والموقع والبيانات الإضافية.</small>
+            <strong>راجع الإعلان</strong>
+            <small>السعر، الحالة، الموقع، والصور والبيانات التي قدمها البائع.</small>
           </div>
           <div>
             <span>2</span>
-            <strong>اختر الكمية والاستلام</strong>
-            <small>حدد الكمية وطريقة الاستلام وأدخل البيانات المطلوبة.</small>
+            <strong>احفظ أو شارك</strong>
+            <small>احتفظ بالإعلان للمقارنة أو شاركه مع من يهمه.</small>
           </div>
           <div>
             <span>3</span>
-            <strong>أكد طلب الشراء</strong>
-            <small>يسجل الطلب بالسعر الثابت ويظهر لك رقم الطلب.</small>
+            <strong>تواصل واتفق</strong>
+            <small>ابدأ محادثة داخل DEBA واتفق مع البائع على السعر والتسليم.</small>
           </div>
         </section>
 
