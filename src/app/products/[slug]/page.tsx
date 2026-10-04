@@ -636,11 +636,31 @@ export default async function ProductDetailPage({
                 )}
                 {product.seller?.bio && <p>{product.seller.bio}</p>}
               </div>
-              <div className="deba-seller-verified">
-                <ShieldCheck size={17} />
-                <span>
-                  {product.seller?.phone_verified ? 'هاتف موثّق' : 'حساب داخل DEBA'}
-                </span>
+              <div className="deba-seller-verified-stack">
+                {product.seller?.phone_verified ? (
+                  <span className="deba-seller-verified">
+                    <ShieldCheck size={15} />
+                    هاتف موثّق
+                  </span>
+                ) : (
+                  <span className="deba-seller-verified is-muted">
+                    حساب داخل DEBA
+                  </span>
+                )}
+                {sellerTrust?.verifiedSeller ? (
+                  <span className="deba-seller-verified is-trust">
+                    <BadgeCheck size={15} />
+                    بائع موثّق
+                  </span>
+                ) : null}
+                {sellerTrust?.reviewCount ? (
+                  <span className="deba-seller-rating-inline">
+                    ★ {sellerTrust.averageRating.toLocaleString('ar-EG', {
+                      minimumFractionDigits: 1,
+                      maximumFractionDigits: 1,
+                    })} · {sellerTrust.reviewCount.toLocaleString('ar-EG')} تقييم
+                  </span>
+                ) : null}
               </div>
             </section>
 
