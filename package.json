@@ -18,7 +18,8 @@
     "test:phase4-2": "node --experimental-strip-types --test tests/phase4-2-deal-matching.test.mjs",
     "test:phase4-3": "node --test tests/phase4-3-future-engine.test.mjs",
     "test:phase4-4": "node --test tests/phase4-4-true-vector-search.test.mjs",
-    "release:preflight": "node scripts/phase4-release-preflight.mjs"
+    "release:preflight": "node scripts/phase4-release-preflight.mjs",
+    "test:phase5": "node --experimental-strip-types --test tests/phase5-ai-broker.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
