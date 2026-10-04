@@ -24,7 +24,7 @@ export default function UserPresence({ userId, compact = false, label = true }: 
     if (!userId) return
 
     let mounted = true
-    const channel = supabase.channel('deba:presence')
+    const channel = supabase.channel('deba:presence:' + userId)
 
     const sync = () => {
       if (!mounted) return
