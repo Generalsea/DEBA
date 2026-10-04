@@ -75,3 +75,49 @@ test('C1 package test command includes the milestone contract suite', async () =
   assert.match(packageJson.scripts.test, /tests\/phase-c1-critical-flow\.test\.mjs/)
   assert.equal(packageJson.scripts['test:phase-c1'], 'node --test tests/phase-c1-critical-flow.test.mjs')
 })
+
+
+test('C1 listing detail is classified-first and hides irrelevant commerce/auction UI', async () => {
+  const page = await read('src/app/products/[slug]/page.tsx')
+  const panel = await read('src/components/FutureMarketplacePanel.tsx')
+  const tabs = await read('src/components/ProductDetailTabs.tsx')
+
+  assert.match(page, /<strong>تواصل مع البائع<\/strong>/)
+  assert.match(page, /<small>اسأل عن التفاصيل، المعاينة، والاستلام قبل الاتفاق النهائي\.<\/small>/)
+  assert.doesNotMatch(page, /<strong>اشترِ الآن<\/strong>/)
+  assert.doesNotMatch(page, /CartAddButton/)
+  assert.doesNotMatch(page, /purchaseHref/)
+  assert.doesNotMatch(page, /href=\{purchaseHref\}/)
+  assert.match(page, /السعر المطلوب من البائع/)
+  assert.match(page, /تواصل مع البائع داخل DEBA للاتفاق على التفاصيل والتسليم/)
+  assert.match(page, /<strong>تواصل واتفق<\/strong>/)
+
+  assert.match(panel, /if \(!isNegotiable && !isOwner\) \{/)
+  assert.match(panel, /أدوات الإعلان الذكية/)
+  assert.match(panel, /التفاوض الذكي/)
+  assert.match(panel, /الحد الأدنى الذي تقبله للعروض/)
+  assert.doesNotMatch(panel, /هذا الإعلان بسعر ثابت ولا يقبل عروضًا ذكية/)
+  assert.doesNotMatch(panel, /محمي — لا يقرأه المشتري/)
+  assert.doesNotMatch(panel, /DEBA FUTURE ENGINE/)
+
+  assert.match(tabs, /أحدث بيانات متاحة/)
+  assert.doesNotMatch(tabs, /بيانات قديمة/)
+  assert.match(tabs, /السعر الحالي هو السعر المطلوب من البائع/)
+})
+
+test('C1 price intelligence copy never presents an asking price as guaranteed market truth', async () => {
+  const score = await read('src/components/ProductDealScore.tsx')
+  const migration = await read('supabase/migrations/20260929224300_phase4_2_deal_matching_price_intelligence.sql')
+
+  assert.match(score, /سعر ممتاز وتنافسي/)
+  assert.match(score, /ضمن النطاق المعتاد/)
+  assert.match(score, /أعلى من المعتاد/)
+  assert.match(score, /أدلة مقارنة كافية/)
+  assert.match(score, /مقارنة مع .*إعلانًا مشابهًا/)
+  assert.match(migration, /percentile_cont\(0\.50\)/)
+  assert.match(migration, /percentile_cont\(0\.25\)/)
+  assert.match(migration, /percentile_cont\(0\.75\)/)
+  assert.match(migration, /word_similarity/)
+  assert.match(migration, /peer_count/)
+  assert.match(migration, /confidence/)
+})
