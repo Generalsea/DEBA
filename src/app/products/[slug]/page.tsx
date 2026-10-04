@@ -415,6 +415,7 @@ export default async function ProductDetailPage({
   return (
     <>
       <Header
+        variant="classified"
         categories={data.categories}
         favoriteCount={data.favoriteCount}
         negotiationCount={data.negotiationCount}
