@@ -2331,21 +2331,19 @@ textarea {
 
 .deba-detail-tabs-nav {
   margin-top: 9px;
-  padding: 3px;
-  display: flex;
-  align-items: stretch;
-  gap: 3px;
-  overflow-x: auto;
+  padding: 4px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 4px;
   border: 1px solid var(--deba-border);
   border-radius: 14px;
   background: var(--deba-surface-2);
-  scrollbar-width: thin;
 }
 
 .deba-detail-tabs-nav button {
-  flex: 0 0 auto;
+  min-width: 0;
   min-height: 41px;
-  padding-inline: 12px;
+  padding-inline: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
