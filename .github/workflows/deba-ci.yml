@@ -39,5 +39,8 @@ jobs:
       - name: Phase 4 notification contract/integration tests
         run: npm run test:phase4-notifications
 
+      - name: Phase 4.2 deal matching contract tests
+        run: npm run test:phase4-2
+
       - name: Playwright collection
         run: npm run e2e:list
