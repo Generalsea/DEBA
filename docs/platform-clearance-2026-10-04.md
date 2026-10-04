@@ -7,7 +7,7 @@
 - Main baseline: `75b26ae6ec72a5f69339f5e2145c2be651967b5e`
 - RC head at this refreshed checkpoint: `7442895a8cc2311e35956c249b9a7c839b903bad`
 - Main has not been merged or directly modified by this RC work.
-- GitHub Actions on the preceding implementation head were PASS (verify `37190735181`, quality `37190735186`). The evidence refresh commits are documentation-only and are subject to the same CI gates.
+- GitHub Actions on the verified code head were PASS (verify `37190735181`, quality `37190735186`). The subsequent evidence refresh commits were confirmed by Git diff to be documentation-only.
 
 ## Evidence gates
 
