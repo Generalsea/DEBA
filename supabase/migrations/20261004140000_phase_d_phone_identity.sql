@@ -63,6 +63,49 @@ execute function private.guard_profile_private_phone();
 
 revoke execute on function private.guard_profile_private_phone() from public;
 
+create or replace function private.cleanup_stale_phone_change(
+  p_max_age interval default interval '24 hours'
+)
+returns integer
+language plpgsql
+security definer
+set search_path = pg_catalog
+as $function$
+declare
+  v_count integer;
+begin
+  update auth.users
+  set phone_change = null,
+      phone_change_token = null,
+      phone_change_sent_at = null
+  where phone_change is not null
+    and phone_confirmed_at is null
+    and phone_change_sent_at is not null
+    and phone_change_sent_at < now() - p_max_age;
+
+  get diagnostics v_count = row_count;
+  return v_count;
+end;
+$function$;
+
+revoke execute on function private.cleanup_stale_phone_change(interval) from public;
+
+do $cron$
+begin
+  if not exists (
+    select 1
+    from cron.job
+    where jobname = 'deba-auth-cleanup-stale-phone-change'
+  ) then
+    perform cron.schedule(
+      'deba-auth-cleanup-stale-phone-change',
+      '0 * * * *',
+      $command$select private.cleanup_stale_phone_change();$command$
+    );
+  end if;
+end;
+$cron$;
+
 drop policy if exists products_insert_seller on public.products;
 create policy products_insert_seller
 on public.products
