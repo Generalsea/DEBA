@@ -67,5 +67,8 @@ jobs:
       - name: Phase 4.3 future marketplace contract tests
         run: npm run test:phase4-3
 
+      - name: Phase 5.1 AI broker/vision contract tests
+        run: npm run test:phase5
+
       - name: Build
         run: npm run build
