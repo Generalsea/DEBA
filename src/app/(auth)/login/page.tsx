@@ -199,12 +199,14 @@ export default function LoginPage() {
       }
 
       if (data.user.phone) {
+        setLegacyPassword('')
         setSuccess('تم تسجيل الدخول. حسابك مرتبط بالفعل بهاتف موثّق.')
         router.replace(nextPath)
         router.refresh()
         return
       }
 
+      setLegacyPassword('')
       setStep('legacy-phone')
       setLegacyOtp('')
       setLegacyResendAfter(0)
@@ -285,6 +287,8 @@ export default function LoginPage() {
         return
       }
 
+      await supabase.auth.refreshSession()
+      setLegacyOtp('')
       setSuccess('تم ربط هاتفك الموثّق بحسابك القديم. مرحبًا بك من جديد في DEBA.')
       router.replace(nextPath)
       router.refresh()
