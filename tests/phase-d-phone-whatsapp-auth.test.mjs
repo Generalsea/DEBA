@@ -74,6 +74,19 @@ test('Phase D phone trust is projected from auth.users and enforced by database 
   assert.match(migration, /\^\\\+20\(10\|11\|12\|15\)/)
 })
 
+test('Phase D application trust gates require a valid Egyptian confirmed phone', async () => {
+  const trust = await read('src/utils/auth/phoneTrust.ts')
+  const form = await read('src/app/sell/ProductListingForm.tsx')
+
+  assert.match(trust, /isValidEgyptianPhone/)
+  assert.match(trust, /phone_confirmed_at/)
+  assert.match(trust, /phoneVerified: Boolean\([\s\S]*isValidEgyptianPhone/)
+
+  assert.match(form, /isValidEgyptianPhone/)
+  assert.match(form, /phone_confirmed_at/)
+  assert.match(form, /!isValidEgyptianPhone\(userData\.user\.phone \|\| ''\)/)
+})
+
 test('Phase D important marketplace APIs return an explicit phone-verification boundary', async () => {
   const chat = await read('src/app/api/chat/rooms/route.ts')
   const offer = await read('src/app/api/smart-offers/route.ts')
