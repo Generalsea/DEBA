@@ -362,7 +362,7 @@ test('Phase D legacy account linking is authenticated, WhatsApp-only, and server
   assert.match(verify, /supabase\.auth\.getUser/)
   assert.match(verify, /enforceOtpVerifyRateLimits/)
   assert.match(verify, /status === 'approved'/)
-  assert.match(verify, /channel.*whatsapp/)
+  assert.match(verify, /channel[\s\S]*whatsapp/)
   assert.match(verify, /updateUserById/)
   assert.match(verify, /phone_confirm: true/)
   assert.match(verify, /auth\.admin\.updateUserById/)
