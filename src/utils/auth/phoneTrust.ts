@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { isValidEgyptianPhone } from '@/lib/auth/egyptian-phone'
 import { createClient } from '@/utils/supabase/server'
 
 export async function getAuthenticatedPhoneTrust() {
@@ -16,7 +17,11 @@ export async function getAuthenticatedPhoneTrust() {
   return {
     supabase,
     user: data.user,
-    phoneVerified: Boolean(data.user.phone && data.user.phone_confirmed_at),
+    phoneVerified: Boolean(
+      data.user.phone &&
+        data.user.phone_confirmed_at &&
+        isValidEgyptianPhone(data.user.phone),
+    ),
   }
 }
 
