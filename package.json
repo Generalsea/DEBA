@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "typecheck": "tsc --noEmit",
-    "test": "node --test scripts/contracts.test.mjs",
+    "test": "node --test scripts/contracts.test.mjs tests/phase-c1-critical-flow.test.mjs tests/phase-d-phone-whatsapp-auth.test.mjs",
     "search:relevance": "node --test tests/search-relevance.matrix.test.mjs",
     "start": "next start",
     "seed:demo-catalog-images": "node scripts/seed-demo-catalog-images.mjs",
@@ -19,7 +19,10 @@
     "test:phase4-3": "node --test tests/phase4-3-future-engine.test.mjs",
     "test:phase4-4": "node --test tests/phase4-4-true-vector-search.test.mjs",
     "release:preflight": "node scripts/phase4-release-preflight.mjs",
-    "test:phase5": "node --experimental-strip-types --test tests/phase5-ai-broker.test.mjs"
+    "test:phase5": "node --experimental-strip-types --test tests/phase5-ai-broker.test.mjs",
+    "test:phase-c1": "node --test tests/phase-c1-critical-flow.test.mjs",
+    "test:phase-d": "node --test tests/phase-d-phone-whatsapp-auth.test.mjs",
+    "e2e:auth-state": "node scripts/e2e/capture-auth-state.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

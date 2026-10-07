@@ -38,17 +38,24 @@ function percent(value: number | string | null | undefined) {
 }
 
 const LABELS = {
-  great_deal: 'سعر ممتاز',
-  fair: 'سعر عادل',
-  overpriced: 'أعلى من نطاق السوق',
+  great_deal: 'سعر ممتاز وتنافسي',
+  fair: 'ضمن النطاق المعتاد',
+  overpriced: 'أعلى من المعتاد',
   insufficient_data: 'بيانات مقارنة غير كافية',
 } as const
 
 const LABEL_COPY = {
-  great_deal: 'السعر الحالي أقل بوضوح من متوسط الإعلانات المقارنة.',
-  fair: 'السعر الحالي قريب من مستوى الأسعار المقارنة لنفس السلعة وحالتها.',
-  overpriced: 'السعر الحالي أعلى من المتوسط المقارن المتاح لهذا النوع من الإعلانات.',
-  insufficient_data: 'نحتاج إلى إعلانات مقارنة كافية قبل إصدار حكم سعري.',
+  great_deal: 'السعر الحالي أقل بوضوح من الأسعار المقارنة المتاحة لهذا الإعلان.',
+  fair: 'السعر الحالي قريب من نطاق الأسعار المقارنة المتاحة لنفس الفئة والحالة.',
+  overpriced: 'السعر الحالي أعلى من مستوى الأسعار المقارنة المتاح لهذا النوع من الإعلانات.',
+  insufficient_data: 'لا توجد أدلة مقارنة كافية لإعطاء إشارة سعر موثوقة بعد.',
+} as const
+
+const ADVICE = {
+  great_deal: 'نصيحة DEBA: السعر يبدو تنافسيًا وفق المقارنات المتاحة؛ راجع الحالة والتفاصيل قبل الاتفاق.',
+  fair: 'نصيحة DEBA: السعر داخل النطاق المعتاد؛ ركّز في المقارنة على الحالة والموقع وما يتضمنه الإعلان.',
+  overpriced: 'تنبيه DEBA: السعر أعلى من المقارنات المتاحة؛ اسأل عن المزايا أو حالة المنتج قبل اتخاذ القرار.',
+  insufficient_data: 'نصيحة DEBA: لا توجد بيانات مقارنة كافية بعد؛ لا تعتمد على السعر وحده، واطلب التفاصيل التي تنقصك.',
 } as const
 
 export default function ProductDealScore({
@@ -85,6 +92,11 @@ export default function ProductDealScore({
 
       <p className={styles.copy}>{LABEL_COPY[data.deal_label]}</p>
 
+      <div className={styles.advice} role="note">
+        <strong>مساعدة في القرار</strong>
+        <span>{ADVICE[data.deal_label]}</span>
+      </div>
+
       <div className={styles.metrics}>
         <div>
           <span>متوسط المقارنة</span>
@@ -116,7 +128,7 @@ export default function ProductDealScore({
       ) : null}
 
       <div className={styles.footer}>
-        <span>{data.peer_count.toLocaleString('ar-EG')} إعلان مقارنة</span>
+        <span>مقارنة مع {data.peer_count.toLocaleString('ar-EG')} إعلانًا مشابهًا</span>
         {score !== null ? <strong>{score.toFixed(0)}/100</strong> : <strong>غير متاح</strong>}
         {confidence !== null ? <span>ثقة {Math.round(confidence * 100)}%</span> : null}
       </div>

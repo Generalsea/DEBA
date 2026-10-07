@@ -27,6 +27,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import EgyptLocationPicker from '@/components/EgyptLocationPicker'
 import DebaLogo from '@/components/DebaLogo'
+import UserPresence from '@/components/UserPresence'
 import type { ProfileAccountData } from '@/components/ProfileDashboard'
 import SellerListingsPanel from '@/components/SellerListingsPanel'
 
@@ -428,7 +429,9 @@ export default function AccountDashboard({ account, initialSection }: Props) {
               <div className="user-info">
                 <div className="user-name">{account.profile.displayName}</div>
                 <div className="user-email">{account.email || account.profile.username || 'حساب DEBA'}</div>
-                <div className="user-status"><span className="status-dot" /> متصل الآن</div>
+                <div className="user-status">
+                  <UserPresence userId={account.userId} compact />
+                </div>
               </div>
             </div>
           </div>

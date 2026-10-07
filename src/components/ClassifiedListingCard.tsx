@@ -19,6 +19,7 @@ export type ClassifiedListingItem = {
   imageAlt: string
   sellerName: string
   sellerAvatar: string | null
+  isFavorite?: boolean
   ratingValue?: number | null
   ratingCount?: number
   publishedAt?: string | null
@@ -85,7 +86,7 @@ export default function ClassifiedListingCard({
 
         <FavoriteButton
           productId={item.id}
-          initialFavorite={false}
+          initialFavorite={Boolean(item.isFavorite)}
           label="أضف الإعلان إلى المفضلة"
           className="deba-classified-listing-favorite"
         />
