@@ -50,6 +50,14 @@ test('Phase D OTP verification uses the Supabase phone OTP verification contract
   assert.doesNotMatch(route, /email.*otp|magiclink/i)
 })
 
+test('Phase D phone trust cannot be self-asserted through public.profiles', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+  assert.match(migration, /sync_profile_phone_verified/)
+  assert.match(migration, /before insert or update of phone_verified on public\.profiles/)
+  assert.match(migration, /new\.phone_verified := exists/)
+  assert.match(migration, /phone_confirmed_at/)
+})
+
 test('Phase D phone trust is projected from auth.users and enforced by database triggers', async () => {
   const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
 
