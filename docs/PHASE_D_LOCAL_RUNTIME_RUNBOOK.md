@@ -42,11 +42,23 @@ Expected: http://localhost:3000
 10. Exceed verification attempts and confirm rate limiting.
 Never use a fake/test OTP.
 
-## Step 5 — critical classifieds flow
+## Step 5 — legacy account linking (only for pre-phone accounts)
+1. Select "لدي حساب قديم في DEBA".
+2. Sign in with the existing confirmed email/password.
+3. If the account has no Auth phone, enter a real Egyptian +20 number.
+4. Request the linking code and verify that it arrives via WhatsApp.
+5. Enter the real 6-digit code.
+6. Confirm the same Auth user now has the verified phone; no second Auth account was created.
+7. Confirm the original profile remains intact.
+8. Confirm the marketplace trust guard is now satisfied.
+
+The legacy linking provider is server-only and uses Twilio Verify WhatsApp. It must not use SMS fallback. Twilio Verify can fall back from WhatsApp to SMS by default in some configurations, so the Verify Service must be configured to disable SMS fallback before this step is marked PASS. A response that does not prove WhatsApp delivery is fail-closed.
+
+## Step 6 — critical classifieds flow
 REGISTER -> LOGIN -> CREATE LISTING -> UPLOAD MEDIA -> PUBLISH -> SEARCH -> FILTER -> VIEW -> SAVE -> CONTACT SELLER -> MESSAGE
 Test the happy path and the blocked path for an unverified account.
 
-## Step 6 — two-user communication
+## Step 7 — two-user communication
 - Buyer opens a real published listing.
 - Buyer selects تواصل مع البائع.
 - Verify a real chat room opens.
@@ -58,15 +70,15 @@ Test the happy path and the blocked path for an unverified account.
 - Presence changes with the second user's real session.
 - Realtime failure shows الحالة غير متاحة, never a false غير متصل.
 
-## Step 7 — negotiable listing / offers
+## Step 8 — negotiable listing / offers
 For an offers-enabled listing: buyer sends offer -> seller receives -> seller accepts/counters/declines -> buyer receives the lifecycle result.
 For fixed-price listings: no buyer auction panel, no secret floor, no 0 عرض نشط shell, and primary action remains تواصل مع البائع.
 
-## Step 8 — responsive and dark-mode matrix
+## Step 9 — responsive and dark-mode matrix
 Test 320, 360, 390, 414, 768, 1024, 1280 and 1440 px.
 Inspect RTL alignment, clipped text, overflow, listing cards, product detail, phone OTP, chat, account menu, dialogs, light mode, dark mode, and mobile keyboard reachability.
 
-## Step 9 — evidence to return
+## Step 10 — evidence to return
 - command exit status
 - test summary/count
 - screenshots for browser/responsive findings
