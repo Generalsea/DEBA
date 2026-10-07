@@ -138,7 +138,7 @@ test('C1 classifieds discovery does not expose cart actions or hidden horizontal
 
   assert.match(home, /deba-classified-listing-grid/)
   assert.match(home, /favoriteProductIds/)
-  assert.match(home, /supabase\.from\('favorites'\)/)
+  assert.match(home, /\.from\('favorites'\)/)
   assert.doesNotMatch(home, /deba-classified-listing-scroll/)
   assert.doesNotMatch(home, /deba-classified-listing-scroll-item/)
 
