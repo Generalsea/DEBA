@@ -3,7 +3,6 @@ import 'server-only'
 type TwilioVerificationResponse = {
   sid?: string
   service_sid?: string
-  account_sid?: string
   to?: string
   channel?: string
   status?: string
@@ -16,7 +15,6 @@ type TwilioVerificationResponse = {
 type TwilioVerificationCheckResponse = {
   sid?: string
   service_sid?: string
-  account_sid?: string
   to?: string
   channel?: string
   status?: string
@@ -26,18 +24,17 @@ type TwilioVerificationCheckResponse = {
 export class LegacyPhoneVerificationConfigurationError extends Error {}
 
 function getConfig() {
-  const accountSid = process.env.DEBA_TWILIO_ACCOUNT_SID?.trim()
   const apiKey = process.env.DEBA_TWILIO_API_KEY?.trim()
   const apiSecret = process.env.DEBA_TWILIO_API_SECRET?.trim()
   const verifyServiceSid = process.env.DEBA_TWILIO_VERIFY_SERVICE_SID?.trim()
 
-  if (!accountSid || !apiKey || !apiSecret || !verifyServiceSid) {
+  if (!apiKey || !apiSecret || !verifyServiceSid) {
     throw new LegacyPhoneVerificationConfigurationError(
-      'Missing DEBA_TWILIO_ACCOUNT_SID, DEBA_TWILIO_API_KEY, DEBA_TWILIO_API_SECRET or DEBA_TWILIO_VERIFY_SERVICE_SID on the server.',
+      'Missing DEBA_TWILIO_API_KEY, DEBA_TWILIO_API_SECRET or DEBA_TWILIO_VERIFY_SERVICE_SID on the server.',
     )
   }
 
-  return { accountSid, apiKey, apiSecret, verifyServiceSid }
+  return { apiKey, apiSecret, verifyServiceSid }
 }
 
 function authorizationHeader(apiKey: string, apiSecret: string) {
@@ -75,7 +72,10 @@ async function postForm(path: string, values: Record<string, string>) {
       typeof payload === 'object' &&
       payload !== null &&
       'message' in payload
-        ? String((payload as { message?: unknown }).message || 'Twilio Verify request failed.')
+        ? String(
+            (payload as { message?: unknown }).message ||
+              'Twilio Verify request failed.',
+          )
         : 'Twilio Verify request failed.'
 
     throw new Error('Twilio Verify failed: ' + message)
@@ -85,11 +85,6 @@ async function postForm(path: string, values: Record<string, string>) {
 }
 
 export async function sendLegacyPhoneWhatsAppVerification(phone: string) {
-  const { apiKey, apiSecret, verifyServiceSid } = getConfig()
-  if (!verifyServiceSid) {
-    throw new LegacyPhoneVerificationConfigurationError('Missing Verify Service.')
-  }
-
   return postForm('/Verifications', {
     To: phone,
     Channel: 'whatsapp',
