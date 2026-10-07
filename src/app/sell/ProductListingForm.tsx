@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { AlertCircle, CheckCircle2, ImagePlus, LoaderCircle, ShieldCheck, Upload, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
+import { isValidEgyptianPhone } from '@/lib/auth/egyptian-phone'
 import EgyptLocationPicker from '@/components/EgyptLocationPicker'
 
 const BUCKET = 'deba-product-media'
@@ -249,7 +250,7 @@ export default function ProductListingForm({ categories, definitions }: Props) {
         throw new Error('يجب تسجيل الدخول بحساب بائع قبل نشر السلعة.')
       }
 
-      if (!userData.user.phone_confirmed_at) {
+      if (!userData.user.phone_confirmed_at || !isValidEgyptianPhone(userData.user.phone || '')) {
         throw new Error('PHONE_VERIFICATION_REQUIRED')
       }
 
