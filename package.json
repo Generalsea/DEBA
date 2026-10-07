@@ -21,7 +21,8 @@
     "release:preflight": "node scripts/phase4-release-preflight.mjs",
     "test:phase5": "node --experimental-strip-types --test tests/phase5-ai-broker.test.mjs",
     "test:phase-c1": "node --test tests/phase-c1-critical-flow.test.mjs",
-    "test:phase-d": "node --test tests/phase-d-phone-whatsapp-auth.test.mjs"
+    "test:phase-d": "node --test tests/phase-d-phone-whatsapp-auth.test.mjs",
+    "e2e:auth-state": "node scripts/e2e/capture-auth-state.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
