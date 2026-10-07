@@ -11,7 +11,7 @@ import {
   HelpCircle,
   PackageCheck,
   ShieldCheck,
-  Truck,
+  MessageCircle,
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
@@ -37,8 +37,6 @@ type ProductDetailTabsProps = {
   conditionLabel: string
   categoryName: string
   location: string
-  deliveryLabel: string
-  quantity: number
   publishedDate: string
   detailsSchemaVersion: number
   detailsLastCompletedAt: string | null
@@ -49,7 +47,7 @@ const TABS = [
   { id: 'overview', label: 'الوصف والبيانات', icon: FileCheck2 },
   { id: 'specs', label: 'المواصفات الدقيقة', icon: ClipboardCheck },
   { id: 'condition', label: 'الحالة والتاريخ', icon: Wrench },
-  { id: 'policies', label: 'الشحن والإرجاع والضمان', icon: Truck },
+  { id: 'policies', label: 'الاتفاق والمعاينة', icon: MessageCircle },
   { id: 'safety', label: 'الأصالة والسلامة', icon: ShieldCheck },
   { id: 'reviews', label: 'التقييمات', icon: BadgeCheck },
   { id: 'faq', label: 'أسئلة شائعة', icon: HelpCircle },
@@ -176,8 +174,6 @@ export default function ProductDetailTabs({
   conditionLabel,
   categoryName,
   location,
-  deliveryLabel,
-  quantity,
   publishedDate,
   detailsSchemaVersion,
   detailsLastCompletedAt,
@@ -194,10 +190,8 @@ export default function ProductDetailTabs({
   const identification = asObject(root.identification)
   const commerce = asObject(root.commerce)
   const declaration = asObject(commerce.declaration)
-  const returns = asObject(commerce.returns)
   const warranty = asObject(commerce.warranty)
   const authenticity = asObject(commerce.authenticity)
-  const shipping = asObject(commerce.shipping)
   const inspection = asObject(commerce.inspection)
 
   const legacyDetails = useMemo(() => {
@@ -317,8 +311,6 @@ export default function ProductDetailTabs({
                 <DataRow label="الفئة" value={categoryName} />
                 <DataRow label="الحالة" value={conditionLabel} />
                 <DataRow label="الموقع" value={location} />
-                <DataRow label="طريقة الاستلام" value={deliveryLabel} />
-                <DataRow label="الكمية" value={quantity} unit="وحدة" />
                 <DataRow label="تاريخ النشر" value={publishedDate} />
               </div>
             </section>
@@ -454,48 +446,21 @@ export default function ProductDetailTabs({
           <div className="deba-detail-panel-grid">
             <section className="deba-detail-panel-card deba-detail-panel-wide">
               <SectionHeading
-                eyebrow="COMMERCE POLICIES"
-                title="الشحن والإرجاع والضمان"
-                description="لا تُعرض سياسة غير مسجلة؛ كل بطاقة هنا مبنية على بيانات التجارة الخاصة بالمنتج."
+                eyebrow="AGREEMENT & INSPECTION"
+                title="التواصل والاتفاق"
+                description="DEBA منصة إعلانات مبوبة؛ التواصل والاتفاق النهائي يتمان مباشرة بين المشتري والبائع داخل المحادثة."
               />
               <div className="deba-detail-policy-grid">
                 <PolicyCard
-                  icon={Truck}
-                  title="الشحن والتوصيل"
-                  status={textValue(shipping.cost_type) || 'غير محدد'}
-                  body={textValue(shipping.details)}
+                  icon={MessageCircle}
+                  title="التواصل مع البائع"
+                  status="داخل DEBA"
+                  body="ابدأ بالمراسلة لطلب التفاصيل، طرح الأسئلة، وتحديد الخطوات المناسبة لإتمام الاتفاق."
                   tone="positive"
                 />
                 <PolicyCard
-                  icon={PackageCheck}
-                  title="الإرجاع"
-                  status={
-                    booleanValue(returns.eligible) === true
-                      ? 'مسموح — ' + (numberValue(returns.window_days) ?? 0) + ' يوم'
-                      : booleanValue(returns.eligible) === false
-                        ? 'غير مسموح'
-                        : 'لم يحدد'
-                  }
-                  body={textValue(returns.conditions)}
-                  tone={booleanValue(returns.eligible) ? 'positive' : 'neutral'}
-                />
-                <PolicyCard
-                  icon={Wrench}
-                  title="الضمان"
-                  status={
-                    textValue(warranty.type)
-                      ? (textValue(warranty.type) === 'none' ? 'بدون ضمان' : textValue(warranty.type)!)
-                        + (numberValue(warranty.duration_days) !== null
-                          ? ' — ' + numberValue(warranty.duration_days) + ' يوم'
-                          : '')
-                      : 'لم يحدد'
-                  }
-                  body={textValue(warranty.details)}
-                  tone={textValue(warranty.type) && textValue(warranty.type) !== 'none' ? 'positive' : 'neutral'}
-                />
-                <PolicyCard
                   icon={ClipboardCheck}
-                  title="المعاينة قبل الشراء"
+                  title="المعاينة"
                   status={
                     booleanValue(inspection.available) === true
                       ? 'متاحة'
@@ -506,27 +471,46 @@ export default function ProductDetailTabs({
                   body={textValue(inspection.details)}
                   tone={booleanValue(inspection.available) === true ? 'positive' : 'neutral'}
                 />
+                <PolicyCard
+                  icon={Wrench}
+                  title="الضمان"
+                  status={
+                    textValue(warranty.type)
+                      ? (textValue(warranty.type) === 'none'
+                        ? 'بدون ضمان'
+                        : textValue(warranty.type)!) +
+                        (numberValue(warranty.duration_days) !== null
+                          ? ' — ' + numberValue(warranty.duration_days) + ' يوم'
+                          : '')
+                      : 'لم يحدد'
+                  }
+                  body={textValue(warranty.details)}
+                  tone={
+                    textValue(warranty.type) && textValue(warranty.type) !== 'none'
+                      ? 'positive'
+                      : 'neutral'
+                  }
+                />
+                <PolicyCard
+                  icon={ShieldCheck}
+                  title="إقرار البائع"
+                  status="بيان صادر عن البائع"
+                  body={
+                    textValue(commerce.seller_declaration) ||
+                    'لم يسجل البائع إقرارًا إضافيًا لهذا الإعلان.'
+                  }
+                  tone="neutral"
+                />
               </div>
             </section>
 
             <section className="deba-detail-panel-card">
-              <SectionHeading title="إقرار البائع التجاري" />
-              <div className="deba-detail-declaration">
-                <ShieldCheck size={19} />
-                <p>
-                  {textValue(commerce.seller_declaration) ||
-                    'لم يسجل البائع إقرارًا تجاريًا في البيانات المنظمة لهذا الإعلان.'}
-                </p>
-              </div>
-            </section>
-
-            <section className="deba-detail-panel-card">
-              <SectionHeading title="ملاحظة الدفع" />
+              <SectionHeading title="حدود مسؤولية DEBA" />
               <div className="deba-detail-note">
-                <PackageCheck size={18} />
+                <ShieldCheck size={18} />
                 <p>
-                  يمكنك تسجيل طلب الشراء بالسعر الثابت ثم بدء الدفع الإلكتروني الآمن
-                  من صفحة الطلب عندما تكون بوابة الدفع مهيأة للحساب والبيئة الحالية.
+                  DEBA يعرض بيانات الإعلان ويسهّل التواصل. لا يعرض هذا القسم سياسة شحن أو إرجاع
+                  أو دفع خاصة بالمنصة، ولا يُفهم منه وجود خدمة مالية أو لوجستية مفعلة.
                 </p>
               </div>
             </section>
