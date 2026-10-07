@@ -11,8 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      DEBA_E2E_EMAIL: ${{ secrets.DEBA_E2E_EMAIL }}
-      DEBA_E2E_PASSWORD: ${{ secrets.DEBA_E2E_PASSWORD }}
+      DEBA_E2E_STORAGE_STATE: e2e/.auth/state.json
       DEBA_E2E_SEARCH_QUERY: ${{ secrets.DEBA_E2E_SEARCH_QUERY }}
       DEBA_E2E_PRODUCT_SLUG: ${{ secrets.DEBA_E2E_PRODUCT_SLUG }}
       DEBA_E2E_ALLOW_MUTATIONS: 'true'
@@ -25,6 +24,14 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - name: Restore phone-verified storage state
+        env:
+          DEBA_E2E_STORAGE_STATE_B64: ${{ secrets.DEBA_E2E_STORAGE_STATE_B64 }}
+        run: |
+          test -n "$DEBA_E2E_STORAGE_STATE_B64"
+          mkdir -p e2e/.auth
+          printf '%s' "$DEBA_E2E_STORAGE_STATE_B64" | base64 --decode > e2e/.auth/state.json
+          test -s e2e/.auth/state.json
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e
       - name: Upload Playwright report
