@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-const email = process.env.DEBA_E2E_EMAIL
-const password = process.env.DEBA_E2E_PASSWORD
+const storageState = process.env.DEBA_E2E_STORAGE_STATE
 const searchQuery = process.env.DEBA_E2E_SEARCH_QUERY
 const productSlug = process.env.DEBA_E2E_PRODUCT_SLUG
 const allowMutations = process.env.DEBA_E2E_ALLOW_MUTATIONS === 'true'
@@ -9,8 +8,7 @@ const reportDescription = 'DEBA authenticated E2E report ' + Date.now()
 
 function requireE2EConfig() {
   const missing = [
-    !email && 'DEBA_E2E_EMAIL',
-    !password && 'DEBA_E2E_PASSWORD',
+    !storageState && 'DEBA_E2E_STORAGE_STATE',
     !searchQuery && 'DEBA_E2E_SEARCH_QUERY',
     !productSlug && 'DEBA_E2E_PRODUCT_SLUG',
     !allowMutations && 'DEBA_E2E_ALLOW_MUTATIONS=true',
@@ -18,23 +16,22 @@ function requireE2EConfig() {
 
   if (missing.length) {
     throw new Error(
-      'Authenticated E2E requires dedicated test credentials and mutation consent. Missing: ' +
+      'Authenticated E2E requires a real phone-verified Playwright storage state and mutation consent. Missing: ' +
         missing.join(', '),
     )
   }
 }
 
-test('authenticated marketplace critical path: auth -> search -> product -> chat offer -> report', async ({
+test.use({ storageState })
+
+test('authenticated marketplace critical path: verified session -> search -> product -> chat offer -> report', async ({
   page,
 }) => {
   requireE2EConfig()
 
-  await test.step('authenticate user', async () => {
-    await page.goto('/login')
-    await page.getByTestId('login-email').fill(email!)
-    await page.getByTestId('login-password').fill(password!)
-    await page.getByTestId('login-submit').click()
-    await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 20_000 })
+  await test.step('reuse a real phone-verified session', async () => {
+    await page.goto('/')
+    await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 15_000 })
   })
 
   let productUrl = '/products/' + encodeURIComponent(productSlug!)
