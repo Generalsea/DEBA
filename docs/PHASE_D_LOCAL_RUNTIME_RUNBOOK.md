@@ -78,3 +78,6 @@ Do not include secrets or OTP values.
 
 ## Completion rule
 Do not mark a step PASS without corresponding real evidence. A successful build or static test suite does not equal browser/runtime/provider verification.
+
+## Exact-head CI integrity rule
+A green GitHub Actions run certifies only the exact commit that was tested. Any later commit that changes application code, migrations, tests, workflows, or configuration invalidates that evidence until a new run succeeds on the new head. Documentation-only changes may reuse the prior software evidence only when the diff is independently verified as documentation-only.
