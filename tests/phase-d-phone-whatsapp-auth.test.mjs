@@ -375,3 +375,12 @@ test('Phase D legacy account linking is authenticated, WhatsApp-only, and server
   assert.match(provider, /VerificationCheck/)
   assert.match(provider, /DEBA_TWILIO_API_SECRET/)
 })
+
+test('Phase D cleans abandoned Auth phone-change state with no delivery timestamp', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+  assert.match(migration, /phone_change_sent_at is null/)
+  assert.match(migration, /phone_change = null/)
+  assert.match(migration, /phone_change_token = null/)
+  assert.match(migration, /phone_confirmed_at is null/)
+  assert.match(migration, /abandoned Auth phone-change state/)
+})
