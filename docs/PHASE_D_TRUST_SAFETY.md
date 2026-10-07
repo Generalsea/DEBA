@@ -136,3 +136,15 @@ The controlled legacy account phone-linking path is implemented on the Phase D b
 - contract coverage within `tests/phase-d-phone-whatsapp-auth.test.mjs`
 
 It is intentionally provider-gated. No Twilio secret is present in browser code, and production configuration remains untouched.
+
+
+## 2026-10-07 Auth phone-change hygiene checkpoint
+
+Production read-only inspection found two unconfirmed `auth.users.phone_change` values with no `phone_change_sent_at`. A rollback-only probe confirmed the Phase D migration's cleanup clause would clear both rows and leave zero matching abandoned attempts.
+
+No persistent production mutation was performed. The Phase D migration now:
+- clears abandoned unconfirmed `phone_change` state with no delivery timestamp during activation;
+- clears stale unconfirmed phone-change state older than the configured grace period;
+- runs the cleanup hourly via `pg_cron`.
+
+This prevents abandoned `phone_change` rows from interfering with later verified-phone linking.
