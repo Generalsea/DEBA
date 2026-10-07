@@ -1,10 +1,12 @@
 name: DEBA Phase D Trust
-# Runs once per Phase D branch push; avoid duplicate push/PR concurrency races.
+# Verify the exact Phase D head on both branch pushes and pull-request synchronization.
 
 on:
   push:
     branches:
       - 'feature/phase-d-trust-phone-whatsapp-otp-20261004'
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 permissions:
   contents: read
