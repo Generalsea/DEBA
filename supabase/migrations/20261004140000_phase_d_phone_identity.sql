@@ -3,6 +3,11 @@
 
 begin;
 
+-- Supabase Cron is backed by pg_cron. Enable it before referencing cron.job/cron.schedule.
+create extension if not exists pg_cron with schema pg_catalog;
+grant usage on schema cron to postgres;
+grant all privileges on all tables in schema cron to postgres;
+
 alter table public.profiles
   add column if not exists phone_verified boolean not null default false;
 
