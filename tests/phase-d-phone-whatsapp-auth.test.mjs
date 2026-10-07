@@ -365,9 +365,9 @@ test('Phase D legacy account linking is authenticated, WhatsApp-only, and server
   assert.match(verify, /channel.*whatsapp/)
   assert.match(verify, /updateUserById/)
   assert.match(verify, /phone_confirm: true/)
-  assert.match(verify, /profile_private/)
-  assert.match(verify, /phone: null/)
-  assert.match(verify, /phone_confirm: false/)
+  assert.match(verify, /auth\.admin\.updateUserById/)
+  assert.match(verify, /canonical write path/)
+  assert.doesNotMatch(verify, /from\(['"]profile_private['"]\)/)
   assert.doesNotMatch(verify, /signInWithOtp/)
 
   assert.match(provider, /verify\.twilio\.com\/v2\/Services/)
