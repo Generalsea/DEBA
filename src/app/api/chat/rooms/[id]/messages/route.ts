@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { consumeApiRateLimit } from '@/utils/rateLimit'
+import { requireVerifiedPhone } from '@/utils/auth/phoneTrust'
 
 type Context = { params: Promise<{ id: string }> }
 type MessageType = 'text' | 'image' | 'offer' | 'system'
@@ -369,8 +370,8 @@ async function handleMultipart(
 function validateLocation(value: unknown) {
   if (!value || typeof value !== 'object') return null
   const location = value as Record<string, unknown>
-  const latitude = Number(location.latitude)
-  const longitude = Number(location.longitude)
+  const latitude = Number(location.lat ?? location.latitude)
+  const longitude = Number(location.lng ?? location.longitude)
   const accuracy = Number(location.accuracy)
 
   if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) return null
@@ -426,13 +427,18 @@ export async function GET(request: Request, context: Context) {
 
 export async function POST(request: Request, context: Context) {
   try {
-    const supabase = await createClient()
-    const { data: userData } = await supabase.auth.getUser()
-    if (!userData.user) return NextResponse.json({ error: 'يجب تسجيل الدخول.' }, { status: 401 })
+    const trust = await requireVerifiedPhone()
+    if (trust.response) return trust.response
+
+    const supabase = trust.supabase
+    const user = trust.user
+    if (!user) {
+      return NextResponse.json({ error: 'يجب تسجيل الدخول.' }, { status: 401 })
+    }
 
     const rateLimit = await consumeApiRateLimit(
       supabase,
-      userData.user.id,
+      user.id,
       'chat:send',
       30,
       60,
@@ -447,12 +453,12 @@ export async function POST(request: Request, context: Context) {
     const { id: roomId } = await context.params
     if (!roomId) return NextResponse.json({ error: 'معرّف المحادثة مطلوب.' }, { status: 400 })
 
-    const access = await getAuthenticatedRoom(supabase, roomId, userData.user.id)
+    const access = await getAuthenticatedRoom(supabase, roomId, user.id)
     if ('error' in access) return access.error
 
     const contentType = request.headers.get('content-type') || ''
     if (contentType.includes('multipart/form-data')) {
-      return handleMultipart(request, supabase, roomId, userData.user.id)
+      return handleMultipart(request, supabase, roomId, user.id)
     }
 
     const payload = await request.json() as {
@@ -487,7 +493,7 @@ export async function POST(request: Request, context: Context) {
         request,
         supabase,
         roomId,
-        userData.user.id,
+        user.id,
         'offer',
         note || 'عرض سعر',
         {
@@ -517,7 +523,7 @@ export async function POST(request: Request, context: Context) {
           request,
           supabase,
           roomId,
-          userData.user.id,
+          user.id,
           'system',
           '📍 موقع مشترك',
           { kind: 'location', location },
@@ -583,7 +589,7 @@ export async function POST(request: Request, context: Context) {
       return NextResponse.json({ error: 'الرسالة مطلوبة وبحد أقصى 4000 حرف.' }, { status: 400 })
     }
 
-    const result = await insertMessage(request, supabase, roomId, userData.user.id, messageType, message, payload.metadata || {})
+    const result = await insertMessage(request, supabase, roomId, user.id, messageType, message, payload.metadata || {})
     if (result.error) return result.error
 
     return NextResponse.json(

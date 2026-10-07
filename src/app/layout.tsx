@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import './globals.css'
+import PresenceSessionTracker from '@/components/PresenceSessionTracker'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'http://localhost:3000').replace(/\/$/, '')
 
@@ -49,6 +50,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <PresenceSessionTracker />
         {children}
         <Script
           id="deba-theme-bootstrap"

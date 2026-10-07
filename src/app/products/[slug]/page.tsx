@@ -20,8 +20,8 @@ import FavoriteButton from '@/components/FavoriteButton'
 import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGallery'
 import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components/ProductDetailTabs'
 import ProductViewTracker from '@/components/ProductViewTracker'
+import UserPresence from '@/components/UserPresence'
 import ProductDealScore, { type ProductDealScoreData } from '@/components/ProductDealScore'
-import FutureMarketplacePanel from '@/components/FutureMarketplacePanel'
 import { createClient } from '@/utils/supabase/server'
 
 // Next.js 16 currently has a non-ASCII dynamic-route cache-tag issue.
@@ -103,6 +103,7 @@ type ProductRow = {
         governorate: string | null
         is_public: boolean
         account_type: 'buyer' | 'seller'
+        phone_verified: boolean
       }
     | null
 }
@@ -249,7 +250,7 @@ async function getProduct(slug: string) {
         ? supabase
             .from('profiles')
             .select(
-              'display_name,username,avatar_url,bio,city,governorate,is_public,account_type',
+              'display_name,username,avatar_url,bio,city,governorate,is_public,account_type,phone_verified',
             )
             .eq('id', product.owner_id)
             .maybeSingle()
@@ -511,14 +512,6 @@ export default async function ProductDetailPage({
               </span>
             </div>
 
-            <FutureMarketplacePanel
-              productId={product.id}
-              isOwner={isOwner}
-              isNegotiable={product.is_negotiable}
-              currency={product.currency || 'EGP'}
-              listingPrice={price}
-            />
-
             <ProductDealScore data={data.dealScore} />
 
             <div className="deba-detail-location">
@@ -635,9 +628,20 @@ export default async function ProductDetailPage({
                 )}
                 {product.seller?.bio && <p>{product.seller.bio}</p>}
               </div>
-              <div className="deba-seller-verified">
-                <ShieldCheck size={17} />
-                <span>حساب داخل DEBA</span>
+              <div className="deba-seller-verified-stack">
+                {product.seller?.phone_verified ? (
+                  <span className="deba-seller-verified">
+                    <ShieldCheck size={15} />
+                    هاتف موثّق
+                  </span>
+                ) : (
+                  <span className="deba-seller-verified is-muted">
+                    حساب داخل DEBA
+                  </span>
+                )}
+                {product.owner_id && !isOwner ? (
+                  <UserPresence userId={product.owner_id} compact label />
+                ) : null}
               </div>
             </section>
 

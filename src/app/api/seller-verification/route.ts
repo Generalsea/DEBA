@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { requireVerifiedPhone } from '@/utils/auth/phoneTrust'
 
 export async function GET() {
   try {
@@ -27,9 +28,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-    const { data: userData } = await supabase.auth.getUser()
-    if (!userData.user) return NextResponse.json({ error: 'يجب تسجيل الدخول.' }, { status: 401 })
+    const trust = await requireVerifiedPhone()
+    if (trust.response) return trust.response
+
+    const supabase = trust.supabase
+    const userData = { data: { user: trust.user } }
 
     const body = (await request.json()) as {
       verificationLevel?: string

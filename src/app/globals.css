@@ -2218,6 +2218,45 @@ textarea {
   font-weight: 900;
 }
 
+.deba-seller-verified-stack {
+  min-width: 0;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.deba-seller-verified.is-muted {
+  background: var(--deba-surface-2);
+  color: var(--deba-text-3);
+}
+
+.deba-seller-verified.is-trust {
+  background: var(--deba-green-soft);
+  color: var(--deba-green);
+}
+
+.deba-seller-rating-inline {
+  color: var(--deba-text-3);
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .deba-seller-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .deba-seller-verified-stack {
+    width: 100%;
+    align-items: flex-start;
+    padding-inline-start: 58px;
+  }
+}
+
 .deba-detail-trust-grid {
   margin-top: 12px;
   display: grid;
@@ -4555,6 +4594,11 @@ textarea {
   color: var(--deba-green);
   font-size: 8.5px;
   font-weight: 900;
+}
+
+.deba-profile-trust-badge.is-unverified {
+  background: var(--deba-surface-2);
+  color: var(--deba-text-3);
 }
 
 .deba-profile-hero-actions {
@@ -13708,4 +13752,334 @@ html[data-theme="dark"] .deba-comms-security-banner-sm {
   color: var(--deba-text-3);
   font-size: 9px;
   line-height: 1.7;
+}
+
+/* =========================================================
+   DEBA PHONE AUTH — TRUST-FIRST
+   ========================================================= */
+
+.deba-phone-auth-page {
+  min-height: 100svh;
+}
+
+.deba-phone-auth-card {
+  position: relative;
+}
+
+.deba-phone-auth-page .brand-logo {
+  text-decoration: none;
+}
+
+.deba-phone-auth-page .brand-logo-icon {
+  font-family: Inter, Arial, sans-serif;
+}
+
+.deba-auth-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 9px;
+  color: var(--deba-brand);
+  font-size: 8.5px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.deba-auth-progress {
+  margin: 0 0 17px;
+  padding: 9px;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 35px minmax(0,1fr);
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--deba-border);
+  border-radius: 13px;
+  background: var(--deba-surface-2);
+}
+
+.deba-auth-progress > div:not(.deba-auth-progress-line) {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 27px minmax(0,1fr);
+  align-items: center;
+  gap: 7px;
+}
+
+.deba-auth-progress > div > span {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--deba-surface);
+  color: var(--deba-text-3);
+  border: 1px solid var(--deba-border);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.deba-auth-progress > div.is-active > span,
+.deba-auth-progress > div.is-complete > span {
+  background: var(--deba-brand-soft);
+  border-color: var(--deba-brand);
+  color: var(--deba-brand-strong);
+}
+
+.deba-auth-progress strong,
+.deba-auth-progress small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.deba-auth-progress strong {
+  color: var(--deba-text);
+  font-size: 8.5px;
+  font-weight: 900;
+}
+
+.deba-auth-progress small {
+  margin-top: 1px;
+  color: var(--deba-text-3);
+  font-size: 7.5px;
+}
+
+.deba-auth-progress-line {
+  height: 1px;
+  background: var(--deba-border-strong);
+}
+
+.deba-phone-form,
+.deba-otp-form {
+  gap: 0;
+}
+
+.deba-phone-input {
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: 58px minmax(0,1fr);
+  overflow: hidden;
+  border: 1px solid var(--deba-border-strong);
+  border-radius: 11px;
+  background: var(--deba-surface);
+}
+
+.deba-phone-input:focus-within {
+  border-color: var(--deba-brand);
+  box-shadow: 0 0 0 3px var(--deba-brand-soft);
+}
+
+.deba-phone-prefix {
+  display: grid;
+  place-items: center;
+  border-inline-end: 1px solid var(--deba-border);
+  background: var(--deba-surface-2);
+  color: var(--deba-text);
+  font-family: Inter, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  direction: ltr;
+}
+
+.deba-phone-input input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  padding: 0 12px;
+  background: transparent;
+  color: var(--deba-text);
+  font: inherit;
+  font-size: 12px;
+  direction: ltr;
+  text-align: left;
+}
+
+.deba-auth-help {
+  display: block;
+  margin-top: 5px;
+  color: var(--deba-text-3);
+  font-size: 8.5px;
+  line-height: 1.65;
+}
+
+.deba-auth-trust-note,
+.deba-auth-policy {
+  display: grid;
+  grid-template-columns: 30px minmax(0,1fr);
+  align-items: start;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid var(--deba-border);
+  border-radius: 12px;
+  background: var(--deba-surface-2);
+}
+
+.deba-auth-trust-note {
+  margin: 3px 0 11px;
+}
+
+.deba-auth-trust-note svg,
+.deba-auth-policy svg {
+  margin-top: 1px;
+  color: var(--deba-brand);
+}
+
+.deba-auth-trust-note strong,
+.deba-auth-trust-note span {
+  display: block;
+}
+
+.deba-auth-trust-note strong {
+  color: var(--deba-text);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.deba-auth-trust-note span {
+  margin-top: 2px;
+  color: var(--deba-text-3);
+  font-size: 8px;
+  line-height: 1.7;
+}
+
+.deba-otp-summary {
+  margin-bottom: 12px;
+  padding: 11px 12px;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 4px 9px;
+  border: 1px solid var(--deba-border);
+  border-radius: 12px;
+  background: var(--deba-surface-2);
+}
+
+.deba-otp-summary > span {
+  color: var(--deba-text-3);
+  font-size: 8px;
+}
+
+.deba-otp-summary > strong {
+  grid-column: 1 / -1;
+  color: var(--deba-text);
+  font-family: Inter, Arial, sans-serif;
+  font-size: 13px;
+  letter-spacing: .04em;
+}
+
+.deba-otp-summary button {
+  justify-self: start;
+  border: 0;
+  background: transparent;
+  color: var(--deba-brand);
+  font: inherit;
+  font-size: 8.5px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.deba-otp-input {
+  min-height: 56px;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: .38em;
+  text-align: center;
+}
+
+.deba-otp-footer {
+  margin-top: 11px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--deba-text-3);
+  font-size: 8px;
+  line-height: 1.7;
+}
+
+.deba-auth-policy {
+  margin-top: 14px;
+}
+
+.deba-auth-policy p {
+  margin: 0;
+  color: var(--deba-text-3);
+  font-size: 8px;
+  line-height: 1.75;
+}
+
+@media (max-width: 760px) {
+  .deba-phone-auth-page .form-side {
+    padding: 16px 12px 28px;
+  }
+
+  .deba-phone-auth-card {
+    width: min(100%, 520px);
+  }
+
+  .deba-phone-auth-page .form-title {
+    font-size: 25px;
+  }
+
+  .deba-auth-progress {
+    grid-template-columns: minmax(0,1fr) 18px minmax(0,1fr);
+  }
+
+  .deba-auth-progress > div:not(.deba-auth-progress-line) {
+    grid-template-columns: 24px minmax(0,1fr);
+  }
+
+  .deba-auth-progress > div > span {
+    width: 24px;
+    height: 24px;
+  }
+
+  .deba-auth-progress strong {
+    font-size: 8px;
+  }
+
+  .deba-auth-progress small {
+    font-size: 7px;
+  }
+
+  .deba-phone-input {
+    min-height: 50px;
+  }
+
+  .deba-otp-input {
+    min-height: 60px;
+    font-size: 23px;
+  }
+}
+
+
+.deba-presence-indicator {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--deba-text-3);
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.deba-presence-indicator.is-online {
+  color: var(--deba-green);
+}
+
+.deba-presence-indicator.is-offline {
+  color: var(--deba-text-3);
+}
+
+.deba-presence-indicator.is-unavailable {
+  color: var(--deba-text-3);
+  opacity: .72;
+}
+
+.deba-presence-indicator.is-compact {
+  font-size: 7.5px;
+}
+
+.deba-presence-indicator.is-online svg {
+  filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 45%, transparent));
 }
