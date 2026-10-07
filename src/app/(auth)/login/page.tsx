@@ -198,9 +198,13 @@ export default function LoginPage() {
         return
       }
 
-      if (data.user.phone) {
+      if (
+        data.user.phone &&
+        data.user.phone_confirmed_at &&
+        isValidEgyptianPhone(data.user.phone)
+      ) {
         setLegacyPassword('')
-        setSuccess('تم تسجيل الدخول. حسابك مرتبط بالفعل بهاتف موثّق.')
+        setSuccess('تم تسجيل الدخول. حسابك مرتبط بالفعل بهاتف مصري موثّق.')
         router.replace(nextPath)
         router.refresh()
         return
@@ -836,6 +840,7 @@ export default function LoginPage() {
                   type="button"
                   className="forgot-link"
                   onClick={() => {
+                    void supabase.auth.signOut()
                     setLegacyPhone('')
                     setLegacyOtp('')
                     setStep('legacy-login')
