@@ -22,6 +22,7 @@ export default function PresenceSessionTracker() {
 
       channel = supabase.channel('deba:presence:' + userId, {
         config: {
+          private: true,
           presence: {
             key: userId,
           },
