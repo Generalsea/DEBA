@@ -45,6 +45,9 @@ jobs:
       - name: Full regression contracts
         run: npm test
 
+      - name: Playwright collection
+        run: npm run e2e:list
+
       - name: Typecheck
         run: npm run typecheck
 
