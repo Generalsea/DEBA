@@ -22,7 +22,6 @@ import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components
 import ProductViewTracker from '@/components/ProductViewTracker'
 import UserPresence from '@/components/UserPresence'
 import ProductDealScore, { type ProductDealScoreData } from '@/components/ProductDealScore'
-import FutureMarketplacePanel from '@/components/FutureMarketplacePanel'
 import { createClient } from '@/utils/supabase/server'
 
 // Next.js 16 currently has a non-ASCII dynamic-route cache-tag issue.
@@ -512,14 +511,6 @@ export default async function ProductDetailPage({
                 سعر ثابت
               </span>
             </div>
-
-            <FutureMarketplacePanel
-              productId={product.id}
-              isOwner={isOwner}
-              isNegotiable={product.is_negotiable}
-              currency={product.currency || 'EGP'}
-              listingPrice={price}
-            />
 
             <ProductDealScore data={data.dealScore} />
 
