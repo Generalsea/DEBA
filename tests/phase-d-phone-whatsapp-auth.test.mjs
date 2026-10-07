@@ -289,6 +289,17 @@ test('Phase D legacy phone constraint is intentionally NOT VALID while protectin
   assert.match(migration, /phone ~ '\^\\\+20\(10\|11\|12\|15\)\[0-9\]\{8\}\$'/)
 })
 
+test('Phase D migration SQL is structurally balanced and function bodies are closed', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+
+  assert.equal((migration.match(/^begin;$/gm) || []).length, 1)
+  assert.equal((migration.match(/^commit;$/gm) || []).length, 1)
+  assert.equal((migration.match(/\$function\$/g) || []).length % 2, 0)
+  assert.equal((migration.match(/\$cron\$/g) || []).length % 2, 0)
+  assert.doesNotMatch(migration, /\}\s*alter table/)
+  assert.equal(migration.slice(migration.indexOf('commit;') + 'commit;'.length).trim(), '')
+})
+
 test('Phase D migration has one transaction boundary and no production activation command', async () => {
   const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
   assert.equal((migration.match(/^begin;$/gm) || []).length, 1)
