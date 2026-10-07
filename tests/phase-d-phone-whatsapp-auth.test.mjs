@@ -180,6 +180,11 @@ test('Phase D synchronizes a newly confirmed Auth phone into profile_private', a
 })
 
 
+test('Phase D presence publisher uses a private Realtime channel', async () => {
+  const tracker = await read('src/components/PresenceSessionTracker.tsx')
+  assert.match(tracker, /config: \{[\s\S]*private: true,[\s\S]*presence:/)
+})
+
 test('Phase D presence is realtime, read-only for observers, and scoped per user', async () => {
   const tracker = await read('src/components/PresenceSessionTracker.tsx')
   const observer = await read('src/components/UserPresence.tsx')
