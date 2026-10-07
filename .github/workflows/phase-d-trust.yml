@@ -4,21 +4,7 @@ on:
   push:
     branches:
       - 'feature/phase-d-trust-phone-whatsapp-otp-20261004'
-  pull_request:
-    branches:
-      - 'feature/phase-c1-critical-marketplace-flow-20261004'
-      - 'rc/**'
-      - 'main'
   workflow_dispatch:
-    paths:
-      - 'src/**'
-      - 'supabase/migrations/**'
-      - 'tests/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'docs/**'
-      - '.github/workflows/phase-d-trust.yml'
-
 permissions:
   contents: read
 
