@@ -348,7 +348,7 @@ test('Phase D legacy account linking is authenticated, WhatsApp-only, and server
 
   assert.match(login, /signInWithPassword/)
   assert.match(login, /legacy-phone/)
-  assert.match(login, /لن يتم إنشاء حساب جديد/)
+  assert.match(login, /لا يتم إنشاء حساب جديد/)
   assert.doesNotMatch(login, /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY|DEBA_TWILIO_API_SECRET|service_role/i)
 
   assert.match(send, /supabase\.auth\.getUser/)
