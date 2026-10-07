@@ -300,6 +300,13 @@ test('Phase D migration SQL is structurally balanced and function bodies are clo
   assert.equal(migration.slice(migration.indexOf('commit;') + 'commit;'.length).trim(), '')
 })
 
+test('Phase D migration enables pg_cron before referencing cron jobs', async () => {
+  const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
+  assert.match(migration, /create extension if not exists pg_cron with schema pg_catalog/)
+  assert.match(migration, /cron\.job/)
+  assert.match(migration, /cron\.schedule/)
+})
+
 test('Phase D migration has one transaction boundary and no production activation command', async () => {
   const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
   assert.equal((migration.match(/^begin;$/gm) || []).length, 1)
