@@ -23,14 +23,17 @@ test('Phase D phone normalizer accepts Egyptian mobile E.164 only', async () => 
 
 test('Phase D OTP send is WhatsApp-only and rate-limited server-side', async () => {
   const route = await read('src/app/api/auth/otp/send/route.ts')
+  const provider = await read('src/lib/auth/whatsappOtpProvider.ts')
   const limiter = await read('src/utils/auth/otpRateLimit.ts')
 
   assert.match(route, /sameOrigin/)
   assert.match(route, /enforceOtpSendRateLimits/)
-  assert.match(route, /channel: 'whatsapp'/)
-  assert.match(route, /shouldCreateUser: true/)
-  assert.doesNotMatch(route, /channel: 'sms'/)
+  assert.match(route, /sendWhatsAppOtp/)
   assert.doesNotMatch(route, /DEBA_ALLOW_DEV_OTP|console.*OTP/i)
+
+  assert.match(provider, /channel: 'whatsapp'/)
+  assert.match(provider, /shouldCreateUser: true/)
+  assert.doesNotMatch(provider, /channel: 'sms'/)
 
   assert.match(limiter, /consume_api_rate_limit/)
   assert.match(limiter, /sha256/)
@@ -42,12 +45,14 @@ test('Phase D OTP send is WhatsApp-only and rate-limited server-side', async () 
 
 test('Phase D OTP verification uses the Supabase phone OTP verification contract', async () => {
   const route = await read('src/app/api/auth/otp/verify/route.ts')
+  const provider = await read('src/lib/auth/whatsappOtpProvider.ts')
 
   assert.match(route, /enforceOtpVerifyRateLimits/)
-  assert.match(route, /verifyOtp/)
-  assert.match(route, /type: 'sms'/)
+  assert.match(route, /verifyWhatsAppOtp/)
   assert.match(route, /PHONE.*?verification|رمز التحقق/s)
   assert.doesNotMatch(route, /email.*otp|magiclink/i)
+  assert.match(provider, /verifyOtp/)
+  assert.match(provider, /type: 'sms'/)
 })
 
 test('Phase D phone trust cannot be self-asserted through public.profiles', async () => {
@@ -147,8 +152,10 @@ test('Phase D prevents direct profile phone mutation outside Auth verification',
 
 test('Phase D seller verification is downstream of verified phone trust', async () => {
   const route = await read('src/app/api/seller-verification/route.ts')
+  const trust = await read('src/utils/auth/phoneTrust.ts')
   assert.match(route, /requireVerifiedPhone/)
-  assert.match(route, /status: 403/)
+  assert.match(trust, /status: 403/)
+  assert.match(trust, /PHONE_VERIFICATION_REQUIRED/)
 })
 
 test('Phase D stale phone-change cleanup is scheduled and removes unconfirmed stale attempts', async () => {
@@ -162,10 +169,12 @@ test('Phase D stale phone-change cleanup is scheduled and removes unconfirmed st
 
 test('Phase D reuses existing trust and safety infrastructure instead of inventing a parallel risk stack', async () => {
   const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
-  const risk = await read('supabase/migrations/20260921210000_risk_engine.sql')
+  const rateLimits = await read('supabase/migrations/20260925163447_api_rate_limits.sql')
+  const risk = await read('supabase/migrations/20260921204433_risk_engine.sql')
   const trust = await read('supabase/migrations/20260925201854_public_profiles_trust_reviews_moderation_20260925.sql')
 
-  assert.match(migration, /api_rate_limit/i)
+  assert.match(migration, /consume_api_rate_limit|api_rate_limits/i)
+  assert.match(rateLimits, /api_rate_limits|consume_api_rate_limit/)
   assert.match(risk, /risk_assessments/)
   assert.match(trust, /chat_security_events|reports|auto_pause_reported_product/)
 })
@@ -175,7 +184,7 @@ test('Phase D keeps seller trust signals evidence-backed', async () => {
   const page = await read('src/app/products/[slug]/page.tsx')
   const trustMigration = await read('supabase/migrations/20260925201854_public_profiles_trust_reviews_moderation_20260925.sql')
 
-  assert.match(page, /get_seller_rating_summary/)
+  assert.match(page, /get_product_trust_evidence/)
   assert.match(page, /phone_verified/)
   assert.match(page, /هاتف موثّق/)
   assert.match(page, /بائع موثّق/)
@@ -215,7 +224,7 @@ test('Phase D presence is realtime, read-only for observers, and scoped per user
   assert.doesNotMatch(observer, /\.track\(/)
 
   assert.match(account, /<UserPresence userId={account\.userId}/)
-  assert.match(account, /متصل الآن/)
+  assert.match(observer, /متصل الآن/)
   assert.match(layout, /<PresenceSessionTracker \/>/)
 })
 
@@ -238,7 +247,7 @@ test('Phase D presence uses private Realtime channels with RLS owner-only publis
   assert.match(migration, /deba:presence:%/)
   assert.match(migration, /deba:presence:'? \|\|?/)
   assert.match(migration, /auth\.uid\(\)/)
-  assert.match(tracker, /config: \{ private: true \}/)
+  assert.match(tracker, /config: \{[\s\S]*private: true,[\s\S]*presence:/)
   assert.match(observer, /config: \{ private: true \}/)
 })
 
