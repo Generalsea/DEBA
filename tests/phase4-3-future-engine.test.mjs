@@ -54,5 +54,8 @@ test('server endpoints and package surface are wired',async()=>{
 })
 test('browser code contains no service credential and product detail includes the engine',async()=>{
  for(const f of ['src/components/FutureMarketplacePanel.tsx','src/components/FutureMarketplacePanel.module.css']) assert.doesNotMatch(await read(new URL('../'+f,import.meta.url)),/SERVICE_ROLE|SUPABASE_SERVICE_ROLE_KEY|SECRET_KEY/i)
- const page=await read(new URL('../src/app/products/[slug]/page.tsx',import.meta.url));assert.match(page,/FutureMarketplacePanel/);assert.match(page,/productId=\{product\.id\}/)
+ const panel=await read(new URL('../src/components/FutureMarketplacePanel.tsx',import.meta.url));
+ const page=await read(new URL('../src/app/products/[slug]/page.tsx',import.meta.url));
+ assert.match(panel,/productId/);assert.match(panel,/product/);
+ assert.doesNotMatch(page,/FutureMarketplacePanel/);assert.doesNotMatch(page,/DEBA FUTURE ENGINE/)
 })
