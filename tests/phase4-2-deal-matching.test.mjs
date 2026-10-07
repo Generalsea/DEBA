@@ -33,7 +33,7 @@ test('deal intelligence uses published approved sale comparables and returns a s
   assert.match(component, /مؤشر السعر الذكي/)
   assert.match(component, /متوسط المقارنة/)
   assert.match(component, /الربع الأدنى/)
-  assert.match(component, /إعلان مقارنة/)
+  assert.match(component, /مقارنة مع .*إعلانًا مشابهًا/)
   assert.match(component, /insufficient_data/)
 })
 
