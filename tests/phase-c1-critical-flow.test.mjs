@@ -83,6 +83,7 @@ test('C1 listing detail is classified-first and hides irrelevant commerce/auctio
   const tabs = await read('src/components/ProductDetailTabs.tsx')
 
   assert.match(page, /<strong>تواصل مع البائع<\/strong>/)
+  assert.doesNotMatch(page, /FutureMarketplacePanel/)
   assert.match(page, /<small>اسأل عن التفاصيل، المعاينة، والاستلام قبل الاتفاق النهائي\.<\/small>/)
   assert.doesNotMatch(page, /<strong>اشترِ الآن<\/strong>/)
   assert.doesNotMatch(page, /CartAddButton/)
