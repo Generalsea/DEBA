@@ -639,20 +639,6 @@ export default async function ProductDetailPage({
                     حساب داخل DEBA
                   </span>
                 )}
-                {sellerTrust?.verifiedSeller ? (
-                  <span className="deba-seller-verified is-trust">
-                    <BadgeCheck size={15} />
-                    بائع موثّق
-                  </span>
-                ) : null}
-                {sellerTrust?.reviewCount ? (
-                  <span className="deba-seller-rating-inline">
-                    ★ {sellerTrust.averageRating.toLocaleString('ar-EG', {
-                      minimumFractionDigits: 1,
-                      maximumFractionDigits: 1,
-                    })} · {sellerTrust.reviewCount.toLocaleString('ar-EG')} تقييم
-                  </span>
-                ) : null}
                 {product.owner_id && !isOwner ? (
                   <UserPresence userId={product.owner_id} compact label />
                 ) : null}
