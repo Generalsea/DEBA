@@ -1,4 +1,5 @@
 name: DEBA Phase D Trust
+# Runs once per Phase D branch push; avoid duplicate push/PR concurrency races.
 
 on:
   push:
