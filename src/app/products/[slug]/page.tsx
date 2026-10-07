@@ -10,7 +10,6 @@ import {
   MessageCircle,
   Package,
   ShieldCheck,
-  Truck,
   UserRound,
 } from 'lucide-react'
 import { notFound } from 'next/navigation'
@@ -80,11 +79,9 @@ type ProductRow = {
   condition_details: string | null
   price: number | string | null
   currency: string
-  quantity: number
   city: string | null
   governorate: string | null
   district: string | null
-  delivery_method: string
   metadata: ProductMetadata | null
   details_schema_version: number
   details_last_completed_at: string | null
@@ -109,7 +106,7 @@ type ProductRow = {
 }
 
 const SELECT =
-  'id,owner_id,title,slug,description,listing_type,status,moderation_status,condition_grade,condition_details,price,currency,is_negotiable,quantity,city,governorate,district,delivery_method,metadata,details_schema_version,details_last_completed_at,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
+  'id,owner_id,title,slug,description,listing_type,status,moderation_status,condition_grade,condition_details,price,currency,is_negotiable,city,governorate,district,metadata,details_schema_version,details_last_completed_at,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
 
 const CONDITION_LABELS: Record<string, string> = {
   new: 'جديد',
@@ -119,13 +116,6 @@ const CONDITION_LABELS: Record<string, string> = {
   fair: 'مستعمل - مقبول',
   poor: 'مستعمل - يحتاج عناية',
   for_parts: 'للقطع / الإصلاح',
-}
-
-const DELIVERY_LABELS: Record<string, string> = {
-  pickup: 'استلام من البائع',
-  seller_delivery: 'توصيل عبر البائع',
-  platform_delivery: 'توصيل عبر DEBA',
-  both: 'استلام أو توصيل',
 }
 
 function normalizePrice(value: number | string | null) {
@@ -359,7 +349,7 @@ export async function generateMetadata({
   }
 
   const description =
-    data.description || 'تفاصيل المنتج والسعر والتنسيق على الاستلام عبر DEBA.'
+    data.description || 'تفاصيل الإعلان والسعر والموقع والتواصل مع البائع عبر DEBA.'
 
   return {
     title: data.title + ' — DEBA',
@@ -410,7 +400,7 @@ export default async function ProductDetailPage({
       ? CONDITION_LABELS[product.condition_grade] || 'حالة موثقة'
       : 'حالة غير محددة'
   const isOwner = Boolean(product.owner_id && data.userId === product.owner_id)
-  const canContact = Boolean(product.owner_id && product.quantity > 0)
+  const canContact = Boolean(product.owner_id)
   const contactHref = '/chat?product=' + encodeURIComponent(product.id)
 
   return (
@@ -464,9 +454,9 @@ export default async function ProductDetailPage({
                 </div>
               ) : null}
               <div>
-                <Truck size={20} />
-                <strong>الاستلام واضح</strong>
-                <span>{DELIVERY_LABELS[product.delivery_method] || product.delivery_method}</span>
+                <MessageCircle size={20} />
+                <strong>التواصل داخل DEBA</strong>
+                <span>نسّق المعاينة والتفاصيل النهائية مباشرة مع البائع.</span>
               </div>
             </section>
           </div>
@@ -557,7 +547,7 @@ export default async function ProductDetailPage({
                   <Package size={18} />
                   <div>
                     <strong>الإعلان غير متاح للتواصل حاليًا</strong>
-                    <span>لا توجد وحدات متاحة وفق حالة الإعلان الحالية.</span>
+                    <span>تعذر فتح قناة التواصل مع هذا الإعلان الآن.</span>
                   </div>
                 </div>
               )}
@@ -585,14 +575,6 @@ export default async function ProductDetailPage({
               <div>
                 <span>القسم</span>
                 <strong>{product.category?.name_ar || 'غير محدد'}</strong>
-              </div>
-              <div>
-                <span>الكمية المتاحة</span>
-                <strong>{product.quantity.toLocaleString('ar-EG')}</strong>
-              </div>
-              <div>
-                <span>الاستلام</span>
-                <strong>{DELIVERY_LABELS[product.delivery_method] || product.delivery_method}</strong>
               </div>
               <div>
                 <span>الموقع</span>
@@ -651,8 +633,7 @@ export default async function ProductDetailPage({
               <ShieldCheck size={17} />
               <span>
                 السعر الظاهر هو السعر المطلوب من البائع.
-                تواصل مع البائع داخل DEBA للاتفاق على التفاصيل والتسليم.
-                الدفع الإلكتروني غير مفعّل حاليًا.
+                تواصل مع البائع داخل DEBA للاتفاق على التفاصيل النهائية.
               </span>
             </div>
           </div>
@@ -666,8 +647,6 @@ export default async function ProductDetailPage({
           conditionLabel={condition}
           categoryName={product.category?.name_ar || product.category?.name_en || 'غير محدد'}
           location={location || 'يُحدد مع البائع'}
-          deliveryLabel={DELIVERY_LABELS[product.delivery_method] || product.delivery_method}
-          quantity={product.quantity}
           publishedDate={formatPublishedDate(product.published_at || product.created_at)}
           detailsSchemaVersion={product.details_schema_version}
           detailsLastCompletedAt={product.details_last_completed_at}
@@ -688,7 +667,7 @@ export default async function ProductDetailPage({
           <div>
             <span>3</span>
             <strong>تواصل واتفق</strong>
-            <small>ابدأ محادثة داخل DEBA واتفق مع البائع على السعر والتسليم.</small>
+            <small>ابدأ محادثة داخل DEBA واتفق مع البائع على التفاصيل النهائية.</small>
           </div>
         </section>
 
