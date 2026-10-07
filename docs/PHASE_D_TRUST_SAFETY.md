@@ -70,9 +70,22 @@ Production WhatsApp OTP still requires the project's real Supabase Phone provide
 
 The code intentionally does not contain provider secrets.
 
-## Safety limitation
+## Legacy account continuity
 
-Existing legacy accounts were created before phone identity became mandatory. They are not silently duplicated or converted by this branch. A controlled account migration/linking procedure is required for those accounts.
+Pre-phone email/password accounts are not silently duplicated or converted. The login UI exposes a controlled legacy path:
+
+EMAIL/PASSWORD → authenticated legacy session → WhatsApp phone verification → server-side Auth phone binding
+
+The legacy flow:
+- requires an authenticated session and a confirmed account email;
+- accepts Egyptian mobile numbers only;
+- uses Twilio Verify with an explicit `whatsapp` channel;
+- does not use `signInWithOtp(phone)`, preventing accidental creation of a second phone-auth account;
+- confirms the external verification before calling server-side `updateUserById`;
+- synchronizes the private profile phone and fails closed if synchronization cannot complete;
+- never grants marketplace trust until `auth.users.phone_confirmed_at` and the Egyptian phone contract are both satisfied.
+
+Twilio Verify can have WhatsApp-to-SMS fallback depending on service configuration. DEBA must use a Verify Service with SMS fallback disabled; otherwise the legacy flow is not release-cleared.
 
 ## Runtime status
 
@@ -87,7 +100,7 @@ Listing detail trust is evidence-backed: phone trust comes from `auth.users.phon
 
 ## Verification checkpoint
 
-2026-10-04: Phase D workflow is configured for branch pushes and pull requests; GitHub run visibility remains an external verification gate until a run is observed.
+2026-10-07: Phase D verification workflow is configured for branch pushes, pull-request synchronization, and manual dispatch. A new code/configuration change invalidates prior green CI evidence until the current head is verified.
 
 
 ## Realtime presence security
@@ -111,3 +124,15 @@ At listing insertion, DEBA now computes an advisory `possible_duplicate_listing`
 - A production-safe transaction dry-run of `20261004140000_phase_d_phone_identity.sql` initially exposed a missing `cron.job` relation because `pg_cron` was available but not enabled in the live project. The migration was corrected to enable `pg_cron` before using `cron.job`/`cron.schedule`; the full dry-run then completed successfully and was rolled back, leaving production unchanged.
 - The dry-run also exercised the phone-trust boundary against an existing unverified Auth user: the marketplace phone guard rejected the user, `profiles.phone_verified` could not be self-asserted, direct private-phone mutation was rejected, and `start_seller_verification` remained blocked. The entire probe was rolled back.
 - The production project still has one legacy private profile phone value outside the new Egyptian E.164 contract, with no corresponding Auth phone. It remains preserved and is not auto-mutated.
+
+
+## 2026-10-07 legacy continuity implementation checkpoint
+
+The controlled legacy account phone-linking path is implemented on the Phase D branch:
+- `src/lib/auth/legacyPhoneVerification.ts`
+- `src/app/api/auth/legacy-phone/send/route.ts`
+- `src/app/api/auth/legacy-phone/verify/route.ts`
+- legacy account UI state within `src/app/(auth)/login/page.tsx`
+- contract coverage within `tests/phase-d-phone-whatsapp-auth.test.mjs`
+
+It is intentionally provider-gated. No Twilio secret is present in browser code, and production configuration remains untouched.
