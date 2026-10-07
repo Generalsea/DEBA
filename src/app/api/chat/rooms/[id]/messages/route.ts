@@ -393,7 +393,7 @@ export async function GET(request: Request, context: Context) {
     const { id: roomId } = await context.params
     if (!roomId) return NextResponse.json({ error: 'معرّف المحادثة مطلوب.' }, { status: 400 })
 
-    const access = await getAuthenticatedRoom(supabase, roomId, user.id)
+    const access = await getAuthenticatedRoom(supabase, roomId, userData.user.id)
     if ('error' in access) return access.error
 
     const url = new URL(request.url)
