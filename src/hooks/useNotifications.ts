@@ -114,7 +114,7 @@ export function useNotifications() {
       if (!mounted || !user) return
 
       channel = supabase
-        .channel('deba-notifications:' + user.id)
+        .channel('deba-notifications:' + user.id, { config: { private: true } })
         .on(
           'postgres_changes',
           {
