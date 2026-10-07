@@ -103,3 +103,11 @@ The existing message pipeline now annotates deterministic advisory signals for u
 ## Duplicate-listing defense
 
 At listing insertion, DEBA now computes an advisory `possible_duplicate_listing` signal for the same owner/category when a recently created listing has very high normalized-title similarity and a nearby price. It does not auto-block the seller; moderation retains the final decision path.
+
+
+## 2026-10-07 verification checkpoint
+
+- GitHub Actions now produces a real Push-triggered `verify` run on the Phase D branch. Check Runs confirmed success through dependency installation, release preflight, Phase D contracts, full regression contracts, Playwright collection, typecheck and build.
+- A production-safe transaction dry-run of `20261004140000_phase_d_phone_identity.sql` initially exposed a missing `cron.job` relation because `pg_cron` was available but not enabled in the live project. The migration was corrected to enable `pg_cron` before using `cron.job`/`cron.schedule`; the full dry-run then completed successfully and was rolled back, leaving production unchanged.
+- The dry-run also exercised the phone-trust boundary against an existing unverified Auth user: the marketplace phone guard rejected the user, `profiles.phone_verified` could not be self-asserted, direct private-phone mutation was rejected, and `start_seller_verification` remained blocked. The entire probe was rolled back.
+- The production project still has one legacy private profile phone value outside the new Egyptian E.164 contract, with no corresponding Auth phone. It remains preserved and is not auto-mutated.
