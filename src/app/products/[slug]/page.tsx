@@ -10,18 +10,17 @@ import {
   MessageCircle,
   Package,
   ShieldCheck,
-  ShoppingBag,
-  Truck,
   UserRound,
 } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import Header, { type HeaderCategory } from '@/components/Header'
 import ProductCard, { type ProductCardItem } from '@/components/ProductCard'
 import FavoriteButton from '@/components/FavoriteButton'
-import CartAddButton from '@/components/CartAddButton'
 import ProductGallery, { type ProductGalleryImage } from '@/components/ProductGallery'
 import ProductDetailTabs, { type ProductAttributeDefinition } from '@/components/ProductDetailTabs'
 import ProductViewTracker from '@/components/ProductViewTracker'
+import UserPresence from '@/components/UserPresence'
+import ProductDealScore, { type ProductDealScoreData } from '@/components/ProductDealScore'
 import { createClient } from '@/utils/supabase/server'
 
 // Next.js 16 currently has a non-ASCII dynamic-route cache-tag issue.
@@ -51,6 +50,22 @@ type ImageRow = {
 
 type ProductMetadata = Record<string, unknown>
 
+type VisualTrustEvidence = {
+  inspection_id: string
+  visual_score: number | null
+  structural_score: number | null
+  cleanliness_score: number | null
+  description_consistency_score: number | null
+  condition_grade: string | null
+  confidence: number | null
+  damage_flags: unknown
+  observations: unknown
+  verified_badge: boolean
+  provider: string | null
+  model_name: string | null
+  completed_at: string | null
+}
+
 type ProductRow = {
   id: string
   owner_id: string | null
@@ -64,16 +79,15 @@ type ProductRow = {
   condition_details: string | null
   price: number | string | null
   currency: string
-  quantity: number
   city: string | null
   governorate: string | null
   district: string | null
-  delivery_method: string
   metadata: ProductMetadata | null
   details_schema_version: number
   details_last_completed_at: string | null
   published_at: string | null
   created_at: string
+  is_negotiable: boolean
   category: Category | null
   images: ImageRow[] | null
   seller:
@@ -86,12 +100,13 @@ type ProductRow = {
         governorate: string | null
         is_public: boolean
         account_type: 'buyer' | 'seller'
+        phone_verified: boolean
       }
     | null
 }
 
 const SELECT =
-  'id,owner_id,title,slug,description,listing_type,status,moderation_status,condition_grade,condition_details,price,currency,quantity,city,governorate,district,delivery_method,metadata,details_schema_version,details_last_completed_at,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
+  'id,owner_id,title,slug,description,listing_type,status,moderation_status,condition_grade,condition_details,price,currency,is_negotiable,city,governorate,district,metadata,details_schema_version,details_last_completed_at,published_at,created_at,category:categories!products_category_id_fkey(id,name_ar,name_en,slug),images:product_images!product_images_product_id_fkey(id,storage_path,alt_text,sort_order,is_primary)'
 
 const CONDITION_LABELS: Record<string, string> = {
   new: 'جديد',
@@ -101,13 +116,6 @@ const CONDITION_LABELS: Record<string, string> = {
   fair: 'مستعمل - مقبول',
   poor: 'مستعمل - يحتاج عناية',
   for_parts: 'للقطع / الإصلاح',
-}
-
-const DELIVERY_LABELS: Record<string, string> = {
-  pickup: 'استلام من البائع',
-  seller_delivery: 'توصيل عبر البائع',
-  platform_delivery: 'توصيل عبر DEBA',
-  both: 'استلام أو توصيل',
 }
 
 function normalizePrice(value: number | string | null) {
@@ -224,13 +232,15 @@ async function getProduct(slug: string) {
     userId,
     categoriesResponse,
     attributeDefinitionsResponse,
+    dealScoreResponse,
     relatedResponse,
+    trustResponse,
   ] = await Promise.all([
       product.owner_id
         ? supabase
             .from('profiles')
             .select(
-              'display_name,username,avatar_url,bio,city,governorate,is_public,account_type',
+              'display_name,username,avatar_url,bio,city,governorate,is_public,account_type,phone_verified',
             )
             .eq('id', product.owner_id)
             .maybeSingle()
@@ -249,6 +259,9 @@ async function getProduct(slug: string) {
             .eq('is_required', true)
             .order('sort_order', { ascending: true })
         : Promise.resolve({ data: [], error: null }),
+      supabase
+        .rpc('get_product_deal_score', { p_product_id: product.id })
+        .maybeSingle(),
       product.category?.id
         ? supabase
             .from('products')
@@ -261,10 +274,16 @@ async function getProduct(slug: string) {
             .order('published_at', { ascending: false, nullsFirst: false })
             .limit(4)
         : Promise.resolve({ data: [], error: null }),
+      supabase
+        .rpc('get_product_trust_evidence', { p_product_id: product.id })
+        .maybeSingle<VisualTrustEvidence>(),
     ])
 
   if (sellerResponse.error) {
     console.error('DEBA seller query failed', sellerResponse.error)
+  }
+  if (dealScoreResponse.error) {
+    console.error('DEBA deal score query failed', dealScoreResponse.error)
   }
   product.seller = sellerResponse.data || null
 
@@ -300,6 +319,8 @@ async function getProduct(slug: string) {
     isFavorite,
     favoriteCount,
     negotiationCount: 0,
+    dealScore: (dealScoreResponse.data as ProductDealScoreData | null) || null,
+    trustEvidence: (trustResponse.data || null) as VisualTrustEvidence | null,
     categories: ((categoriesResponse.data || []) as Category[]).map(mapCategory),
     definitions: ((attributeDefinitionsResponse.data || []) as unknown as ProductAttributeDefinition[]),
     related,
@@ -328,7 +349,7 @@ export async function generateMetadata({
   }
 
   const description =
-    data.description || 'تفاصيل المنتج والسعر والتنسيق على الاستلام عبر DEBA.'
+    data.description || 'تفاصيل الإعلان والسعر والموقع والتواصل مع البائع عبر DEBA.'
 
   return {
     title: data.title + ' — DEBA',
@@ -349,6 +370,7 @@ export default async function ProductDetailPage({
   if (!data) notFound()
 
   const { product } = data
+  const trustEvidence = data.trustEvidence
   const images: ProductGalleryImage[] = [...(product.images || [])]
     .sort(
       (left, right) =>
@@ -378,28 +400,13 @@ export default async function ProductDetailPage({
       ? CONDITION_LABELS[product.condition_grade] || 'حالة موثقة'
       : 'حالة غير محددة'
   const isOwner = Boolean(product.owner_id && data.userId === product.owner_id)
-  const canBuy = Boolean(product.owner_id) && price !== null && price > 0 && product.quantity > 0
-  const purchaseHref = '/products/' + encodeURIComponent(product.slug) + '/checkout'
-  const cartProduct = price !== null ? {
-    id: product.id,
-    title: product.title,
-    slug: product.slug,
-    price,
-    currency: product.currency || 'EGP',
-    conditionGrade: product.condition_grade,
-    listingType: 'sale' as const,
-    quantityAvailable: product.quantity,
-    sellerId: product.owner_id || '',
-    sellerName,
-    sellerAvatar: product.seller?.avatar_url || null,
-    imageUrl: images[0]?.url || null,
-    imageAlt: images[0]?.alt || product.title,
-    deliveryMethod: product.delivery_method as 'pickup' | 'seller_delivery' | 'platform_delivery' | 'both',
-  } : null
+  const canContact = Boolean(product.owner_id)
+  const contactHref = '/chat?product=' + encodeURIComponent(product.id)
 
   return (
     <>
       <Header
+        variant="classified"
         categories={data.categories}
         favoriteCount={data.favoriteCount}
         negotiationCount={data.negotiationCount}
@@ -433,13 +440,23 @@ export default async function ProductDetailPage({
               </div>
               <div>
                 <BadgeCheck size={20} />
-                <strong>سعر ثابت</strong>
-                <span>السعر المعلن ثابت ويمكنك إتمام الطلب مباشرة.</span>
+                <strong>السعر المطلوب</strong>
+                <span>السعر الذي حدده البائع لهذا الإعلان. التواصل والاتفاق يتمان بين الطرفين عبر DEBA.</span>
               </div>
+              {trustEvidence?.verified_badge ? (
+                <div>
+                  <ShieldCheck size={20} />
+                  <strong>فحص بصري موثوق</strong>
+                  <span>
+                    ثقة الفحص {Math.round(trustEvidence.confidence || 0)}٪، مع مقارنة الأدلة
+                    المرئية بالوصف المقدم من البائع.
+                  </span>
+                </div>
+              ) : null}
               <div>
-                <Truck size={20} />
-                <strong>الاستلام واضح</strong>
-                <span>{DELIVERY_LABELS[product.delivery_method] || product.delivery_method}</span>
+                <MessageCircle size={20} />
+                <strong>التواصل داخل DEBA</strong>
+                <span>نسّق المعاينة والتفاصيل النهائية مباشرة مع البائع.</span>
               </div>
             </section>
           </div>
@@ -455,6 +472,12 @@ export default async function ProductDetailPage({
                   <CheckCircle2 size={14} />
                   سعر ثابت
                 </span>
+                {trustEvidence?.verified_badge ? (
+                  <span className="deba-detail-badge">
+                    <ShieldCheck size={14} />
+                    فحص بصري موثوق
+                  </span>
+                ) : null}
               </div>
 
               <FavoriteButton
@@ -479,6 +502,8 @@ export default async function ProductDetailPage({
               </span>
             </div>
 
+            <ProductDealScore data={data.dealScore} />
+
             <div className="deba-detail-location">
               <MapPin size={16} />
               <span>{location || 'الموقع يُحدد مع البائع'}</span>
@@ -490,37 +515,39 @@ export default async function ProductDetailPage({
                   <UserRound size={18} />
                   <div>
                     <strong>هذا إعلانك</strong>
-                    <span>يمكنك إدارة إعلانك، لكن لا يمكنك شراء سلعتك الخاصة.</span>
+                    <span>يمكنك إدارة الإعلان ومتابعة اهتمام المشترين، لكن لا يمكنك مراسلة نفسك من هذا الإعلان.</span>
                   </div>
                 </div>
-              ) : canBuy ? (
+              ) : canContact ? (
                 <div className="deba-purchase-actions">
-                  {cartProduct ? <CartAddButton product={cartProduct} /> : null}
-
-                  <Link href={purchaseHref} className="deba-purchase-primary">
-                  <span className="deba-purchase-primary-icon">
-                    <ShoppingBag size={21} />
-                  </span>
+                  <Link href={contactHref} className="deba-purchase-primary">
+                    <span className="deba-purchase-primary-icon">
+                      <MessageCircle size={21} />
+                    </span>
                     <span>
-                      <strong>اشترِ الآن</strong>
-                      <small>السعر ثابت — اختر الكمية وطريقة الاستلام ثم أكد طلبك</small>
+                      <strong>تواصل مع البائع</strong>
+                      <small>اسأل عن التفاصيل، المعاينة، والاستلام قبل الاتفاق النهائي.</small>
                     </span>
                     <ArrowLeft size={20} />
                   </Link>
-                  <Link
-                    href={'/chat?product=' + encodeURIComponent(product.id)}
-                    className="deba-purchase-chat"
-                  >
-                    <MessageCircle size={17} />
-                    <span>تواصل مع البائع</span>
-                  </Link>
+                  {product.is_negotiable ? (
+                    <Link href={contactHref} className="deba-purchase-chat">
+                      <MessageCircle size={17} />
+                      <span>راسل البائع وأرسل عرضًا</span>
+                    </Link>
+                  ) : (
+                    <span className="deba-purchase-chat is-static">
+                      <CheckCircle2 size={17} />
+                      <span>السعر ثابت — التواصل المباشر هو الخطوة التالية</span>
+                    </span>
+                  )}
                 </div>
               ) : (
                 <div className="deba-owner-notice is-muted">
                   <Package size={18} />
                   <div>
-                    <strong>المنتج غير متاح للشراء حاليًا</strong>
-                    <span>تحقق من توفر الكمية والسعر ثم حاول مرة أخرى.</span>
+                    <strong>الإعلان غير متاح للتواصل حاليًا</strong>
+                    <span>تعذر فتح قناة التواصل مع هذا الإعلان الآن.</span>
                   </div>
                 </div>
               )}
@@ -548,14 +575,6 @@ export default async function ProductDetailPage({
               <div>
                 <span>القسم</span>
                 <strong>{product.category?.name_ar || 'غير محدد'}</strong>
-              </div>
-              <div>
-                <span>الكمية المتاحة</span>
-                <strong>{product.quantity.toLocaleString('ar-EG')}</strong>
-              </div>
-              <div>
-                <span>الاستلام</span>
-                <strong>{DELIVERY_LABELS[product.delivery_method] || product.delivery_method}</strong>
               </div>
               <div>
                 <span>الموقع</span>
@@ -591,9 +610,20 @@ export default async function ProductDetailPage({
                 )}
                 {product.seller?.bio && <p>{product.seller.bio}</p>}
               </div>
-              <div className="deba-seller-verified">
-                <ShieldCheck size={17} />
-                <span>حساب داخل DEBA</span>
+              <div className="deba-seller-verified-stack">
+                {product.seller?.phone_verified ? (
+                  <span className="deba-seller-verified">
+                    <ShieldCheck size={15} />
+                    هاتف موثّق
+                  </span>
+                ) : (
+                  <span className="deba-seller-verified is-muted">
+                    حساب داخل DEBA
+                  </span>
+                )}
+                {product.owner_id && !isOwner ? (
+                  <UserPresence userId={product.owner_id} compact label />
+                ) : null}
               </div>
             </section>
 
@@ -602,8 +632,8 @@ export default async function ProductDetailPage({
             <div className="deba-detail-security">
               <ShieldCheck size={17} />
               <span>
-                السعر الظاهر هو السعر الثابت للمنتج. طلب الشراء يُسجل داخل DEBA،
-                والدفع الإلكتروني غير مفعل في النسخة الحالية.
+                السعر الظاهر هو السعر المطلوب من البائع.
+                تواصل مع البائع داخل DEBA للاتفاق على التفاصيل النهائية.
               </span>
             </div>
           </div>
@@ -617,8 +647,6 @@ export default async function ProductDetailPage({
           conditionLabel={condition}
           categoryName={product.category?.name_ar || product.category?.name_en || 'غير محدد'}
           location={location || 'يُحدد مع البائع'}
-          deliveryLabel={DELIVERY_LABELS[product.delivery_method] || product.delivery_method}
-          quantity={product.quantity}
           publishedDate={formatPublishedDate(product.published_at || product.created_at)}
           detailsSchemaVersion={product.details_schema_version}
           detailsLastCompletedAt={product.details_last_completed_at}
@@ -628,18 +656,18 @@ export default async function ProductDetailPage({
         <section className="deba-purchase-steps">
           <div>
             <span>1</span>
-            <strong>راجع التفاصيل</strong>
-            <small>السعر والحالة والموقع والبيانات الإضافية.</small>
+            <strong>راجع الإعلان</strong>
+            <small>السعر، الحالة، الموقع، والصور والبيانات التي قدمها البائع.</small>
           </div>
           <div>
             <span>2</span>
-            <strong>اختر الكمية والاستلام</strong>
-            <small>حدد الكمية وطريقة الاستلام وأدخل البيانات المطلوبة.</small>
+            <strong>احفظ أو شارك</strong>
+            <small>احتفظ بالإعلان للمقارنة أو شاركه مع من يهمه.</small>
           </div>
           <div>
             <span>3</span>
-            <strong>أكد طلب الشراء</strong>
-            <small>يسجل الطلب بالسعر الثابت ويظهر لك رقم الطلب.</small>
+            <strong>تواصل واتفق</strong>
+            <small>ابدأ محادثة داخل DEBA واتفق مع البائع على التفاصيل النهائية.</small>
           </div>
         </section>
 

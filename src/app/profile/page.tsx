@@ -363,6 +363,7 @@ export default async function ProfilePage({
       storeKey: profile.seller_store_key,
       createdAt: profile.created_at,
       phone: privateProfile?.phone || null,
+      phoneVerified: Boolean(authUserData.user?.phone && authUserData.user?.phone_confirmed_at),
       addressLine1: privateProfile?.address_line1 || null,
       addressLine2: privateProfile?.address_line2 || null,
       district: privateProfile?.district || null,

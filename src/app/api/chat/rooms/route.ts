@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { requireVerifiedPhone } from '@/utils/auth/phoneTrust'
 
 const PRODUCT_MEDIA_BUCKET = 'deba-product-media'
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-    const { data: userData } = await supabase.auth.getUser()
-    if (!userData.user) {
+    const trust = await requireVerifiedPhone()
+    if (trust.response) return trust.response
+
+    const supabase = trust.supabase
+    const user = trust.user
+    if (!user) {
       return NextResponse.json({ error: 'يجب تسجيل الدخول.' }, { status: 401 })
     }
 
@@ -65,7 +69,7 @@ export async function POST(request: Request) {
               }
             : {}),
         },
-        { status: 400 },
+        { status: error.code === 'P0001' ? 400 : 500 },
       )
     }
 

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { createAdminClient } from '@/utils/supabase/admin'
 import { consumeApiRateLimit } from '@/utils/rateLimit'
+import { requireVerifiedPhone } from '@/utils/auth/phoneTrust'
 
 type Context = { params: Promise<{ id: string }> }
 type MessageType = 'text' | 'image' | 'offer' | 'system'
@@ -23,6 +25,109 @@ const ALLOWED_FILE_TYPES = new Set([
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ])
+
+function chatRpcErrorStatus(error: { code?: string | null }) {
+  if (error.code === '42501') return 403
+  if (error.code === 'P0002') return 404
+  if (error.code === 'P0001') return 400
+  return 500
+}
+
+type ChatNotificationResult = {
+  created: boolean
+  recipientCount: number
+}
+
+async function notifyChatCounterparty(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  roomId: string,
+  senderId: string,
+  message: ChatMessageRow,
+): Promise<ChatNotificationResult> {
+  if (message.message_type === 'offer') {
+    return { created: false, recipientCount: 0 }
+  }
+
+  const { data: participants, error: participantsError } = await supabase
+    .from('chat_participants')
+    .select('user_id,is_muted')
+    .eq('room_id', roomId)
+
+  if (participantsError) {
+    console.error('DEBA chat notification recipient lookup failed', participantsError)
+    return { created: false, recipientCount: 0 }
+  }
+
+  const recipients = (participants || [])
+    .filter(
+      (participant) =>
+        participant.user_id !== senderId && participant.is_muted !== true,
+    )
+    .map((participant) => participant.user_id)
+
+  if (!recipients.length) {
+    return { created: false, recipientCount: 0 }
+  }
+
+  const { data: room, error: roomError } = await supabase
+    .from('chat_rooms')
+    .select('product_id')
+    .eq('id', roomId)
+    .maybeSingle()
+
+  if (roomError) {
+    console.error('DEBA chat notification room lookup failed', roomError)
+    return { created: false, recipientCount: recipients.length }
+  }
+
+  const productId = typeof room?.product_id === 'string' ? room.product_id : null
+  const href = productId
+    ? '/chat?product=' + encodeURIComponent(productId)
+    : '/chat'
+
+  const messageKind =
+    typeof message.metadata?.kind === 'string' ? message.metadata.kind : null
+
+  const body =
+    message.message_type === 'image' || messageKind === 'image'
+      ? 'أرسل لك صورة جديدة في محادثة الإعلان.'
+      : messageKind === 'file'
+        ? 'أرسل لك ملفًا جديدًا في محادثة الإعلان.'
+        : messageKind === 'location'
+          ? 'شارك معك موقعًا جديدًا في محادثة الإعلان.'
+          : 'لديك رسالة جديدة في محادثة إعلان على DEBA.'
+
+  try {
+    const admin = createAdminClient()
+    const { error } = await admin.from('notifications').insert(
+      recipients.map((recipientId) => ({
+        user_id: recipientId,
+        type: 'chat.message',
+        title: 'رسالة جديدة',
+        body,
+        href,
+        metadata: {
+          entity: 'chat',
+          event: 'message.created',
+          room_id: roomId,
+          message_id: message.id,
+          product_id: productId,
+          message_type: message.message_type,
+        },
+      })),
+    )
+
+    if (error) {
+      console.error('DEBA chat notification insert failed', error)
+      return { created: false, recipientCount: recipients.length }
+    }
+
+    return { created: true, recipientCount: recipients.length }
+  } catch (error) {
+    console.error('DEBA chat notification dispatch failed', error)
+    return { created: false, recipientCount: recipients.length }
+  }
+}
 
 function safeFileName(value: string) {
   return value
@@ -103,7 +208,12 @@ async function getAuthenticatedRoom(
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (error || !data) {
+  if (error) {
+    console.error('DEBA chat participant lookup failed', error)
+    return { error: NextResponse.json({ error: 'تعذر التحقق من صلاحية المحادثة.' }, { status: 500 }) }
+  }
+
+  if (!data) {
     return { error: NextResponse.json({ error: 'المحادثة غير متاحة لك.' }, { status: 403 }) }
   }
 
@@ -136,7 +246,12 @@ async function insertMessage(
 
   if (error) {
     console.error('DEBA message RPC failed', error)
-    return { error: NextResponse.json({ error: 'تعذر إرسال الرسالة.' }, { status: 403 }) }
+    return {
+      error: NextResponse.json(
+        { error: 'تعذر إرسال الرسالة.' },
+        { status: chatRpcErrorStatus(error) },
+      ),
+    }
   }
 
   try {
@@ -164,7 +279,14 @@ async function insertMessage(
     console.error('DEBA chat security audit failed', auditError)
   }
 
-  return { data }
+  const notification = await notifyChatCounterparty(
+    supabase,
+    roomId,
+    userId,
+    data as ChatMessageRow,
+  )
+
+  return { data, notification }
 }
 
 async function handleMultipart(
@@ -208,7 +330,7 @@ async function handleMultipart(
 
   if (uploadError) {
     console.error('DEBA chat media upload failed', uploadError)
-    return NextResponse.json({ error: 'تعذر رفع الملف الآن.' }, { status: 403 })
+    return NextResponse.json({ error: 'تعذر رفع الملف الآن.' }, { status: 500 })
   }
 
   const messageType: MessageType = isImage ? 'image' : 'system'
@@ -239,22 +361,25 @@ async function handleMultipart(
     result.data as ChatMessageRow,
   ])
 
-  return NextResponse.json({ message, riskFlags: [] }, { status: 201 })
+  return NextResponse.json(
+    { message, riskFlags: [], notification: result.notification },
+    { status: 201 },
+  )
 }
 
 function validateLocation(value: unknown) {
   if (!value || typeof value !== 'object') return null
   const location = value as Record<string, unknown>
-  const latitude = Number(location.latitude)
-  const longitude = Number(location.longitude)
+  const latitude = Number(location.lat ?? location.latitude)
+  const longitude = Number(location.lng ?? location.longitude)
   const accuracy = Number(location.accuracy)
 
   if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) return null
   if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) return null
 
   return {
-    latitude,
-    longitude,
+    lat: latitude,
+    lng: longitude,
     ...(Number.isFinite(accuracy) && accuracy >= 0 ? { accuracy } : {}),
   }
 }
@@ -283,7 +408,7 @@ export async function GET(request: Request, context: Context) {
 
     if (error) {
       console.error('DEBA messages load failed', error)
-      return NextResponse.json({ error: 'تعذر تحميل الرسائل.' }, { status: 403 })
+      return NextResponse.json({ error: 'تعذر تحميل الرسائل.' }, { status: 500 })
     }
 
     await supabase.rpc('mark_chat_read', { p_room_id: roomId })
@@ -302,13 +427,18 @@ export async function GET(request: Request, context: Context) {
 
 export async function POST(request: Request, context: Context) {
   try {
-    const supabase = await createClient()
-    const { data: userData } = await supabase.auth.getUser()
-    if (!userData.user) return NextResponse.json({ error: 'يجب تسجيل الدخول.' }, { status: 401 })
+    const trust = await requireVerifiedPhone()
+    if (trust.response) return trust.response
+
+    const supabase = trust.supabase
+    const user = trust.user
+    if (!user) {
+      return NextResponse.json({ error: 'يجب تسجيل الدخول.' }, { status: 401 })
+    }
 
     const rateLimit = await consumeApiRateLimit(
       supabase,
-      userData.user.id,
+      user.id,
       'chat:send',
       30,
       60,
@@ -323,12 +453,12 @@ export async function POST(request: Request, context: Context) {
     const { id: roomId } = await context.params
     if (!roomId) return NextResponse.json({ error: 'معرّف المحادثة مطلوب.' }, { status: 400 })
 
-    const access = await getAuthenticatedRoom(supabase, roomId, userData.user.id)
+    const access = await getAuthenticatedRoom(supabase, roomId, user.id)
     if ('error' in access) return access.error
 
     const contentType = request.headers.get('content-type') || ''
     if (contentType.includes('multipart/form-data')) {
-      return handleMultipart(request, supabase, roomId, userData.user.id)
+      return handleMultipart(request, supabase, roomId, user.id)
     }
 
     const payload = await request.json() as {
@@ -363,7 +493,7 @@ export async function POST(request: Request, context: Context) {
         request,
         supabase,
         roomId,
-        userData.user.id,
+        user.id,
         'offer',
         note || 'عرض سعر',
         {
@@ -377,7 +507,10 @@ export async function POST(request: Request, context: Context) {
       )
 
       if (result.error) return result.error
-      return NextResponse.json({ message: result.data, riskFlags: [] }, { status: 201 })
+      return NextResponse.json(
+        { message: result.data, riskFlags: [], notification: result.notification },
+        { status: 201 },
+      )
     }
 
     if (messageType === 'system') {
@@ -390,13 +523,16 @@ export async function POST(request: Request, context: Context) {
           request,
           supabase,
           roomId,
-          userData.user.id,
+          user.id,
           'system',
           '📍 موقع مشترك',
           { kind: 'location', location },
         )
         if (result.error) return result.error
-        return NextResponse.json({ message: result.data, riskFlags: [] }, { status: 201 })
+        return NextResponse.json(
+          { message: result.data, riskFlags: [], notification: result.notification },
+          { status: 201 },
+        )
       }
 
       if (metadata.kind === 'offer_action') {
@@ -436,7 +572,10 @@ export async function POST(request: Request, context: Context) {
 
         if (error) {
           console.error('DEBA offer action failed', error)
-          return NextResponse.json({ error: 'تعذر تنفيذ إجراء العرض.' }, { status: 400 })
+          return NextResponse.json(
+            { error: 'تعذر تنفيذ إجراء العرض.' },
+            { status: chatRpcErrorStatus(error) },
+          )
         }
 
         return NextResponse.json({ message: data, riskFlags: [] }, { status: 201 })
@@ -450,10 +589,13 @@ export async function POST(request: Request, context: Context) {
       return NextResponse.json({ error: 'الرسالة مطلوبة وبحد أقصى 4000 حرف.' }, { status: 400 })
     }
 
-    const result = await insertMessage(request, supabase, roomId, userData.user.id, messageType, message, payload.metadata || {})
+    const result = await insertMessage(request, supabase, roomId, user.id, messageType, message, payload.metadata || {})
     if (result.error) return result.error
 
-    return NextResponse.json({ message: result.data, riskFlags: [] }, { status: 201 })
+    return NextResponse.json(
+      { message: result.data, riskFlags: [], notification: result.notification },
+      { status: 201 },
+    )
   } catch (error) {
     console.error('DEBA messages POST failed', error)
     return NextResponse.json({ error: 'تعذر إرسال الرسالة.' }, { status: 500 })

@@ -36,5 +36,20 @@ jobs:
       - name: Public search rate-limit contract/integration tests
         run: node --test tests/public-search-rate-limit.test.mjs
 
+      - name: Phase 4 notification contract/integration tests
+        run: npm run test:phase4-notifications
+
+      - name: Phase 4.2 deal matching contract tests
+        run: npm run test:phase4-2
+
+      - name: Phase 4.3 future marketplace contract tests
+        run: npm run test:phase4-3
+
+      - name: Phase 4.4 true vector search contract tests
+        run: npm run test:phase4-4
+
+      - name: Phase 5.1 AI broker/vision contract tests
+        run: npm run test:phase5
+
       - name: Playwright collection
         run: npm run e2e:list

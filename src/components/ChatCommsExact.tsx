@@ -176,8 +176,8 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
         name,
         avatar: initials(name),
         gradient: gradientFor(name + index),
-        online: true,
-        verified: true,
+        online: false,
+        verified: false,
         unread: Number(room.unreadCount || 0),
         lastTime: formatTime(room.updated_at),
         lastMsg: room.lastMessagePreview || 'ابدأ التفاوض داخل DEBA',
@@ -443,8 +443,8 @@ export default function ChatCommsExact({ initialProduct }: { initialProduct: str
               metadata: {
                 kind: 'location',
                 location: {
-                  latitude: position.coords.latitude,
-                  longitude: position.coords.longitude,
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
                   accuracy: position.coords.accuracy,
                 },
               },

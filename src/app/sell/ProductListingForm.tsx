@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { AlertCircle, CheckCircle2, ImagePlus, LoaderCircle, ShieldCheck, Upload, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
+import { isValidEgyptianPhone } from '@/lib/auth/egyptian-phone'
 import EgyptLocationPicker from '@/components/EgyptLocationPicker'
 
 const BUCKET = 'deba-product-media'
@@ -82,6 +83,10 @@ function requiredText(value: string, min: number) {
 }
 
 function getFriendlyError(message: string) {
+  if (message === 'PHONE_VERIFICATION_REQUIRED') {
+    return 'يجب توثيق رقم الهاتف المصري عبر WhatsApp قبل نشر الإعلان.'
+  }
+
   if (message.includes('PRODUCT_DETAILS_INCOMPLETE')) {
     const raw = message.split('PRODUCT_DETAILS_INCOMPLETE:')[1]?.trim()
     if (raw) {
@@ -243,6 +248,10 @@ export default function ProductListingForm({ categories, definitions }: Props) {
       const { data: userData, error: userError } = await supabase.auth.getUser()
       if (userError || !userData.user) {
         throw new Error('يجب تسجيل الدخول بحساب بائع قبل نشر السلعة.')
+      }
+
+      if (!userData.user.phone_confirmed_at || !isValidEgyptianPhone(userData.user.phone || '')) {
+        throw new Error('PHONE_VERIFICATION_REQUIRED')
       }
 
       const metadata = {

@@ -1,0 +1,165 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+
+async function read(path) {
+  return readFile(new URL('../' + path, import.meta.url), 'utf8')
+}
+
+test('C1 chat location contract matches the database RPC', async () => {
+  const ui = await read('src/components/ChatCommsExact.tsx')
+  const api = await read('src/app/api/chat/rooms/[id]/messages/route.ts')
+  const rpc = await read('supabase/migrations/20260925162444_lock_direct_chat_message_insert.sql')
+
+  assert.match(ui, /location:\s*\{\s*lat: position\.coords\.latitude,\s*lng: position\.coords\.longitude,\s*accuracy:/s)
+  assert.doesNotMatch(ui, /location:\s*\{\s*latitude:\s*position\.coords\.latitude,\s*longitude:\s*position\.coords\.longitude/s)
+  assert.match(api, /return \{\s*lat: latitude,\s*lng: longitude,/s)
+  assert.match(rpc, /v_metadata -> 'location' ->> 'lat'/)
+  assert.match(rpc, /v_metadata -> 'location' ->> 'lng'/)
+})
+
+test('C1 chat UI does not manufacture presence or verification claims', async () => {
+  const ui = await read('src/components/ChatCommsExact.tsx')
+  assert.match(ui, /online: false/)
+  assert.match(ui, /verified: false/)
+  assert.doesNotMatch(ui, /online:\s*true,\s*verified:\s*true/)
+})
+
+test('C1 chat RPC errors are mapped to truthful HTTP classes', async () => {
+  const api = await read('src/app/api/chat/rooms/[id]/messages/route.ts')
+  const rooms = await read('src/app/api/chat/rooms/route.ts')
+
+  assert.match(api, /error\.code === '42501'\) return 403/)
+  assert.match(api, /error\.code === 'P0002'\) return 404/)
+  assert.match(api, /error\.code === 'P0001'\) return 400/)
+  assert.match(api, /return 500/)
+  assert.match(api, /chat participant lookup failed/)
+  assert.match(api, /status: 500/)
+  assert.match(api, /تعذر رفع الملف الآن\.' \}, \{ status: 500 \}/)
+  assert.match(api, /apply_chat_offer_action[\s\S]*?chatRpcErrorStatus\(error\)/)
+  assert.match(rooms, /status: error\.code === 'P0001' \? 400 : 500/)
+})
+
+test('C1 normal chat messages create recipient-scoped in-app notifications server-side', async () => {
+  const api = await read('src/app/api/chat/rooms/[id]/messages/route.ts')
+  const admin = await read('src/utils/supabase/admin.ts')
+  const notifications = await read('src/hooks/useNotifications.ts')
+
+  assert.match(api, /^import .*createAdminClient.*$/m)
+  assert.match(api, /chat_participants/)
+  assert.match(api, /is_muted !== true/)
+  assert.match(api, /admin\.from\('notifications'\)\.insert/)
+  assert.match(api, /type: 'chat\.message'/)
+  assert.match(api, /message_id: message\.id/)
+  assert.match(api, /product_id: productId/)
+  assert.match(api, /notification: result\.notification/)
+  assert.match(api, /if \(message\.message_type === 'offer'\)/)
+  assert.match(admin, /^import 'server-only'/m)
+  assert.doesNotMatch(admin, /NEXT_PUBLIC_.*(?:KEY|SECRET|TOKEN)/i)
+  assert.match(notifications, /table: 'notifications'/)
+  assert.match(notifications, /filter: 'user_id=eq\.' \+ user\.id/)
+})
+
+test('C1 keeps direct message inserts behind the server-enforced RPC', async () => {
+  const api = await read('src/app/api/chat/rooms/[id]/messages/route.ts')
+  const rpcMigration = await read('supabase/migrations/20260925162444_lock_direct_chat_message_insert.sql')
+
+  assert.match(api, /send_chat_message/)
+  assert.doesNotMatch(api, /from\(['"]messages['"]\)\.insert/)
+  assert.match(rpcMigration, /revoke execute on function public\.send_chat_message\(uuid, text, text, jsonb\) from public, anon/)
+  assert.match(rpcMigration, /grant execute on function public\.send_chat_message\(uuid, text, text, jsonb\) to authenticated/)
+})
+
+test('C1 package test command includes the milestone contract suite', async () => {
+  const packageJson = JSON.parse(await read('package.json'))
+  assert.match(packageJson.scripts.test, /tests\/phase-c1-critical-flow\.test\.mjs/)
+  assert.equal(packageJson.scripts['test:phase-c1'], 'node --test tests/phase-c1-critical-flow.test.mjs')
+})
+
+
+test('C1 listing detail is classified-first and hides irrelevant commerce/auction UI', async () => {
+  const page = await read('src/app/products/[slug]/page.tsx')
+  const panel = await read('src/components/FutureMarketplacePanel.tsx')
+  const tabs = await read('src/components/ProductDetailTabs.tsx')
+
+  assert.match(page, /<strong>تواصل مع البائع<\/strong>/)
+  assert.doesNotMatch(page, /FutureMarketplacePanel/)
+  assert.match(page, /<small>اسأل عن التفاصيل، المعاينة، والاستلام قبل الاتفاق النهائي\.<\/small>/)
+  assert.doesNotMatch(page, /<strong>اشترِ الآن<\/strong>/)
+  assert.doesNotMatch(page, /الدفع الإلكتروني غير مفعّل حاليًا/)
+  assert.doesNotMatch(page, /الكمية المتاحة/)
+  assert.doesNotMatch(page, /طريقة الاستلام/)
+  assert.doesNotMatch(page, /توصيل عبر DEBA/)
+  assert.doesNotMatch(page, /CartAddButton/)
+  assert.doesNotMatch(page, /purchaseHref/)
+  assert.doesNotMatch(page, /href=\{purchaseHref\}/)
+  assert.match(page, /السعر المطلوب من البائع/)
+  assert.match(page, /تواصل مع البائع داخل DEBA للاتفاق على التفاصيل النهائية/)
+  assert.match(page, /<strong>تواصل واتفق<\/strong>/)
+
+  const legacyCheckout = await read('src/app/products/[slug]/checkout/page.tsx')
+  assert.match(legacyCheckout, /redirect\('\/products\/' \+ encodeURIComponent\(normalizedSlug\)\)/)
+  assert.doesNotMatch(legacyCheckout, /CheckoutForm|إتمام شراء المنتج|طلب الشراء/)
+
+  assert.match(panel, /if \(!isNegotiable && !isOwner\) \{/)
+  assert.match(panel, /أدوات الإعلان الذكية/)
+  assert.match(panel, /التفاوض الذكي/)
+  assert.match(panel, /الحد الأدنى الذي تقبله للعروض/)
+  assert.doesNotMatch(panel, /هذا الإعلان بسعر ثابت ولا يقبل عروضًا ذكية/)
+  assert.doesNotMatch(panel, /محمي — لا يقرأه المشتري/)
+  assert.doesNotMatch(panel, /DEBA FUTURE ENGINE/)
+
+  assert.match(tabs, /أحدث بيانات متاحة/)
+  assert.match(tabs, /الاتفاق والمعاينة/)
+  assert.doesNotMatch(tabs, /الشحن والإرجاع والضمان/)
+  assert.doesNotMatch(tabs, /ملاحظة الدفع|ابدأ الدفع الإلكتروني|سجل طلب الشراء/)
+  assert.doesNotMatch(tabs, /طريقة الاستلام|الكمية.*وحدة/)
+  assert.doesNotMatch(tabs, /بيانات قديمة/)
+  assert.match(tabs, /السعر الحالي هو السعر المطلوب من البائع/)
+})
+
+test('C1 price intelligence copy never presents an asking price as guaranteed market truth', async () => {
+  const score = await read('src/components/ProductDealScore.tsx')
+  const migration = await read('supabase/migrations/20260929224300_phase4_2_deal_matching_price_intelligence.sql')
+
+  assert.match(score, /سعر ممتاز وتنافسي/)
+  assert.match(score, /ضمن النطاق المعتاد/)
+  assert.match(score, /أعلى من المعتاد/)
+  assert.match(score, /أدلة مقارنة كافية/)
+  assert.match(score, /مقارنة مع .*إعلانًا مشابهًا/)
+  assert.match(migration, /percentile_cont\(0\.50\)/)
+  assert.match(migration, /percentile_cont\(0\.25\)/)
+  assert.match(migration, /percentile_cont\(0\.75\)/)
+  assert.match(migration, /word_similarity/)
+  assert.match(migration, /peer_count/)
+  assert.match(migration, /confidence/)
+})
+
+
+test('C1 classifieds discovery does not expose cart actions or hidden horizontal listing rails', async () => {
+  const home = await read('src/app/page.tsx')
+  const card = await read('src/components/ClassifiedListingCard.tsx')
+  const relatedCard = await read('src/components/ProductCard.tsx')
+  const css = await read('src/app/globals.css')
+  const cart = await read('src/app/cart/page.tsx')
+  const detailTabsCss = css.slice(css.indexOf('.deba-detail-tabs-nav'), css.indexOf('.deba-detail-tab-panel'))
+
+  assert.match(home, /deba-classified-listing-grid/)
+  assert.match(home, /favoriteProductIds/)
+  assert.match(home, /\.from\('favorites'\)/)
+  assert.doesNotMatch(home, /deba-classified-listing-scroll/)
+  assert.doesNotMatch(home, /deba-classified-listing-scroll-item/)
+
+  assert.match(card, /initialFavorite=\{Boolean\(item\.isFavorite\)\}/)
+  assert.match(card, /تواصل مع البائع/)
+
+  assert.doesNotMatch(relatedCard, /AddToCartButton|أضف للسلة|ShoppingCart/)
+  assert.match(relatedCard, /تواصل مع البائع/)
+  
+  assert.match(css, /\.deba-classified-listing-grid \{/)
+  assert.doesNotMatch(css, /\.deba-classified-listing-scroll \{[\s\S]*?overflow-x: auto/)
+  assert.match(detailTabsCss, /display: grid/)
+  assert.doesNotMatch(detailTabsCss, /overflow-x: auto/)
+  assert.match(cart, /redirect\('\/'\)/)
+  assert.doesNotMatch(cart, /سلة التسوق|CartSummary|SellerGroup/)
+})

@@ -1,0 +1,198 @@
+.card {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid var(--deba-border);
+  border-radius: 20px;
+  background: var(--deba-surface);
+  box-shadow: var(--deba-shadow-sm);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  font-family: var(--deba-font);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--deba-text-3);
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--deba-text);
+}
+
+.badge {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--deba-brand-soft);
+  color: var(--deba-brand-strong);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.badge[data-label="fair"] {
+  background: var(--deba-blue-soft, rgba(44, 95, 138, .12));
+  color: var(--deba-blue);
+}
+
+.badge[data-label="overpriced"] {
+  background: var(--deba-brand-soft);
+  color: var(--deba-brand-strong);
+}
+
+.badge[data-label="insufficient_data"] {
+  background: var(--deba-surface-2);
+  color: var(--deba-text-3);
+}
+
+.copy {
+  margin: 10px 0 0;
+  color: var(--deba-text-2);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.advice {
+  margin-top: 12px;
+  padding: 11px 12px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  border: 1px solid var(--deba-brand-soft);
+  border-radius: 12px;
+  background: var(--deba-brand-soft);
+}
+
+.advice strong {
+  color: var(--deba-brand-strong);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.advice span {
+  color: var(--deba-text-2);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.metrics > div {
+  min-width: 0;
+  padding: 11px 12px;
+  border-radius: 14px;
+  background: var(--deba-surface-2);
+}
+
+.metrics span,
+.graphLabels,
+.footer {
+  font-size: 11px;
+  color: var(--deba-text-3);
+}
+
+.metrics strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--deba-text);
+  font-size: 14px;
+}
+
+.graph {
+  position: relative;
+  margin-top: 17px;
+  padding-top: 24px;
+}
+
+.range {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--deba-brand-soft) 0%, var(--deba-brand) 50%, var(--deba-brand-soft) 100%);
+}
+
+.marker {
+  position: absolute;
+  top: 1px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.marker::after {
+  content: '';
+  display: block;
+  width: 12px;
+  height: 12px;
+  margin: 5px auto 0;
+  border: 3px solid var(--deba-surface);
+  border-radius: 50%;
+  background: var(--deba-brand);
+  box-shadow: var(--deba-shadow-sm);
+}
+
+.marker span {
+  display: inline-flex;
+  padding: 4px 7px;
+  border-radius: 8px;
+  background: var(--deba-navy-2);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.graphLabels {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px solid var(--deba-border);
+}
+
+.footer strong {
+  color: var(--deba-text);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .badge {
+    align-self: flex-start;
+  }
+
+  .advice {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+}

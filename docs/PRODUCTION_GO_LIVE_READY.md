@@ -1,227 +1,180 @@
 # DEBA — Production Go-Live Readiness Gate
 
-**Assessment date:** 2026-09-25  
-**Repository:** `Generalsea/DEBA`  
-**Release baseline:** `main` @ `50fee79b9429ebef27a880203a2ecc9638f4ad26` (PR #18 squash merge)  
-**Supabase project:** `gkwpjtbrecoesxyoybto`  
-**Supabase status:** `ACTIVE_HEALTHY`  
-**PostgreSQL:** `17.6.1.166`
+**Assessment refresh:** 2026-10-04
+**Repository:** `Generalsea/DEBA`
+**Integrated RC:** `rc/phase4-5-integrated-20261004`
+**Verification PR:** #43
+**Protected main baseline:** `75b26ae6ec72a5f69339f5e2145c2be651967b5e`
+**Verified code head:** `bf117a6ab203f86789cbcad4125a1bc906683de1`
+**Post-verification commits:** documentation-only evidence refresh; no application, migration, configuration, or workflow code changed after the verified code head.
+**Supabase project:** `gkwpjtbrecoesxyoybto`
 
 ## Executive decision
 
-**RELEASE CANDIDATE 1.0 — CONDITIONAL / GO-LIVE GATE: BLOCKED**
+**RELEASE CANDIDATE — VERIFIED / PRODUCTION ACTIVATION NOT YET CLEARED**
 
-The Phase 2 application and database hardening plus the Phase 3 fail-closed limiter remediation are now merged to `main`, and the live database is healthy. The repository qualifies as **Release Candidate 1.0 (conditional)**, but the production launch gate remains blocked because three externally observable conditions remain unresolved:
+The integrated RC has green exact-head CI and a passing 12-migration release preflight. Main remains isolated.
 
-1. Supabase Auth leaked-password protection is still disabled.
-2. Public search still has no request-aware abuse limiter at the application/edge/WAF layer.
-3. A production Vercel deployment/domain is not accessible through the current environment, so the complete deployed-path walkthrough cannot be independently attested.
+Production activation is still blocked by external platform gates:
+1. Supabase Auth leaked-password protection.
+2. Vercel team/project access and production environment verification.
+3. Real Phase 5.1 provider configuration and E2E.
+4. The Supabase PostgreSQL minor upgrade is still a dashboard-side platform operation.
 
-No production business data was fabricated or mutated for this gate.
+These are environment gates, not unresolved repository defects.
 
-## 1. Security hardening
+## 1. Repository / CI
 
-### 1.1 Supabase Auth — leaked password protection
+Exact RC head was verified through GitHub Actions:
 
-**Status: PLATFORM_ACTION_REQUIRED**
+- `verify` → PASS
+- `quality` → PASS
+- Typecheck → PASS
+- Contract tests → PASS
+- Phase 4.1 → PASS
+- Phase 4.2 → PASS
+- Phase 4.3 → PASS
+- Phase 4.4 → PASS
+- Phase 5.1 → PASS
+- Playwright collection → PASS
+- Release migration preflight → PASS
+- Production build → PASS
 
-Live Supabase Security Advisor reports exactly one warning:
+## 2. Supabase security and authorization
 
-- `auth_leaked_password_protection`
-- **Leaked Password Protection Disabled**
-- Severity: `WARN`
-- Findings: `1`
+### Auth leaked-password protection
 
-Supabase documents this control as an Auth/password-security setting that rejects passwords known to have appeared in compromised-password datasets.
+**Status: EXTERNAL ACTION REQUIRED**
 
-Remediation:
-https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+Live Security Advisor has one WARN:
+`auth_leaked_password_protection`.
 
-**Required platform action:** enable leaked-password protection in Supabase **Authentication → Settings / Password Security**. After enabling it, rerun Security Advisor; the expected result for this gate is zero Security Advisor WARN findings. Until then, this item remains `PLATFORM_ACTION_REQUIRED`, not PASS.
+Required platform action:
+- Enable leaked-password protection in Auth password-security settings.
+- Re-run Security Advisor.
+- Release target: zero remaining Security Advisor WARN findings.
 
-The current connected Supabase tooling does not expose an Auth-project-settings mutation operation, so this environmental setting was not changed programmatically during this run.
-
-### 1.2 Database/API authorization
-
-**Status: PASS**
-
-Live privilege checks confirm:
-
-- `anon` can execute `search_marketplace_products`.
-- `anon` can execute `get_product_review_feed`.
-- `anon` can execute `get_seller_review_feed`.
-- `anon` cannot execute `create_review`.
-- `anon` cannot execute `admin_update_report_status`.
-- `anon` cannot execute `apply_chat_offer_action`.
-- `authenticated` can execute `apply_chat_offer_action`.
-- `anon` and `authenticated` cannot directly SELECT `public.reviews`.
-- `anon` and `authenticated` cannot directly UPDATE `public.reports`.
-- `public.api_rate_limits`, `public.reviews`, and `public.reports` have RLS enabled.
-
-This preserves the transaction-bound review model and the protected moderation lifecycle.
-
-### 1.3 Rate-limit storage and primitive
-
-**Status: PARTIAL — public-search abuse control remains open**
-
-The live database contains the shared `api_rate_limits` table with RLS enabled and no direct read/write access for `anon` or `authenticated`.
-
-The underlying limiter primitive is database-backed and behaves correctly: a transactional probe configured for **3 requests / 60 seconds** returned `false` on the fourth request, and the transaction was rolled back.
-
-Current endpoint coverage:
-
-| Surface | Current limit | Coverage | Gate |
-|---|---:|---|---|
-| Listing reports | 5 / hour / authenticated user | `src/app/api/reports/route.ts` | **PASS — fail-closed helper merged** |
-| Chat / offer mutations | 30 / minute / authenticated user | `src/app/api/chat/rooms/[id]/messages/route.ts` | **PASS — fail-closed helper merged** |
-| Public search RPC | none at application layer | `search_marketplace_products` | **BLOCKED** |
-
-The shared helper now fails closed when the rate-limit RPC errors. PR #18 carried this remediation, GitHub Actions returned Green on the exact Head `79105f3c872add83f4fd7c50a01b460b88de98c4`, and the change was squash-merged to `main` as `50fee79b9429ebef27a880203a2ecc9638f4ad26`.
-
-The public search path also has no equivalent application-layer limiter. Supabase's documented `db_pre_request` write-counter pattern cannot directly rate-limit GET/HEAD requests; the search path therefore needs an explicit application/edge/WAF control if it is to carry a production abuse ceiling.
-
-Supabase API security reference:
-https://supabase.com/docs/guides/api/securing-your-api
-
-## 2. Production performance baseline
-
-**Status: PASS for database execution; HTTP/browser E2E not attested**
-
-Measured against the live production Supabase database using **30 samples per function** and production data:
-
-| RPC | Samples | Mean | p50 | p95 | Max |
-|---|---:|---:|---:|---:|---:|
-| `search_marketplace_products` | 30 | 6.678 ms | 3.490 ms | 7.614 ms | 86.933 ms |
-| `get_product_review_feed` | 30 | 0.319 ms | 0.146 ms | 0.601 ms | 3.245 ms |
-
-These are **database/function execution timings**, not end-to-end HTTP or browser timings.
-
-Live production data at the gate:
-
-- Published + approved products: 9
-- Reviews: 0
-- Reports: 0
-- Rate-limit rows: 0
-
-The benchmark used an existing published product and a real search query. No synthetic records were persisted.
-
-## 3. Trust, privacy and moderation verification
+### RLS
 
 **Status: PASS**
 
-Verified live:
+Every current base table in the `public` schema was verified with RLS enabled.
 
-- Public review feeds are callable through safe RPC projections.
-- Raw review-table SELECT is denied to public API roles.
-- Transaction-bound review creation remains behind the authenticated RPC.
-- Direct report UPDATE is denied to public API roles.
-- Anonymous report moderation execution is denied.
-- Moderation lifecycle remains database-enforced.
-- The automatic report-threshold pause trigger exists.
-- Search RPC is `SECURITY INVOKER`.
-- Public review feed wrappers are `SECURITY INVOKER`; private helpers use pinned `search_path = ''` as SECURITY DEFINER where RLS bypass is intentional.
+Sensitive tables such as `reviews`, `reports`, `orders`, `payments`, `notifications`, `audit_logs`, and `api_rate_limits` are not directly readable by `anon`.
 
-## 4. Application route walkthrough
+The live privilege check also confirms:
+- `anon` cannot execute `consume_api_rate_limit`.
+- `authenticated` and `service_role` can execute the limiter wrapper.
 
-**Status: BLOCKED — production endpoint unavailable in current environment**
+## 3. Public-search abuse control
 
-Target flow:
+**Status: PASS — implementation verified**
 
-`Homepage → Search → Product Details → Seller Store → DEBA Comms / Chat → Offers → Reports`
+The current RC enforces the public-search ceiling at the request boundary through `proxy.ts` and `src/utils/publicSearchRateLimit.ts`.
 
-Repository inspection confirms the relevant application paths exist, including:
+Control:
+- GET/HEAD search requests on `/`.
+- HMAC-SHA256 client-IP key using a server-only secret.
+- 60 requests per 60 seconds per hashed IP.
+- Missing production secret → HTTP 503, fail closed.
+- Limiter backend error → HTTP 503, fail closed.
+- Exceeded window → HTTP 429.
 
-- Home/search experience.
-- Product detail with reports and review feed.
-- Seller store and public member profile surfaces.
-- DEBA Comms/chat and offer action path.
-- Report submission and moderation lifecycle.
-- Authenticated Playwright coverage and production build scripts.
+The dedicated `tests/public-search-rate-limit.test.mjs` covers the wiring and the underlying limiter primitive.
 
-A complete **deployed** walkthrough could not be independently completed because no Vercel team/project is exposed to the current connected environment. The production deployment must set `NEXT_PUBLIC_SITE_URL` to the canonical HTTPS application origin and the value must match the URL used by Auth callbacks/redirects and production verification.
+## 4. Live database release state
 
-### POST-DEPLOYMENT VERIFICATION STEP
+**Status: NOT ACTIVATED**
 
-After the first production deployment, set the Vercel production environment variable:
+Production PostgreSQL is `17.6.1.166`.
 
-`NEXT_PUBLIC_SITE_URL=https://<canonical-production-domain>`
+The production migration ledger does not contain the current Phase 4.1 → 5.1 release set.
 
-Then redeploy if the deployment does not automatically pick up the environment change. Verify from the deployed app that the canonical origin is used consistently for production links and Auth callback/redirect configuration. Run the authenticated Playwright suite against that exact HTTPS origin using the dedicated non-production E2E account.
+`vector` is not installed in Production.
 
-The following candidate Vercel URLs were also not resolvable through the connected deployment access:
+No Phase 4.3 / 4.4 / 5.1 production schema has been persisted by the RC verification work.
 
-- `https://deba.vercel.app`
-- `https://deba-marketplace.vercel.app`
-- `https://deba-marketplace-git-main-generalsea.vercel.app`
+## 5. PostgreSQL platform compatibility
 
-This is an environment/access limitation, not evidence that the application routes are broken.
+**Status: CLEAR FOR DASHBOARD UPGRADE**
 
-## 5. CI / repository release evidence
+Read-only checks found no instances of the examined PostgreSQL 17.11 caveat classes:
+- no ltree indexes because ltree is not installed;
+- no btree_gist float indexes;
+- no user-defined PGP encrypt/decrypt functions;
+- no problematic custom operators with non-catalog selectivity estimators.
 
-**Status: PASS — PR #18 release checks Green; post-merge push check is connector-limited**
+The platform upgrade itself remains a Supabase Dashboard operation.
 
-PR #17 was merged into `main` at:
+## 6. Vercel production
 
-`a509d9b6ac34e8fe97e7f813499d0fbcfe5e692f`
+**Status: EXTERNAL ACCESS BLOCKER**
 
-PR #18 (`chore/phase-3-go-live-readiness-20260925`) was merged by squash into `main` as:
+The connected Vercel account currently exposes:
+- 0 teams
+- 0 DEBA projects
 
-`50fee79b9429ebef27a880203a2ecc9638f4ad26`
+Therefore this session cannot certify:
+- Production deployment;
+- canonical domain;
+- `NEXT_PUBLIC_SITE_URL`;
+- `SUPABASE_SERVICE_ROLE_KEY`;
+- `CRON_SECRET`;
+- embedding provider credentials;
+- broker / vision credentials;
+- Cron;
+- deployed browser walkthrough.
 
-The exact PR #18 Head `79105f3c872add83f4fd7c50a01b460b88de98c4` passed both GitHub Actions workflows:
+No replacement project is to be created as a workaround.
 
-- `DEBA CI` verify run `36188349439`: PASS
-- `DEBA CI` quality run `36188349522`: PASS
-- Typecheck: PASS
-- Contract tests: PASS
-- Playwright collection: PASS
-- Build: PASS
+## 7. AI / vector production
 
-Prior PR validation recorded:
+**Phase 4.4:** repository contracts PASS; production vector remains unactivated and no real embedding corpus is claimed.
 
-- Typecheck: PASS
-- Contract tests: PASS
-- Playwright collection: PASS
-- Production build: PASS
+**Phase 5.1:** broker/vision code and contract tests PASS; real provider E2E is not claimed until server-only credentials/endpoints exist in the target environment.
 
-The current connected GitHub status endpoint exposes no status entries for the merge commit itself, and its workflow-run lookup is limited to pull-request-triggered runs. Therefore this gate does not represent the absence of CI; it records that the current connector cannot independently restate a fresh post-merge workflow status.
+## 8. Activation sequence
 
-## 6. Launch gate checklist
+```
+External Auth / platform clearance
+  →
+exact integrated RC verification
+  →
+12-migration preflight
+  →
+ordered production migration
+  →
+live schema + Security Advisor verification
+  →
+vector activation
+  →
+real embedding ingestion
+  →
+AI provider E2E
+  →
+Vercel production verification
+  →
+critical-path deployed walkthrough
+  →
+Go-Live evidence
+```
 
-| Gate | Result |
+## 9. Final gate state
+
+| Gate | State |
 |---|---|
-| Phase 2 main release present | PASS |
-| Supabase project healthy | PASS |
-| RLS / public grants reviewed | PASS |
-| Safe public review feeds | PASS |
-| Transaction-bound reviews | PASS |
-| Moderation lifecycle | PASS |
-| Auto-pause trigger | PASS |
-| DB performance baseline | PASS |
-| Auth leaked-password protection | **PLATFORM_ACTION_REQUIRED** |
-| Reports rate limiting fail-closed | **PASS — merged and CI-verified** |
-| Offer mutation rate limiting fail-closed | **PASS — merged and CI-verified** |
-| Public search abuse-rate control | **BLOCKER** |
-| Deployed Vercel route walkthrough | **BLOCKED / environment access** |
-| No fabricated production test data | PASS |
+| Integrated RC | PASS |
+| Exact-head CI | PASS |
+| 12-migration preflight | PASS |
+| RLS / grants | PASS |
+| Public-search abuse control | PASS |
+| PostgreSQL compatibility checks | PASS |
+| Supabase Auth | EXTERNAL ACTION REQUIRED |
+| PostgreSQL dashboard upgrade | EXTERNAL PLATFORM ACTION |
+| Vector production activation | WAITING |
+| Vercel access | EXTERNAL ACCESS BLOCKER |
+| AI provider E2E | NOT VERIFIED |
 
-## 7. Required release actions
+**Production activation remains fail-closed.**
 
-Before declaring the official public launch:
-
-1. Enable Supabase leaked-password protection and rerun Security Advisor.
-2. Add an enforceable production abuse limit for public search (application/edge/WAF or an equivalent request-aware control).
-3. Run the authenticated Playwright suite against the real deployed production/staging URL using a dedicated non-production test account.
-4. Re-run the complete launch checklist and capture the resulting production URL and HTTP/browser timings.
-
-## Final attestation
-
-At **2026-09-25**, DEBA is now at **Release Candidate 1.0 — conditional** under the evidence-first production gate. PR #18 is merged to `main`, and its exact Head passed both GitHub Actions workflows with Typecheck, Contract Tests, Playwright Collection, and Build all Green.
-
-The database trust/privacy controls, database performance baseline, and fail-closed application rate limiting are verified. The remaining launch blockers are explicit and actionable: one Supabase Auth security setting, a public-search abuse ceiling, and independent verification of the deployed application URL.
-
-Supabase security guidance:
-https://supabase.com/docs/guides/api/securing-your-api
-
-Supabase password-security guidance:
-https://supabase.com/docs/guides/auth/password-security
+The RC itself is not the blocker. The remaining blockers are platform/environment actions that cannot be honestly executed through the currently connected external tool surfaces.

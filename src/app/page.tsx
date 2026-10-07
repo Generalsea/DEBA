@@ -26,6 +26,7 @@ import {
 import Header from '@/components/Header'
 import ClassifiedFilterBar from '@/components/ClassifiedFilterBar'
 import ClassifiedListingCard, { type ClassifiedListingItem } from '@/components/ClassifiedListingCard'
+import SaveBuyerIntentButton from '@/components/SaveBuyerIntentButton'
 import type { HeaderPromo } from '@/components/HeaderReelsRail'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { createClient } from '@/utils/supabase/server'
@@ -358,7 +359,12 @@ async function loadHomeData(filters: SearchFilters) {
   )
   const productIds = products.map((product) => product.id)
 
-  const [imagesResponse, profilesResponse, reviewsResponse] = await Promise.all([
+  const { data: claimsData } = await supabase.auth.getClaims()
+  const viewerId =
+    typeof claimsData?.claims?.sub === 'string' ? claimsData.claims.sub : null
+
+  const [imagesResponse, profilesResponse, reviewsResponse, favoritesResponse] =
+    await Promise.all([
     productIds.length
       ? supabase
           .from('product_images')
@@ -380,7 +386,20 @@ async function loadHomeData(filters: SearchFilters) {
           .eq('status', 'published')
           .in('product_id', productIds)
       : Promise.resolve({ data: [], error: null }),
+    viewerId && productIds.length
+      ? supabase
+          .from('favorites')
+          .select('product_id')
+          .eq('user_id', viewerId)
+          .in('product_id', productIds)
+      : Promise.resolve({ data: [], error: null }),
   ])
+
+  const favoriteProductIds = new Set(
+    ((favoritesResponse.data || []) as Array<{ product_id: string }>)
+      .map((row) => row.product_id)
+      .filter((id): id is string => typeof id === 'string'),
+  )
 
   const imageByProduct = new Map<string, ImageRow>()
   for (const image of (imagesResponse.data || []) as ImageRow[]) {
@@ -427,6 +446,7 @@ async function loadHomeData(filters: SearchFilters) {
     imageByProduct,
     profileById,
     ratingByProduct,
+    favoriteProductIds,
     searchTotalCount,
     searchPage,
     searchTelemetry:
@@ -476,6 +496,7 @@ function toClassifiedItem(
     sellerName: seller?.display_name || seller?.username || 'عضو DEBA',
     sellerAvatar:
       seller?.avatar_url && /^https?:\/\//i.test(seller.avatar_url) ? seller.avatar_url : null,
+    isFavorite: data.favoriteProductIds.has(product.id),
     ratingValue,
     ratingCount: aggregate?.count || 0,
     publishedAt: product.published_at || product.created_at,
@@ -683,14 +704,13 @@ function ListingRail({
           </Link>
         </div>
 
-        <div className="deba-classified-listing-scroll">
+        <div className="deba-classified-listing-grid">
           {products.slice(0, 6).map((product, index) => (
-            <div className="deba-classified-listing-scroll-item" key={product.id}>
-              <ClassifiedListingCard
-                item={toClassifiedItem(product, data)}
-                priority={index < 2}
-              />
-            </div>
+            <ClassifiedListingCard
+              key={product.id}
+              item={toClassifiedItem(product, data)}
+              priority={index < 2}
+            />
           ))}
         </div>
       </div>
