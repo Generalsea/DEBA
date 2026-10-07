@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, CheckCircle2, MessageCircle, ShieldCheck } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Mail, MessageCircle, ShieldCheck } from 'lucide-react'
+import { createClient } from '@/utils/supabase/client'
 import { isValidEgyptianPhone, normalizeEgyptianPhone } from '@/lib/auth/egyptian-phone'
 
 type AccountType = 'buyer' | 'seller'
-type Step = 'phone' | 'otp'
+type Step = 'phone' | 'otp' | 'legacy-login' | 'legacy-phone' | 'legacy-otp'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -21,6 +22,13 @@ export default function LoginPage() {
   const [isPending, setIsPending] = useState(false)
   const [resendAfter, setResendAfter] = useState(0)
   const otpRef = useRef<HTMLInputElement | null>(null)
+  const legacyOtpRef = useRef<HTMLInputElement | null>(null)
+  const supabase = createClient()
+  const [legacyEmail, setLegacyEmail] = useState('')
+  const [legacyPassword, setLegacyPassword] = useState('')
+  const [legacyPhone, setLegacyPhone] = useState('')
+  const [legacyOtp, setLegacyOtp] = useState('')
+  const [legacyResendAfter, setLegacyResendAfter] = useState(0)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -35,18 +43,27 @@ export default function LoginPage() {
   }, [])
 
   useEffect(() => {
-    if (step !== 'otp' || resendAfter <= 0) return
+    if (!['otp', 'legacy-otp'].includes(step)) return
+    const value = step === 'otp' ? resendAfter : legacyResendAfter
+    if (value <= 0) return
 
     const timer = window.setInterval(() => {
-      setResendAfter((current) => Math.max(0, current - 1))
+      if (step === 'otp') {
+        setResendAfter((current) => Math.max(0, current - 1))
+      } else {
+        setLegacyResendAfter((current) => Math.max(0, current - 1))
+      }
     }, 1000)
 
     return () => window.clearInterval(timer)
-  }, [step, resendAfter])
+  }, [step, resendAfter, legacyResendAfter])
 
   useEffect(() => {
     if (step === 'otp') {
       window.setTimeout(() => otpRef.current?.focus(), 80)
+    }
+    if (step === 'legacy-otp') {
+      window.setTimeout(() => legacyOtpRef.current?.focus(), 80)
     }
   }, [step])
 
@@ -138,11 +155,170 @@ export default function LoginPage() {
     }
   }
 
+
+  function openLegacyLogin() {
+    clearNotice()
+    setLegacyPassword('')
+    setStep('legacy-login')
+  }
+
+  function backToPhoneLogin() {
+    clearNotice()
+    setLegacyPassword('')
+    setLegacyOtp('')
+    setLegacyResendAfter(0)
+    setStep('phone')
+  }
+
+  async function signInLegacyAccount() {
+    clearNotice()
+
+    const email = legacyEmail.trim().toLowerCase()
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setMessage('أدخل بريد الحساب القديم بصورة صحيحة.')
+      return
+    }
+
+    if (!legacyPassword) {
+      setMessage('أدخل كلمة مرور الحساب القديم.')
+      return
+    }
+
+    setIsPending(true)
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: legacyPassword,
+      })
+
+      if (error || !data.user) {
+        console.error('DEBA legacy account sign-in failed', error)
+        setMessage('تعذر تسجيل الدخول بالحساب القديم. راجع بيانات الدخول وحاول مرة أخرى.')
+        return
+      }
+
+      if (data.user.phone) {
+        setSuccess('تم تسجيل الدخول. حسابك مرتبط بالفعل بهاتف موثّق.')
+        router.replace(nextPath)
+        router.refresh()
+        return
+      }
+
+      setStep('legacy-phone')
+      setLegacyOtp('')
+      setLegacyResendAfter(0)
+      setSuccess('تم الدخول بحسابك القديم. الخطوة الأخيرة هي ربط هاتف مصري موثّق عبر WhatsApp.')
+    } catch (error) {
+      console.error('DEBA legacy account sign-in client error', error)
+      setMessage('تعذر تسجيل الدخول بالحساب القديم الآن.')
+    } finally {
+      setIsPending(false)
+    }
+  }
+
+  async function sendLegacyCode() {
+    clearNotice()
+
+    const normalized = normalizeEgyptianPhone(legacyPhone)
+    if (!normalized || !isValidEgyptianPhone(normalized)) {
+      setMessage('أدخل رقم هاتف مصري صحيح يبدأ بـ +20.')
+      return
+    }
+
+    setIsPending(true)
+
+    try {
+      const response = await fetch('/api/auth/legacy-phone/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: normalized }),
+      })
+
+      const data = await response.json() as { error?: string; sent?: boolean }
+      if (!response.ok || !data.sent) {
+        setMessage(data.error || 'تعذر إرسال رمز WhatsApp لربط الحساب.')
+        return
+      }
+
+      setLegacyPhone(normalized)
+      setLegacyOtp('')
+      setStep('legacy-otp')
+      setLegacyResendAfter(60)
+      setSuccess('أرسلنا رمز التحقق إلى WhatsApp. لن يتم استخدام SMS لهذا المسار.')
+    } catch (error) {
+      console.error('DEBA legacy WhatsApp send client error', error)
+      setMessage('تعذر الاتصال بخدمة التحقق الآن.')
+    } finally {
+      setIsPending(false)
+    }
+  }
+
+  async function verifyLegacyCode() {
+    clearNotice()
+
+    if (!/^\d{6}$/.test(legacyOtp)) {
+      setMessage('أدخل رمز التحقق المكوّن من 6 أرقام.')
+      return
+    }
+
+    setIsPending(true)
+
+    try {
+      const response = await fetch('/api/auth/legacy-phone/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: legacyPhone,
+          token: legacyOtp,
+        }),
+      })
+
+      const data = await response.json() as {
+        error?: string
+        ok?: boolean
+        phoneVerified?: boolean
+      }
+
+      if (!response.ok || !data.ok || !data.phoneVerified) {
+        setMessage(data.error || 'تعذر إكمال ربط الهاتف.')
+        return
+      }
+
+      setSuccess('تم ربط هاتفك الموثّق بحسابك القديم. مرحبًا بك من جديد في DEBA.')
+      router.replace(nextPath)
+      router.refresh()
+    } catch (error) {
+      console.error('DEBA legacy WhatsApp verification client error', error)
+      setMessage('تعذر إكمال ربط الهاتف الآن.')
+    } finally {
+      setIsPending(false)
+    }
+  }
+
+  function onLegacyOtpChange(value: string) {
+    setMessage(null)
+    setSuccess(null)
+    setLegacyOtp(value.replace(/[^0-9]/g, '').slice(0, 6))
+  }
+
   function changeNumber() {
     setStep('phone')
     setOtp('')
     setResendAfter(0)
     clearNotice()
+  }
+
+  function changeLegacyPhone() {
+    setStep('legacy-phone')
+    setLegacyOtp('')
+    setLegacyResendAfter(0)
+    clearNotice()
+  }
+
+  async function resendLegacy() {
+    if (legacyResendAfter > 0 || isPending) return
+    await sendLegacyCode()
   }
 
   async function resend() {
@@ -235,33 +411,85 @@ export default function LoginPage() {
               </div>
 
               <h2 className="form-title">
-                {step === 'phone' ? 'دخول أو إنشاء حساب' : 'تحقق من هاتفك'}
+                {step === 'phone'
+                  ? 'دخول أو إنشاء حساب'
+                  : step === 'otp'
+                    ? 'تحقق من هاتفك'
+                    : step === 'legacy-login'
+                      ? 'دخول حساب قديم'
+                      : step === 'legacy-phone'
+                        ? 'ربط هاتف بحسابك القديم'
+                        : 'تأكيد ربط الهاتف'}
               </h2>
 
               <p className="form-subtitle">
                 {step === 'phone'
                   ? 'استخدم رقم هاتفك المصري للدخول أو إنشاء حساب جديد.'
-                  : 'أدخل الرمز المرسل عبر WhatsApp لإكمال التحقق.'}
+                  : step === 'otp'
+                    ? 'أدخل الرمز المرسل عبر WhatsApp لإكمال التحقق.'
+                    : step === 'legacy-login'
+                      ? 'هذا المسار مخصص للحسابات القديمة التي أُنشئت قبل اعتماد الهاتف كهوية أساسية.'
+                      : step === 'legacy-phone'
+                        ? 'تم التحقق من حسابك القديم. الآن اربط به رقم هاتف مصري تملكه عبر WhatsApp.'
+                        : 'أدخل رمز WhatsApp لإثبات ملكية الهاتف وربطه بالحساب نفسه.'}
               </p>
             </div>
 
-            <div className="deba-auth-progress" aria-label="خطوات التحقق">
-              <div className={step === 'phone' ? 'is-active' : 'is-complete'}>
-                <span>1</span>
-                <div>
-                  <strong>رقم الهاتف</strong>
-                  <small>+20 فقط</small>
+            {step === 'phone' || step === 'otp' ? (
+              <div className="deba-auth-progress" aria-label="خطوات التحقق">
+                <div className={step === 'phone' ? 'is-active' : 'is-complete'}>
+                  <span>1</span>
+                  <div>
+                    <strong>رقم الهاتف</strong>
+                    <small>+20 فقط</small>
+                  </div>
+                </div>
+                <div className="deba-auth-progress-line" />
+                <div className={step === 'otp' ? 'is-active' : ''}>
+                  <span>2</span>
+                  <div>
+                    <strong>رمز WhatsApp</strong>
+                    <small>6 أرقام</small>
+                  </div>
                 </div>
               </div>
-              <div className="deba-auth-progress-line" />
-              <div className={step === 'otp' ? 'is-active' : ''}>
-                <span>2</span>
+            ) : step === 'legacy-login' ? (
+              <div className="deba-auth-progress" aria-label="استعادة الحساب القديم">
+                <div className="is-active">
+                  <span>1</span>
+                  <div>
+                    <strong>الحساب القديم</strong>
+                    <small>تسجيل آمن</small>
+                  </div>
+                </div>
+                <div className="deba-auth-progress-line" />
                 <div>
-                  <strong>رمز WhatsApp</strong>
-                  <small>6 أرقام</small>
+                  <span>2</span>
+                  <div>
+                    <strong>ربط الهاتف</strong>
+                    <small>WhatsApp</small>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="deba-auth-progress" aria-label="ربط الهاتف بالحساب القديم">
+                <div className="is-complete">
+                  <span>1</span>
+                  <div>
+                    <strong>الحساب</strong>
+                    <small>تم الدخول</small>
+                  </div>
+                </div>
+                <div className="deba-auth-progress-line" />
+                <div className={step === 'legacy-otp' ? 'is-active' : ''}>
+                  <span>2</span>
+                  <div>
+                    <strong>WhatsApp</strong>
+                    <small>توثيق الهاتف</small>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {message ? (
               <div className="error-message" role="alert">
@@ -371,8 +599,17 @@ export default function LoginPage() {
                     </>
                   )}
                 </button>
+
+                <button
+                  type="button"
+                  className="forgot-link"
+                  onClick={openLegacyLogin}
+                  disabled={isPending}
+                >
+                  لدي حساب قديم في DEBA
+                </button>
               </form>
-            ) : (
+            ) : step === 'otp' ? (
               <form
                 className="login-form deba-otp-form"
                 onSubmit={(event) => {
@@ -444,6 +681,239 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => void resend()}
                     disabled={resendAfter > 0 || isPending}
+                    className="forgot-link"
+                  >
+                    إعادة إرسال الرمز
+                  </button>
+                </div>
+              </form>
+            ) : step === 'legacy-login' ? (
+              <form
+                className="login-form deba-phone-form"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  void signInLegacyAccount()
+                }}
+              >
+                <div className="deba-auth-trust-note">
+                  <Mail size={17} aria-hidden="true" />
+                  <div>
+                    <strong>استعادة آمنة للحساب القديم</strong>
+                    <span>
+                      لن تحصل على صلاحيات السوق الحساسة حتى يكتمل ربط هاتف مصري موثّق.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="legacyEmail">
+                    بريد الحساب القديم
+                  </label>
+                  <input
+                    id="legacyEmail"
+                    data-testid="legacy-email"
+                    className="form-input"
+                    type="email"
+                    value={legacyEmail}
+                    onChange={(event) => setLegacyEmail(event.target.value)}
+                    autoComplete="username"
+                    inputMode="email"
+                    disabled={isPending}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="legacyPassword">
+                    كلمة المرور
+                  </label>
+                  <input
+                    id="legacyPassword"
+                    data-testid="legacy-password"
+                    className="form-input"
+                    type="password"
+                    value={legacyPassword}
+                    onChange={(event) => setLegacyPassword(event.target.value)}
+                    autoComplete="current-password"
+                    disabled={isPending}
+                    required
+                  />
+                </div>
+
+                <button
+                  data-testid="legacy-login-submit"
+                  type="submit"
+                  className="submit-btn"
+                  disabled={isPending}
+                >
+                  {isPending ? (
+                    <div className="btn-loader" aria-label="جارٍ تسجيل الدخول" />
+                  ) : (
+                    <>
+                      <span>تسجيل الدخول للحساب القديم</span>
+                      <span className="arrow">←</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className="forgot-link"
+                  onClick={backToPhoneLogin}
+                  disabled={isPending}
+                >
+                  العودة لدخول الهاتف
+                </button>
+              </form>
+            ) : step === 'legacy-phone' ? (
+              <form
+                className="login-form deba-phone-form"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  void sendLegacyCode()
+                }}
+              >
+                <div className="deba-auth-trust-note">
+                  <MessageCircle size={17} aria-hidden="true" />
+                  <div>
+                    <strong>اربط هاتفك بحسابك نفسه</strong>
+                    <span>
+                      سنستخدم WhatsApp لإثبات ملكية الرقم ثم نثبته على حسابك القديم. لا يتم إنشاء حساب جديد.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="legacyPhoneNumber">
+                    رقم الهاتف المصري
+                  </label>
+                  <div className="deba-phone-input">
+                    <span className="deba-phone-prefix" aria-hidden="true">+20</span>
+                    <input
+                      id="legacyPhoneNumber"
+                      data-testid="legacy-phone-input"
+                      type="tel"
+                      value={legacyPhone.replace(/^\+20/, '')}
+                      onChange={(event) =>
+                        setLegacyPhone(
+                          event.target.value.replace(/[^0-9]/g, '').slice(0, 10),
+                        )
+                      }
+                      placeholder="10XXXXXXXX"
+                      autoComplete="tel"
+                      inputMode="tel"
+                      maxLength={10}
+                      disabled={isPending}
+                      required
+                    />
+                  </div>
+                  <small className="deba-auth-help">
+                    نقبل أرقام المحمول المصرية فقط: 010، 011، 012، 015.
+                  </small>
+                </div>
+
+                <button
+                  data-testid="legacy-phone-send"
+                  type="submit"
+                  className="submit-btn"
+                  disabled={isPending}
+                >
+                  {isPending ? (
+                    <div className="btn-loader" aria-label="جارٍ إرسال الرمز" />
+                  ) : (
+                    <>
+                      <span>إرسال رمز WhatsApp للربط</span>
+                      <span className="arrow">←</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className="forgot-link"
+                  onClick={() => {
+                    setLegacyPhone('')
+                    setLegacyOtp('')
+                    setStep('legacy-login')
+                    clearNotice()
+                  }}
+                  disabled={isPending}
+                >
+                  تغيير الحساب
+                </button>
+              </form>
+            ) : (
+              <form
+                className="login-form deba-otp-form"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  void verifyLegacyCode()
+                }}
+              >
+                <div className="deba-otp-summary">
+                  <span>سيتم ربط الرقم بالحساب الحالي:</span>
+                  <strong dir="ltr">{legacyPhone}</strong>
+                  <button type="button" onClick={changeLegacyPhone} disabled={isPending}>
+                    تغيير الرقم
+                  </button>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="legacyOtpCode">
+                    رمز WhatsApp
+                  </label>
+                  <input
+                    ref={legacyOtpRef}
+                    id="legacyOtpCode"
+                    data-testid="legacy-otp-input"
+                    className="form-input deba-otp-input"
+                    type="text"
+                    value={legacyOtp}
+                    onChange={(event) => onLegacyOtpChange(event.target.value)}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    pattern="[0-9]{6}"
+                    minLength={6}
+                    maxLength={6}
+                    disabled={isPending}
+                    required
+                    aria-label="رمز WhatsApp لربط الهاتف"
+                    dir="ltr"
+                  />
+                  <small className="deba-auth-help">
+                    أدخل الرمز الذي وصلك على WhatsApp. لا يوجد SMS fallback لهذا المسار.
+                  </small>
+                </div>
+
+                <button
+                  data-testid="legacy-otp-verify"
+                  type="submit"
+                  className="submit-btn"
+                  disabled={isPending || legacyOtp.length !== 6}
+                >
+                  {isPending ? (
+                    <div className="btn-loader" aria-label="جارٍ التحقق" />
+                  ) : (
+                    <>
+                      <span>تأكيد ربط الهاتف</span>
+                      <span className="arrow">←</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="deba-otp-footer">
+                  <span>
+                    {legacyResendAfter > 0
+                      ? 'إعادة الإرسال متاحة خلال ' + legacyResendAfter + ' ثانية'
+                      : 'لم يصلك الرمز؟'}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => void resendLegacy()}
+                    disabled={legacyResendAfter > 0 || isPending}
                     className="forgot-link"
                   >
                     إعادة إرسال الرمز
