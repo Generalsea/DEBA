@@ -89,46 +89,11 @@ export async function POST(request: Request) {
       )
     }
 
-    const { error: privateProfileError } = await admin
-      .from('profile_private')
-      .upsert(
-        {
-          user_id: authData.user.id,
-          phone,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id' },
-      )
-
-    if (privateProfileError) {
-      console.error('DEBA legacy phone private-profile sync failed', privateProfileError)
-
-      // The Auth update above is the canonical identity mutation. If the
-      // database mirror cannot be synchronized, immediately clear the phone
-      // rather than leaving two sources of truth out of sync.
-      const { error: rollbackError } =
-        await admin.auth.admin.updateUserById(authData.user.id, {
-          phone: null,
-          phone_confirm: false,
-        })
-
-      if (rollbackError) {
-        console.error('DEBA legacy phone rollback failed', rollbackError)
-        return NextResponse.json(
-          {
-            error:
-              'تعذر إكمال ربط الهاتف بصورة آمنة. تم إيقاف العملية ويجب مراجعة الحساب قبل إعادة المحاولة.',
-            code: 'LEGACY_PHONE_BINDING_NEEDS_REVIEW',
-          },
-          { status: 503 },
-        )
-      }
-
-      return NextResponse.json(
-        { error: 'تعذر مزامنة بيانات الهاتف بأمان. لم يتم اعتماد الربط.' },
-        { status: 503 },
-      )
-    }
+    // Phase D's auth.users trigger synchronizes profiles.phone_verified
+    // and profile_private.phone in the same database transaction.
+    // Do not duplicate that mutation here; keeping one canonical write path
+    // prevents partial-sync states during failure recovery.
+    
 
     return NextResponse.json(
       {
