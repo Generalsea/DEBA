@@ -39,6 +39,17 @@ before insert or update of phone_verified on public.profiles
 for each row
 execute function private.sync_profile_phone_verified();
 
+-- Clear abandoned Auth phone-change state that has no delivery timestamp.
+-- Such rows cannot represent a current OTP attempt and can interfere with
+-- subsequent phone verification by leaving duplicate phone_change values.
+update auth.users
+set phone_change = null,
+    phone_change_token = null,
+    phone_change_sent_at = null
+where phone_change is not null
+  and phone_confirmed_at is null
+  and phone_change_sent_at is null;
+
 alter table public.profile_private
   drop constraint if exists profile_private_phone_egyptian_check;
 
@@ -216,8 +227,10 @@ begin
       phone_change_sent_at = null
   where phone_change is not null
     and phone_confirmed_at is null
-    and phone_change_sent_at is not null
-    and phone_change_sent_at < now() - p_max_age;
+    and (
+      phone_change_sent_at is null
+      or phone_change_sent_at < now() - p_max_age
+    );
 
   get diagnostics v_count = row_count;
   return v_count;
