@@ -117,6 +117,7 @@ test('client Realtime subscription is user-filtered and contains no server crede
   assert.match(hook, /event: 'UPDATE'/)
   assert.match(hook, /removeChannel/)
   assert.match(hook, /deba-notifications:/)
+  assert.match(hook, /config: \{ private: true \}/)
   assert.match(hook, /deba:notification/)
   assert.doesNotMatch(hook, /SUPABASE_SERVICE_ROLE_KEY/)
   assert.doesNotMatch(hook, /SUPABASE_SECRET_KEY/)
