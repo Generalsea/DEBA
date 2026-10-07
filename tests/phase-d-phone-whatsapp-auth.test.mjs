@@ -58,7 +58,7 @@ test('Phase D OTP verification uses the Supabase phone OTP verification contract
 test('Phase D phone trust cannot be self-asserted through public.profiles', async () => {
   const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
   assert.match(migration, /sync_profile_phone_verified/)
-  assert.match(migration, /before insert or update of phone_verified[\s\S]*on public\.profiles/)
+  assert.match(migration, /before insert or update of phone_verified\s+on public\.profiles/)
   assert.match(migration, /new\.phone_verified := exists/)
   assert.match(migration, /phone_confirmed_at/)
 })
