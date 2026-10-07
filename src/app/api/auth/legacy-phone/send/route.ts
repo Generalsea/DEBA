@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const latestAttempt = verification.send_code_attempts?.at(-1)
     const actualChannel = latestAttempt?.channel || verification.channel || ''
 
-    if (actualChannel && actualChannel.toLowerCase() !== 'whatsapp') {
+    if (actualChannel.toLowerCase() !== 'whatsapp') {
       return NextResponse.json(
         {
           error: 'تعذر ضمان إرسال رمز التحقق عبر WhatsApp فقط. لم يتم إكمال الربط.',
