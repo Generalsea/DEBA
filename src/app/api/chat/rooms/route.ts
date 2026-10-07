@@ -10,8 +10,8 @@ export async function POST(request: Request) {
     if (trust.response) return trust.response
 
     const supabase = trust.supabase
-    const userData = { data: { user: trust.user } }
-    if (!userData.user) {
+    const user = trust.user
+    if (!user) {
       return NextResponse.json({ error: 'يجب تسجيل الدخول.' }, { status: 401 })
     }
 
@@ -91,7 +91,7 @@ export async function GET() {
     const { data: participants, error } = await supabase
       .from('chat_participants')
       .select('room_id,last_read_at,is_muted')
-      .eq('user_id', userData.user.id)
+      .eq('user_id', user.id)
 
     if (error) {
       console.error('DEBA chat rooms load failed', error)
@@ -228,7 +228,7 @@ export async function GET() {
       : { data: [] as Array<Record<string, unknown>> }
 
     const profileMap = new Map((profiles || []).map((profile) => [profile.id, profile]))
-    const userId = userData.user.id
+    const userId = user.id
 
     const { data: viewerProfile } = await supabase
       .from('profiles')
@@ -290,7 +290,7 @@ export async function GET() {
     return NextResponse.json({
       viewer: viewerProfile || {
         id: userId,
-        display_name: userData.user.email?.split('@')[0] || 'عضو DEBA',
+        display_name: user.email?.split('@')[0] || 'عضو DEBA',
         username: null,
         avatar_url: null,
         account_type: null,
