@@ -285,8 +285,13 @@ test('authenticated Playwright path is wired and offer lifecycle is database-enf
   const productTabs = await read('src/components/ProductDetailTabs.tsx')
   const workflow = await read('.github/workflows/authenticated-e2e.yml')
 
+  const authBootstrap = await read('scripts/e2e/capture-auth-state.mjs')
   assert.equal(packageJson.devDependencies['@playwright/test'], '1.63.0')
   assert.equal(packageJson.scripts.e2e, 'playwright test')
+  assert.equal(packageJson.scripts['e2e:auth-state'], 'node scripts/e2e/capture-auth-state.mjs')
+  assert.match(authBootstrap, /channel|WhatsApp OTP|OTP/)
+  assert.match(authBootstrap, /storageState/)
+  assert.doesNotMatch(authBootstrap, /console\.log\([^\n]*otp/i)
   assert.match(config, /defineConfig/)
   assert.match(e2e, /DEBA_E2E_STORAGE_STATE/)
   assert.match(e2e, /DEBA_E2E_ALLOW_MUTATIONS/)
