@@ -170,7 +170,7 @@ test('Phase D stale phone-change cleanup is scheduled and removes unconfirmed st
 test('Phase D reuses existing trust and safety infrastructure instead of inventing a parallel risk stack', async () => {
   const migration = await read('supabase/migrations/20261004140000_phase_d_phone_identity.sql')
   const rateLimits = await read('supabase/migrations/20260925164000_api_rate_limits.sql')
-  const risk = await read('supabase/migrations/20260921204433_risk_engine.sql')
+  const risk = await read('supabase/migrations/20260921210000_risk_engine.sql')
   const trust = await read('supabase/migrations/20260925201854_public_profiles_trust_reviews_moderation_20260925.sql')
 
   assert.match(migration, /consume_api_rate_limit|api_rate_limits/i)
